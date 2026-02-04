@@ -655,7 +655,7 @@
   <rect x="636" y="12" width="10" height="10" fill="#161b22" rx="2"/>
   <rect x="636" y="24" width="10" height="10" fill="#006d32" rx="2"/>
   <rect x="636" y="36" width="10" height="10" fill="#161b22" rx="2"/>
-  <rect x="636" y="48" width="10" height="10" fill="#161b22" rx="2"/>
+  <rect x="636" y="48" width="10" height="10" fill="#006d32" rx="2"/>
   <rect x="312" y="0" width="10" height="10" fill="#161b22" rx="2"/>
   <rect x="324" y="0" width="10" height="10" fill="#161b22" rx="2"/>
   <rect x="288" y="-12" width="10" height="10" fill="#161b22" rx="2"/>
