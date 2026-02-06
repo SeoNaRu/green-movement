@@ -19,7 +19,7 @@
 1. GitHub에서 **New repository** 클릭
 2. **Repository name**을 **본인 사용자명과 똑같이** 입력 (예: `seonaru`)
 3. Public, **Add a README file** 선택 후 생성
-4. 이 저장소의 README가 **프로필 페이지**에 노출됩니다.
+4. 이 저장소의 README가 **프로필 페이지**에 노출됩니다
 
 ---
 
