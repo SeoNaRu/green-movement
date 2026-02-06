@@ -29,6 +29,7 @@ jobs:
       - name: Generate SVG
         run: node dist/index.js
         env:
+          GITHUB_TOKEN: ${{ github.token }}
           GITHUB_USERNAME: ${{ secrets.GITHUB_USERNAME || github.repository_owner }}
 
       - name: Push SVG to profile repository
