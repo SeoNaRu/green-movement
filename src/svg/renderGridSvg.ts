@@ -1,82 +1,29 @@
 import type { GridCell } from "../grid/mapGrid.js";
-
-// GitHub official specs
-const CELL_SIZE = 10;
-const GAP = 2;
-const BORDER_RADIUS = 2;
-const BACKGROUND_COLOR = "#0d1117"; // GitHub dark background
-
-// Pasture fence: 잔디 그리드와 동일하게 1타일 = 10px 셀 + 2px 간격 (12px). 펜스 드로잉은 10px로 스케일.
-const FENCE_TILE = CELL_SIZE + GAP; // 12 — 타일 배치 간격(셀+간격)
-const FENCE_MARGIN = FENCE_TILE;
-const FENCE_SCALE = CELL_SIZE / 14; // 10/14 — 14x14 에셋을 10px(셀)로 스케일, 타일마다 2px 간격
-const FENCE_STROKE = "#8B4513";
-
-// Inlined path from assets/fance/*.svg (viewBox 0 0 14 14). 직선은 끝이 조금 떨어짐.
-const FENCE_H_PATH = "M 1.5 7 H 12.5";
-const FENCE_V_PATH = "M 7 1.5 V 12.5";
-// fence-corner.svg 하나: TL 기준 (12.5,7)-(7,12.5), 나머지는 반사로 간격 통일
-const FENCE_CORNER_PATH = "M 12.5 7 A 5.5 5.5 0 0 0 7 12.5";
-const FENCE_GROUP_STYLE =
-  'fill="none" stroke="' +
-  FENCE_STROKE +
-  '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"';
-// 양 이동: 1틱 = 1칸 이동 = 이 시간(초). 애니메이션에서 셀당 구간 길이.
-const SHEEP_CELL_TIME = 0.75; // 1칸 0.75초 (체감 확 빨라짐)
-// 양이 잔디에 도착한 뒤 잔디 색이 레벨 4→0으로 줄어드는 시간(초). 이만큼 대기 후 다시 탐색.
-const GRASS_FADE_DURATION = 2.0;
-// 시간 관계: waitTicks = round(GRASS_FADE_DURATION / SHEEP_CELL_TIME). 잔디 페이드 끝나기 전에는 다음 잔디로 못 감.
-const waitTicks = Math.round(GRASS_FADE_DURATION / SHEEP_CELL_TIME);
-// 각 양이 최대 몇 칸의 잔디를 먹을지 (전체 잔디 전부를 원하면 크게)
-const MAX_MEALS_PER_SHEEP = 50;
-// 교착 해소: 같은 칸에서 이 틱 수 이상 막히면 한 칸 후진(backoff) 시도
-const STUCK_BACKOFF_THRESHOLD = 2; // 막히면 더 빨리 후진 시도
-// 접근칸 예약 TTL: 이 틱 수 지나면 예약 자동 해제 (입구 독점 완화)
-const APPROACH_TTL = 12;
-// 거리 기반 뺏기: 예약 후 이 틱 수 지나면, 더 가까운 양이 뺏을 수 있음
-const APPROACH_STEAL_AFTER = 6;
-const APPROACH_STEAL_MARGIN = 2; // 새 dist가 기존보다 이만큼 이상 가까우면 뺏음
-// 잔디 예약 TTL: 이 틱 수 지나면 또는 stuck이 크면 예약 해제 (한 번 먹고 멈춤 방지)
-const GRASS_RES_TTL = 25;
-
-// Sheep (assets/sheep.svg) — viewBox 0.5 0 15 12.5, 중심 (8, 6.25)
-// assets/sheep.svg 의 <g id="sheep"> 내용과 동일하게 유지해야 함.
-const SHEEP_CONTENT = `<g transform="translate(0,7.5) scale(1,1.25) translate(0,-7.5)">
-  <path
-    d="M8 10.5
-       C6.4 10.9 5.0 10.4 4.3 9.3
-       C3.1 9.1 2.7 7.9 3.5 7.1
-       C2.7 6.1 3.5 5.0 4.6 4.7
-       C4.6 3.6 5.6 2.9 6.6 3.2
-       C7.1 2.3 8.0 2.1 8.0 2.1
-       C8.0 2.1 8.9 2.3 9.4 3.2
-       C10.4 2.9 11.4 3.6 11.4 4.7
-       C12.5 5.0 13.3 6.1 12.5 7.1
-       C13.3 7.9 12.9 9.1 11.7 9.3
-       C11.0 10.4 9.6 10.9 8.0 10.5
-       Z"
-    fill="#f0f0f0" stroke="#d0d0d0" stroke-width="0.5"/>
-</g>
-<g transform="translate(0,-1.55)">
-  <!-- 머리 -->
-  <ellipse cx="8" cy="3.6" rx="3" ry="2.4" fill="#2b2b2b"/>
-  <!-- 귀 -->
-  <ellipse cx="4.8" cy="4.4" rx="1.5" ry="1.0" fill="#333333"/>
-  <ellipse cx="11.2" cy="4.4" rx="1.5" ry="1.0" fill="#333333"/>
-  <!-- 코끝 느낌의 밝은 점 (살짝 더 크게) -->
-  <circle cx="8" cy="2.0" r="0.35" fill="#444"/>
-  <!-- 뿔: 아래 털 쪽으로 조금 더 길게, 아래쪽 간격이 살짝 더 넓어지도록 -->
-  <path d="M6.7 3.9 C6.0 4.7 6.0 5.7 6.5 6.0"
-        stroke="#e0c090" stroke-width="1.4"
-        stroke-linecap="round" fill="none"/>
-  <path d="M9.3 3.9 C10.0 4.7 10.0 5.7 9.5 6.0"
-        stroke="#e0c090" stroke-width="1.4"
-        stroke-linecap="round" fill="none"/>
-</g>`;
-const SHEEP_VIEWBOX_CX = 8;
-const SHEEP_VIEWBOX_CY = 6.25;
-const SHEEP_VIEWBOX_W = 15;
-const SHEEP_WIDTH_PX = 24;
+import {
+  CELL_SIZE,
+  GAP,
+  BORDER_RADIUS,
+  BACKGROUND_COLOR,
+  FENCE_TILE,
+  FENCE_MARGIN,
+  FENCE_SCALE,
+  FENCE_H_PATH,
+  FENCE_V_PATH,
+  FENCE_CORNER_PATH,
+  FENCE_GROUP_STYLE,
+  SHEEP_CELL_TIME,
+  GRASS_FADE_DURATION,
+  waitTicks,
+  MAX_MEALS_PER_SHEEP,
+  GRASS_RES_TTL,
+  SHEEP_CONTENT,
+  SHEEP_VIEWBOX_CX,
+  SHEEP_VIEWBOX_CY,
+  SHEEP_VIEWBOX_W,
+  SHEEP_WIDTH_PX,
+  TILE_PATH,
+  COLORS,
+} from "./constants.js";
 
 /**
  * GitHub 잔디 그리드 좌표 (0-based)
@@ -99,392 +46,38 @@ export function getCellCenterPx(
 // 디버그용: 지정한 칸 중앙에 점 찍기 (비우면 점 없음)
 const CELL_DOTS: [col: number, row: number][] = [];
 
-// #161b22 = 길(이동 가능한 타일). 대기 칸·빈 그리드 칸 모두 이 색.
-// 양은 좌우·앞뒤(4방향)만 이동. 양옆 앞뒤에 길이 없으면 멈춤(경로 끝이거나 막힘).
-const TILE_PATH = "#161b22";
-
-// GitHub contribution colors (dark theme) - EXACT official colors
-const COLORS = {
-  LEVEL_0: TILE_PATH, // 0 contributions = 빈 칸 = 길
-  LEVEL_1: "#0e4429", // low
-  LEVEL_2: "#006d32", // medium-low
-  LEVEL_3: "#26a641", // medium-high
-  LEVEL_4: "#39d353", // high
-};
-
 // ---- Reservation Table (시간 확장 예약: t, t+1, ... 미래 점유/엣지) ----
-type CellKey = string;
-type EdgeKey = string;
+import {
+  type ReservationTable,
+  type CellKey,
+  cellKey,
+  edgeKeyAtTime,
+  createReservationTable,
+  getCellRes,
+  getEdgeRes,
+  isCellFree,
+  reserveCell,
+  reserveEdge,
+  clearReservationsInRange,
+  reserveEdgePreview,
+} from "./reservationTable.js";
 
-const cellKey = (c: number, r: number) => `${c},${r}`;
-const edgeKeyAtTime = (a: [number, number], b: [number, number]) =>
-  `${a[0]},${a[1]}->${b[0]},${b[1]}`;
+import {
+  getContributionLevel,
+  getColor,
+  calculateQuartiles,
+} from "./contribution.js";
 
-type ReservationTable = {
-  cell: Map<number, Map<CellKey, number>>;
-  edge: Map<number, Map<EdgeKey, number>>;
-};
-
-function createReservationTable(): ReservationTable {
-  return { cell: new Map(), edge: new Map() };
-}
-
-function getCellRes(res: ReservationTable, t: number): Map<CellKey, number> {
-  let m = res.cell.get(t);
-  if (!m) {
-    m = new Map();
-    res.cell.set(t, m);
-  }
-  return m;
-}
-function getEdgeRes(res: ReservationTable, t: number): Map<EdgeKey, number> {
-  let m = res.edge.get(t);
-  if (!m) {
-    m = new Map();
-    res.edge.set(t, m);
-  }
-  return m;
-}
-
-function isCellFree(
-  res: ReservationTable,
-  t: number,
-  c: number,
-  r: number,
-  self: number,
-): boolean {
-  const m = res.cell.get(t);
-  if (!m) return true;
-  const occ = m.get(cellKey(c, r));
-  return occ == null || occ === self;
-}
-
-function reserveCell(
-  res: ReservationTable,
-  t: number,
-  c: number,
-  r: number,
-  self: number,
-): boolean {
-  const m = getCellRes(res, t);
-  const k = cellKey(c, r);
-  const occ = m.get(k);
-  if (occ != null && occ !== self) return false;
-  m.set(k, self);
-  return true;
-}
-
-function reserveEdge(
-  res: ReservationTable,
-  t: number,
-  from: [number, number],
-  to: [number, number],
-  self: number,
-): boolean {
-  const m = getEdgeRes(res, t);
-  const fwd = edgeKeyAtTime(from, to);
-  const rev = edgeKeyAtTime(to, from);
-  const occF = m.get(fwd);
-  const occR = m.get(rev);
-  if ((occF != null && occF !== self) || (occR != null && occR !== self))
-    return false;
-  m.set(fwd, self);
-  return true;
-}
-
-function clearReservationsInRange(
-  res: ReservationTable,
-  self: number,
-  tFrom: number,
-  tTo: number,
-): void {
-  for (let t = tFrom; t <= tTo; t++) {
-    const cm = res.cell.get(t);
-    if (cm) {
-      for (const [k, v] of cm) if (v === self) cm.delete(k);
-    }
-    const em = res.edge.get(t);
-    if (em) {
-      for (const [k, v] of em) if (v === self) em.delete(k);
-    }
-  }
-}
-
-/**
- * planWindowed 내부에서 edge 예약 미리보기용. 충돌 검사만.
- */
-function reserveEdgePreview(
-  res: ReservationTable,
-  t: number,
-  from: [number, number],
-  to: [number, number],
-  self: number,
-): boolean {
-  const m = res.edge.get(t + 1);
-  if (!m) return true;
-  const fwd = edgeKeyAtTime(from, to);
-  const rev = edgeKeyAtTime(to, from);
-  const occF = m.get(fwd);
-  const occR = m.get(rev);
-  if ((occF != null && occF !== self) || (occR != null && occR !== self))
-    return false;
-  return true;
-}
-
-/**
- * Calculate contribution level using quartiles (GitHub's actual algorithm)
- * 0: no contributions
- * 1-4: quartiles of non-zero contributions
- */
-function getContributionLevel(count: number, quartiles: number[]): number {
-  if (count === 0) return 0;
-  if (count < quartiles[0]) return 1;
-  if (count < quartiles[1]) return 2;
-  if (count < quartiles[2]) return 3;
-  return 4;
-}
-
-function getColor(level: number): string {
-  switch (level) {
-    case 0:
-      return COLORS.LEVEL_0;
-    case 1:
-      return COLORS.LEVEL_1;
-    case 2:
-      return COLORS.LEVEL_2;
-    case 3:
-      return COLORS.LEVEL_3;
-    case 4:
-      return COLORS.LEVEL_4;
-    default:
-      return COLORS.LEVEL_0;
-  }
-}
-
-/**
- * Calculate quartiles from non-zero contribution counts
- */
-function calculateQuartiles(counts: number[]): number[] {
-  const nonZero = counts.filter((c) => c > 0).sort((a, b) => a - b);
-  if (nonZero.length === 0) return [0, 0, 0];
-
-  const q1 = nonZero[Math.floor(nonZero.length * 0.25)] || 1;
-  const q2 = nonZero[Math.floor(nonZero.length * 0.5)] || 1;
-  const q3 = nonZero[Math.floor(nonZero.length * 0.75)] || 1;
-
-  return [q1, q2, q3];
-}
-
-/**
- * 한 입구 칸에서 BFS, 길(빈 칸)만 확장.
- * 상하좌우 4방향만 사용 → 인접한 길이 없으면 그쪽으로는 확장 안 함(멈춤).
- */
-function emptyBfsFromGate(
-  grid: GridCell[],
-  maxX: number,
-  maxY: number,
-  startCol: number,
-): { emptyOrder: GridCell[]; parent: Map<string, string | null> } {
-  const byKey = new Map<string, GridCell>();
-  for (const c of grid) byKey.set(`${c.x},${c.y}`, c);
-
-  const visited = new Set<string>();
-  const parent = new Map<string, string | null>();
-  const queue: [number, number][] = [];
-  const emptyOrder: GridCell[] = [];
-
-  const key = (col: number, row: number) => `${col},${row}`;
-  const inBounds = (col: number, row: number) =>
-    col >= 0 && col <= maxX && row >= 0 && row <= maxY;
-
-  const start: [number, number] = [startCol, 0];
-  const cell = byKey.get(key(start[0], start[1]));
-  if (cell && cell.count === 0) {
-    visited.add(key(start[0], start[1]));
-    parent.set(key(start[0], start[1]), null);
-    emptyOrder.push(cell);
-    queue.push(start);
-  }
-
-  const dirs: [number, number][] = [
-    [0, 1],
-    [1, 0],
-    [-1, 0],
-    [0, -1],
-  ];
-  while (queue.length > 0) {
-    const [col, row] = queue.shift()!;
-    for (const [dc, dr] of dirs) {
-      const nc = col + dc;
-      const nr = row + dr;
-      if (!inBounds(nc, nr) || visited.has(key(nc, nr))) continue;
-
-      const next = byKey.get(key(nc, nr));
-      if (!next || next.count !== 0) continue;
-
-      visited.add(key(nc, nr));
-      parent.set(key(nc, nr), key(col, row));
-      emptyOrder.push(next);
-      queue.push([nc, nr]);
-    }
-  }
-
-  return { emptyOrder, parent };
-}
-
-/**
- * 상하좌우 인접 여부 (한 칸만 차이)
- */
-function isAdjacent4(a: [number, number], b: [number, number]): boolean {
-  return Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]) === 1;
-}
-
-/**
- * path에서 currIdx보다 앞이면서 좌표가 currIdx와 다른 마지막 인덱스 (addCornerPause 중복 대비)
- */
-function findPrevDifferentIdx(
-  path: [number, number][],
-  currIdx: number,
-): number {
-  const [cc, cr] = path[currIdx] ?? [0, 0];
-  for (let j = currIdx - 1; j >= 0; j--) {
-    const [pc, pr] = path[j] ?? [0, 0];
-    if (pc !== cc || pr !== cr) return j;
-  }
-  return Math.max(0, currIdx - 1);
-}
-
-/**
- * 경로에서 대각선(한 번에 2칸 이상) 제거: 인접하지 않은 연속 칸 사이에 중간 칸 삽입 → 4방향만
- */
-function ensureOnly4Direction(path: [number, number][]): [number, number][] {
-  if (path.length <= 1) return path;
-  const out: [number, number][] = [path[0]];
-  for (let i = 1; i < path.length; i++) {
-    const [c0, r0] = path[i - 1];
-    const [c1, r1] = path[i];
-    if (c0 === c1 && r0 === r1) continue;
-    let cx = c0;
-    let rx = r0;
-    do {
-      if (cx !== c1) cx += c1 > cx ? 1 : -1;
-      else if (rx !== r1) rx += r1 > rx ? 1 : -1;
-      out.push([cx, rx]);
-    } while (cx !== c1 || rx !== r1);
-  }
-  return out;
-}
-
-/**
- * 코너(방향이 바뀌는 칸)에서 한 틱 멈추도록 칸을 한 번 더 넣음 — 대각선 느낌·성급한 이동 방지
- * 예약/시간 플래닝 사용 시 비활성화 (중복 좌표로 충돌 증가 방지)
- */
-function addCornerPause(path: [number, number][]): [number, number][] {
-  return path; // 비활성화: 예약 기반 이동에서는 stay가 회전 멈칫을 대체
-  /* if (path.length < 3) return path;
-  const out: [number, number][] = [path[0], path[1]];
-  for (let i = 2; i < path.length; i++) {
-    const prev = path[i - 1];
-    const curr = path[i];
-    const prevDir: [number, number] = [
-      path[i - 1][0] - path[i - 2][0],
-      path[i - 1][1] - path[i - 2][1],
-    ];
-    const currDir: [number, number] = [curr[0] - prev[0], curr[1] - prev[1]];
-    const dirChanged = prevDir[0] !== currDir[0] || prevDir[1] !== currDir[1];
-    if (dirChanged) out.push([prev[0], prev[1]]);
-    out.push(curr);
-  }
-  return out; */
-}
-
-/**
- * BFS parent 맵으로 시작→목표 경로 추적 (셀 리스트 반환)
- */
-function tracePath(
-  targetCol: number,
-  targetRow: number,
-  parent: Map<string, string | null>,
-): [number, number][] {
-  const path: [number, number][] = [];
-  let key: string | null = `${targetCol},${targetRow}`;
-  while (key !== null) {
-    const [c, r] = key.split(",").map(Number);
-    path.unshift([c, r]);
-    key = parent.get(key) ?? null;
-  }
-  return path;
-}
-
-/**
- * BFS로 두 칸 사이 경로 (allowedSet 안의 칸만 통과). 4방향.
- */
-function pathBetweenCells(
-  fromCol: number,
-  fromRow: number,
-  toCol: number,
-  toRow: number,
-  allowedSet: Set<string>,
-  maxX: number,
-  maxY: number,
-): [number, number][] {
-  const key = (c: number, r: number) => `${c},${r}`;
-  const allowed = (c: number, r: number) =>
-    c >= 0 && c <= maxX && r >= 0 && r <= maxY && allowedSet.has(key(c, r));
-  const visited = new Set<string>();
-  const parent = new Map<string, string | null>();
-  const queue: [number, number][] = [[fromCol, fromRow]];
-  visited.add(key(fromCol, fromRow));
-  parent.set(key(fromCol, fromRow), null);
-  const dirs: [number, number][] = [
-    [0, 1],
-    [1, 0],
-    [-1, 0],
-    [0, -1],
-  ];
-  const targetK = key(toCol, toRow);
-  while (queue.length > 0) {
-    const [col, row] = queue.shift()!;
-    if (col === toCol && row === toRow) break;
-    for (const [dc, dr] of dirs) {
-      const nc = col + dc;
-      const nr = row + dr;
-      const nk = key(nc, nr);
-      if (!allowed(nc, nr) || visited.has(nk)) continue;
-      visited.add(nk);
-      parent.set(nk, key(col, row));
-      queue.push([nc, nr]);
-    }
-  }
-  if (!visited.has(targetK)) return [];
-  return tracePath(toCol, toRow, parent);
-}
-
-/**
- * 잔디→잔디 경로 (빈 칸 + 두 잔디만 통과)
- */
-function pathBetweenGrassCells(
-  firstGrass: GridCell,
-  secondGrass: GridCell,
-  emptyCellSet: Set<string>,
-  maxX: number,
-  maxY: number,
-): [number, number][] {
-  const allowed = new Set([
-    ...emptyCellSet,
-    `${firstGrass.x},${firstGrass.y}`,
-    `${secondGrass.x},${secondGrass.y}`,
-  ]);
-  return pathBetweenCells(
-    firstGrass.x,
-    firstGrass.y,
-    secondGrass.x,
-    secondGrass.y,
-    allowed,
-    maxX,
-    maxY,
-  );
-}
+import {
+  emptyBfsFromGate,
+  isAdjacent4,
+  findPrevDifferentIdx,
+  ensureOnly4Direction,
+  addCornerPause,
+  tracePath,
+  pathBetweenCells,
+  pathBetweenGrassCells,
+} from "./pathUtils.js";
 
 // ---- 윈도우 플래너 (시간 확장 BFS + 예약) ----
 type PlannedWindow = {
@@ -651,7 +244,9 @@ function findPullOverTarget(
       const neigh = countFreeNeighbors(c, r, emptyCellSet, funnelCellSet);
       if (neigh < 3) continue;
       const dist = Math.abs(c - from[0]) + Math.abs(r - from[1]);
-      const score = dist;
+      // 그리드 쪽(아래)으로 치우쳐서 왔다갔다 줄이기: 위쪽(r < from[1])이면 페널티
+      const backwardPenalty = r < from[1] ? 20 : 0;
+      const score = dist + backwardPenalty;
       if (!best || score < best.score) best = { pos: [c, r], score };
     }
   }
@@ -897,7 +492,10 @@ export function renderGridSvg(grid: GridCell[]): string {
   const grassCells = grid.filter(
     (c) => (initialCountByKey.get(`${c.x},${c.y}`) ?? 0) > 0,
   );
-  const sheepCountCap = Math.floor(grassCells.length / 3);
+  const sheepCountCap = Math.min(
+    40, // 양 절대 상한
+    Math.floor(grassCells.length / 7),
+  );
   const inBounds = (col: number, row: number) =>
     col >= 0 && col <= maxX && row >= 0 && row <= maxY;
   const dirs4: [number, number][] = [
@@ -969,12 +567,31 @@ export function renderGridSvg(grid: GridCell[]): string {
     }
     return list;
   };
-  const grassTargetsLeft = buildGrassTargets(leftBfs.emptyOrder, centerCol - 1);
-  const grassTargetsRight = buildGrassTargets(rightBfs.emptyOrder, centerCol);
-  const sheepCount = Math.min(
+  let grassTargetsLeft = buildGrassTargets(leftBfs.emptyOrder, centerCol - 1);
+  let grassTargetsRight = buildGrassTargets(rightBfs.emptyOrder, centerCol);
+  let sheepCount = Math.min(
     sheepCountCap,
     grassTargetsLeft.length + grassTargetsRight.length,
   );
+
+  // 게이트에서 도달 가능한 잔디가 하나도 없으면, 전체 빈 칸 기준으로라도 최소 일부 잔디를 타깃으로 잡는다.
+  if (sheepCount === 0 && sheepCountCap > 0) {
+    const allEmptyCells = grid.filter(
+      (c) => (initialCountByKey.get(`${c.x},${c.y}`) ?? 0) === 0,
+    );
+    const allGrassTargets = buildGrassTargets(allEmptyCells, centerCol - 1);
+    if (allGrassTargets.length > 0) {
+      if (process.env.NODE_ENV !== "production") {
+        console.log(
+          "[renderGridSvg] no reachable grass from gates; using fallback targets:",
+          allGrassTargets.length,
+        );
+      }
+      grassTargetsLeft = allGrassTargets;
+      grassTargetsRight = [];
+      sheepCount = Math.min(sheepCountCap, grassTargetsLeft.length);
+    }
+  }
   // 깔때기: 수학 기반 삼각형 영역 + 스폰 칸. funnelAreaSet = 영역 전체, spawnPositions = 양별 시작 칸.
   type FunnelGen = {
     spawnPositions: [number, number][];
@@ -1300,7 +917,7 @@ export function renderGridSvg(grid: GridCell[]): string {
     () => null,
   );
 
-  const WINDOW_W = 12;
+  const WINDOW_W = 20;
 
   type SheepState = {
     pos: [number, number];
@@ -1343,7 +960,8 @@ export function renderGridSvg(grid: GridCell[]): string {
   }
 
   const positionsHistory: [number, number][][] = sheepTargets.map(() => []);
-  const maxSteps = 20000;
+  // 시뮬레이션 틱 상한: 너무 크면 현실적으로 끝이 안 날 수 있음
+  const maxSteps = 6000;
   const mealsEaten: number[] = sheepTargets.map(() => 0);
 
   const edgeKey = (a: [number, number], b: [number, number]) =>
@@ -1351,7 +969,21 @@ export function renderGridSvg(grid: GridCell[]): string {
 
   const resTable = createReservationTable();
 
+  // 시간 기반 안전장치: 렌더링에 너무 오래 걸리면 강제로 종료 (양이 움직이다 얼어 멈추지 않도록 여유 있게)
+  const SIMULATION_TIME_LIMIT_MS = 15000;
+  const simStartTime = Date.now();
+
+  console.time("[renderGridSvg] simLoop");
+  let lastTick = 0;
   for (let t = 0; t < maxSteps; t++) {
+    lastTick = t;
+    // 주기적으로 시간 초과 검사 (매 틱마다 하면 Date.now 호출 비용이 아까우므로 간격을 둠)
+    if (t % 100 === 0) {
+      const elapsed = Date.now() - simStartTime;
+      if (elapsed > SIMULATION_TIME_LIMIT_MS) {
+        break;
+      }
+    }
     let emptyDirty = false;
 
     // 오래된 예약 정리(메모리/충돌 방지): t-2 이하 삭제
@@ -1389,7 +1021,7 @@ export function renderGridSvg(grid: GridCell[]): string {
 
       const tooOld =
         reservedAtTick[i] >= 0 && t - reservedAtTick[i] > GRASS_RES_TTL;
-      const tooStuck = sheepStates[i].stuck >= 4;
+      const tooStuck = sheepStates[i].stuck >= 6;
 
       if (tooOld || tooStuck) {
         reservedGrass.delete(rk);
@@ -1466,6 +1098,7 @@ export function renderGridSvg(grid: GridCell[]): string {
     }
 
     // 가는 길 재평가: 목표가 없거나 빼앗겼을 때만 새로 잡음 (매 틱 바꾸면 뭉치고 얼음)
+    // plan이 있으면 목표를 바꾸지 않음 → 왔다갔다 반복 감소
     const availableKeysEarly = new Set(remainingGrassKeys);
     for (const k of reservedGrass.keys()) availableKeysEarly.delete(k);
     for (let i = 0; i < sheepStates.length; i++) {
@@ -1480,6 +1113,7 @@ export function renderGridSvg(grid: GridCell[]): string {
         availableKeysEarly.has(st.goalGrassKey)
       )
         continue;
+      if (st.plan.length > 0) continue;
 
       const candidates = findNearestReachableGrassCandidates(
         i,
@@ -1531,39 +1165,29 @@ export function renderGridSvg(grid: GridCell[]): string {
     const availableKeys = new Set(remainingGrassKeys);
     for (const k of reservedGrass.keys()) availableKeys.delete(k);
 
+    // needPlan 정렬: 양별 최단 거리 후보를 한 번씩만 계산 후 정렬 (O(n²) → O(n) 호출)
+    const needPlanDist = new Map<number, number>();
+    for (const i of needPlan) {
+      const cand = findNearestReachableGrassCandidates(
+        i,
+        sheepStates[i].pos,
+        availableKeys,
+        emptyCellSet,
+        funnelCellSet,
+        minFunnelRow,
+        maxX,
+        maxY,
+        byKey,
+        new Map(),
+        reservedApproach,
+        1,
+        grassEating,
+      );
+      needPlanDist.set(i, cand[0]?.dist ?? 1e9);
+    }
     needPlan.sort((a, b) => {
-      const candA = findNearestReachableGrassCandidates(
-        a,
-        sheepStates[a].pos,
-        availableKeys,
-        emptyCellSet,
-        funnelCellSet,
-        minFunnelRow,
-        maxX,
-        maxY,
-        byKey,
-        new Map(),
-        reservedApproach,
-        1,
-        grassEating,
-      );
-      const candB = findNearestReachableGrassCandidates(
-        b,
-        sheepStates[b].pos,
-        availableKeys,
-        emptyCellSet,
-        funnelCellSet,
-        minFunnelRow,
-        maxX,
-        maxY,
-        byKey,
-        new Map(),
-        reservedApproach,
-        1,
-        grassEating,
-      );
-      const distA = candA[0]?.dist ?? 1e9;
-      const distB = candB[0]?.dist ?? 1e9;
+      const distA = needPlanDist.get(a) ?? 1e9;
+      const distB = needPlanDist.get(b) ?? 1e9;
       if (distA !== distB) return distA - distB;
       return priority[a] - priority[b];
     });
@@ -1673,7 +1297,7 @@ export function renderGridSvg(grid: GridCell[]): string {
 
       if (!planned) {
         st.stuck += 1;
-        if (st.stuck >= 3) {
+        if (st.stuck >= 6) {
           const pull = findPullOverTarget(
             st.pos,
             emptyCellSet,
@@ -1863,22 +1487,35 @@ export function renderGridSvg(grid: GridCell[]): string {
     }
 
     if (remainingGrassKeys.size === 0) break;
+    // 모든 양이 식사 상한에 도달하면 조기 종료 (불필요한 틱 방지)
+    if (mealsEaten.every((m) => m >= MAX_MEALS_PER_SHEEP)) break;
+  }
+  console.timeEnd("[renderGridSvg] simLoop");
+  if (process.env.NODE_ENV !== "production") {
+    console.log(
+      "[renderGridSvg] simLoop finished at tick",
+      lastTick,
+      "remainingGrassKeys=",
+      remainingGrassKeys.size,
+    );
   }
 
   // 양들끼리 같은 칸을 공유하는지 검사 (블로킹이 제대로 되었는지)
   const collisionLog: { tick: number; cell: string; sheep: number[] }[] = [];
-  const historyLen = Math.min(...positionsHistory.map((h) => h.length));
-  for (let tick = 0; tick < historyLen; tick++) {
-    const byCell = new Map<string, number[]>();
-    for (let i = 0; i < positionsHistory.length; i++) {
-      const pos = positionsHistory[i][tick];
-      if (pos == null) continue;
-      const key = `${pos[0]},${pos[1]}`;
-      if (!byCell.has(key)) byCell.set(key, []);
-      byCell.get(key)!.push(i);
-    }
-    for (const [cell, sheep] of byCell) {
-      if (sheep.length > 1) collisionLog.push({ tick, cell, sheep });
+  if (positionsHistory.length > 0) {
+    const historyLen = Math.min(...positionsHistory.map((h) => h.length));
+    for (let tick = 0; tick < historyLen; tick++) {
+      const byCell = new Map<string, number[]>();
+      for (let i = 0; i < positionsHistory.length; i++) {
+        const pos = positionsHistory[i][tick];
+        if (pos == null) continue;
+        const key = `${pos[0]},${pos[1]}`;
+        if (!byCell.has(key)) byCell.set(key, []);
+        byCell.get(key)!.push(i);
+      }
+      for (const [cell, sheep] of byCell) {
+        if (sheep.length > 1) collisionLog.push({ tick, cell, sheep });
+      }
     }
   }
   if (collisionLog.length > 0 && process.env.NODE_ENV !== "production") {
@@ -2073,12 +1710,24 @@ export function renderGridSvg(grid: GridCell[]): string {
   const animationStyles = sheepAnimations
     .map((a: { keyframes: string }) => a.keyframes)
     .join("\n  ");
-  const sheepGroups = sheepAnimations
-    .map(
-      (a: { id: string; animationCSS: string }) =>
-        `<g class="${a.id}" style="${a.animationCSS}">${SHEEP_CONTENT}</g>`,
-    )
-    .join("\n  ");
+
+  let sheepGroups: string;
+  if (sheepAnimations.length > 0) {
+    sheepGroups = sheepAnimations
+      .map(
+        (a: { id: string; animationCSS: string }) =>
+          `<g class="${a.id}" style="${a.animationCSS}">${SHEEP_CONTENT}</g>`,
+      )
+      .join("\n  ");
+  } else {
+    // 시뮬레이션 결과 양이 한 마리도 없으면, 입구 위에 최소 1마리는 보여주자 (정적 양)
+    const fallbackCol = centerCol;
+    const fallbackRow = -1; // 입구 바로 위 대기 칸
+    const pos = getCellCenterPx(gridLeftX, gridTopY, fallbackCol, fallbackRow);
+    const sheepScale = SHEEP_WIDTH_PX / SHEEP_VIEWBOX_W / 2.5;
+    const transform = `translate(${pos.x}px, ${pos.y}px) rotate(180deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px)`;
+    sheepGroups = `<g class="sheep-fallback" transform="${transform}">${SHEEP_CONTENT}</g>`;
+  }
 
   // 입구 위 대기 칸: 깔때기 삼각형 전체(funnelAreaSet)를 길로 렌더
   const QUEUE_CELL_FILL = TILE_PATH;

@@ -11,8 +11,10 @@ const OUT_PATH = join(__dirname, "..", "assets", "live.svg");
 
 const username = process.env.GITHUB_USERNAME?.trim() || undefined;
 
+console.time("fetch+map");
 const weeks = await fetchContributionGrid(username);
 const grid = mapGrid(weeks);
+console.timeEnd("fetch+map");
 
 // 잔디 통계: 그리드 칸 수, 기여 있는 칸 수(초록), 기여 합계
 const totalCells = grid.length;
@@ -24,6 +26,8 @@ console.log("GitHub 잔디:", {
   "기여 합계": totalContributions,
 });
 
+console.time("renderGridSvg");
 const svg = renderGridSvg(grid);
+console.timeEnd("renderGridSvg");
 writeFileSync(OUT_PATH, svg, "utf-8");
 console.log("Written:", OUT_PATH);

@@ -1,0 +1,51 @@
+# 새벽 1시(KST)에 잔디 SVG 생성 후 프로필 README 저장소에 푸시
+name: Update profile README with grass SVG
+
+on:
+  schedule:
+    # KST 01:00 = UTC 16:00 (전날)
+    - cron: "0 16 * * *"
+  workflow_dispatch:
+
+jobs:
+  generate-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout green-movement
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Generate SVG
+        run: node dist/index.js
+        env:
+          GITHUB_USERNAME: ${{ secrets.GITHUB_USERNAME || github.repository_owner }}
+
+      - name: Push SVG to profile repository
+        run: |
+          REPO_OWNER="${{ github.repository_owner }}"
+          PROFILE_REPO="${REPO_OWNER}/${REPO_OWNER}"
+          mkdir -p ../profile-repo
+          git clone "https://x-access-token:${{ secrets.SEONARU_README }}@github.com/${PROFILE_REPO}.git" ../profile-repo
+          mkdir -p ../profile-repo/assets
+          cp assets/live.svg ../profile-repo/assets/
+          cd ../profile-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/live.svg
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update grass SVG [auto]"
+            git push
+          fi
