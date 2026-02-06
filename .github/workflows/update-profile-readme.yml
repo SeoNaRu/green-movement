@@ -34,8 +34,10 @@ jobs:
 
       - name: Push SVG to profile repository
         run: |
-          REPO_OWNER="${{ github.repository_owner }}"
-          PROFILE_REPO="${REPO_OWNER}/${REPO_OWNER}"
+          # 프로필 README 레포 = 사용자명/사용자명 (시크릿 없으면 green-movement 소유자 사용)
+          PROFILE_USER="${{ secrets.PROFILE_README_USERNAME || github.repository_owner }}"
+          PROFILE_REPO="${PROFILE_USER}/${PROFILE_USER}"
+          echo "Target profile repo: ${PROFILE_REPO}"
           mkdir -p ../profile-repo
           git clone "https://x-access-token:${{ secrets.SEONARU_README }}@github.com/${PROFILE_REPO}.git" ../profile-repo
           mkdir -p ../profile-repo/assets
