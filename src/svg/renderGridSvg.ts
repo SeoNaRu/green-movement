@@ -1983,33 +1983,21 @@ export function renderGridSvg(grid: GridCell[]): string {
     }
   }
 
-  // 잔디 레벨 4→0 서서히 감소용 CSS 키프레임 (시작 레벨별)
-  const grassFadeKeyframes = `
-  @keyframes grass-fade-from-4 {
-    0% { fill: ${COLORS.LEVEL_4}; }
-    25% { fill: ${COLORS.LEVEL_3}; }
-    50% { fill: ${COLORS.LEVEL_2}; }
-    75% { fill: ${COLORS.LEVEL_1}; }
-    100% { fill: ${COLORS.LEVEL_0}; }
-  }
-  @keyframes grass-fade-from-3 {
-    0% { fill: ${COLORS.LEVEL_3}; }
-    33.33% { fill: ${COLORS.LEVEL_2}; }
-    66.67% { fill: ${COLORS.LEVEL_1}; }
-    100% { fill: ${COLORS.LEVEL_0}; }
-  }
-  @keyframes grass-fade-from-2 {
-    0% { fill: ${COLORS.LEVEL_2}; }
-    50% { fill: ${COLORS.LEVEL_1}; }
-    100% { fill: ${COLORS.LEVEL_0}; }
-  }
-  @keyframes grass-fade-from-1 {
-    0% { fill: ${COLORS.LEVEL_1}; }
-    100% { fill: ${COLORS.LEVEL_0}; }
-  }`;
+  // 양 애니메이션과 같은 길이로 루프 맞춤 (잔디도 루프 시 0%에서 다시 초록)
+  const maxTotalTime =
+    positionsHistory.length === 0
+      ? 1
+      : Math.max(
+          1,
+          ...positionsHistory.map((timeline) => {
+            if (!timeline || timeline.length <= 1) return 0;
+            return (timeline.length - 1) * SHEEP_CELL_TIME;
+          }),
+        );
 
+  const grassLoopKeyframes: string[] = [];
   const rects = grid
-    .map((cell) => {
+    .map((cell, cellIndex) => {
       const px = gridLeftX + cell.x * (CELL_SIZE + GAP);
       const py = gridTopY + cell.y * (CELL_SIZE + GAP);
       const key = `${cell.x},${cell.y}`;
@@ -2020,13 +2008,26 @@ export function renderGridSvg(grid: GridCell[]): string {
         const first = arrivals[0];
         const startLevel = Math.max(1, first.level);
         const fill = getColor(startLevel);
-        const anim = `animation: grass-fade-from-${startLevel} ${GRASS_FADE_DURATION}s ease-out ${first.arrivalTime}s forwards`;
+        const p1 = (first.arrivalTime / maxTotalTime) * 100;
+        const p2 =
+          ((first.arrivalTime + GRASS_FADE_DURATION) / maxTotalTime) * 100;
+        const kfName = `grass-loop-${cellIndex}`;
+        grassLoopKeyframes.push(`
+  @keyframes ${kfName} {
+    0% { fill: ${fill}; }
+    ${p1}% { fill: ${fill}; }
+    ${p2}% { fill: ${COLORS.LEVEL_0}; }
+    100% { fill: ${COLORS.LEVEL_0}; }
+  }`);
+        const anim = `animation: ${kfName} ${maxTotalTime}s linear 0s infinite`;
         return `<rect x="${px}" y="${py}" width="${CELL_SIZE}" height="${CELL_SIZE}" fill="${fill}" rx="${BORDER_RADIUS}" style="${anim}"/>`;
       }
       const color = getColor(level);
       return `<rect x="${px}" y="${py}" width="${CELL_SIZE}" height="${CELL_SIZE}" fill="${color}" rx="${BORDER_RADIUS}"/>`;
     })
     .join("\n  ");
+
+  const grassFadeKeyframes = grassLoopKeyframes.join("");
 
   const CORNER_PAUSE = 0.18;
 
@@ -2118,7 +2119,7 @@ export function renderGridSvg(grid: GridCell[]): string {
     for (let fi = 0; fi < totalFrames; fi++) {
       const f = frames[fi];
       const { x, y } = getCellCenterPx(gridLeftX, gridTopY, f.x, f.y);
-      const percent = totalTime > 0 ? (f.t * 100) / totalTime : 0;
+      const percent = maxTotalTime > 0 ? (f.t * 100) / maxTotalTime : 0;
       const pct = percent.toFixed(4);
       keyframeEntries.push(
         `${pct}% { transform: translate(${x}px, ${y}px) rotate(${f.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); }`,
@@ -2134,7 +2135,7 @@ export function renderGridSvg(grid: GridCell[]): string {
       keyframes: `@keyframes sheep-${si}-move {\n    ${keyframeEntries.join(
         "\n    ",
       )}\n  }`,
-      animationCSS: `${initialTransform}animation: sheep-${si}-move ${totalTime}s linear 0s forwards;`,
+      animationCSS: `${initialTransform}animation: sheep-${si}-move ${maxTotalTime}s linear 0s infinite;`,
     };
   });
 
