@@ -16,6 +16,7 @@ import {
   waitTicks,
   MAX_MEALS_PER_SHEEP,
   GRASS_RES_TTL,
+  RESERVE_AHEAD_LIMIT,
   SHEEP_CONTENT,
   SHEEP_VIEWBOX_CX,
   SHEEP_VIEWBOX_CY,
@@ -149,9 +150,16 @@ function planWindowed(
       if (!inBounds(nc, nr)) continue;
       if (!passable(nc, nr)) continue;
 
-      if (!isCellFree(res, nt, nc, nr, self)) continue;
-
-      if (!reserveEdgePreview(res, cur.t, [cur.c, cur.r], [nc, nr], self))
+      // 입구(깔때기) 셀은 다른 양 예약을 무시해 뒤쪽 양이 항상 경로를 찾을 수 있게 함
+      // 단, row -1은 실제 병목 구간이므로 예약을 준수해야 충돌/정체가 줄어든다.
+      const inFunnel = nr < -1; // -2 이하만 \"예약 무시\"
+      const fromFunnel = cur.r < -1;
+      if (!inFunnel && !isCellFree(res, nt, nc, nr, self)) continue;
+      // 깔때기 안에서는 엣지 예약도 무시 (입구 정체 완화)
+      if (
+        !(inFunnel || fromFunnel) &&
+        !reserveEdgePreview(res, cur.t, [cur.c, cur.r], [nc, nr], self)
+      )
         continue;
 
       const k = key3(nc, nr, nt);
@@ -445,6 +453,28 @@ function buildPathFromToGrass(
   return [...p1, ...p2];
 }
 
+// 현재 위치와 목표 잔디까지의 ETA(틱 수)를 대략 계산한다.
+// - 우선: 미리 계산해 둔 targetBfsLen(게이트 기준 거리)을 사용
+// - 보정: 현재 위치까지의 맨해튼 거리, 게이트·퍼널에 있으면 살짝 가중치
+function estimateEtaTicks(
+  from: [number, number],
+  target: { grass: GridCell },
+  targetBfsLen: Map<string, number>,
+): number {
+  const key = `${target.grass.x},${target.grass.y}`;
+  const base = targetBfsLen.get(key) ?? 0;
+  const dx = Math.abs(from[0] - target.grass.x);
+  const dy = Math.abs(from[1] - target.grass.y);
+  const manhattanFromSelf = dx + dy;
+
+  // 퍼널/게이트 부근이면 살짝 패널티를 줘서,
+  // 이미 안쪽에 들어간 양에게 조금 더 유리하게.
+  const inFunnelOrGate = from[1] <= 0;
+  const funnelPenalty = inFunnelOrGate ? 1 : 0;
+
+  return base + manhattanFromSelf + funnelPenalty;
+}
+
 /**
  * Generate SVG matching GitHub contribution grid EXACTLY.
  * Uses GitHub's official sizing, colors, and quartile-based level calculation.
@@ -585,6 +615,7 @@ export function renderGridSvg(grid: GridCell[]): string {
   );
 
   // 게이트에서 도달 가능한 잔디가 하나도 없으면, 전체 빈 칸 기준으로라도 최소 일부 잔디를 타깃으로 잡는다.
+  let isFallback = false;
   if (sheepCount === 0 && sheepCountCap > 0) {
     const allEmptyCells = grid.filter(
       (c) => (initialCountByKey.get(`${c.x},${c.y}`) ?? 0) === 0,
@@ -597,9 +628,25 @@ export function renderGridSvg(grid: GridCell[]): string {
           allGrassTargets.length,
         );
       }
-      grassTargetsLeft = allGrassTargets;
-      grassTargetsRight = [];
-      sheepCount = Math.min(sheepCountCap, grassTargetsLeft.length);
+      isFallback = true;
+      // 오른쪽 입구 양이 아래·오른쪽 잔디를 먼저 차지하도록, 잔디를 왼쪽/오른쪽 게이트에 가까운 쪽으로 나눔
+      const distToLeft = (g: GridCell) => Math.abs(g.x - (centerCol - 1)) + g.y;
+      const distToRight = (g: GridCell) => Math.abs(g.x - centerCol) + g.y;
+      const leftPart: typeof allGrassTargets = [];
+      const rightPart: typeof allGrassTargets = [];
+      for (const t of allGrassTargets) {
+        if (distToLeft(t.grass) <= distToRight(t.grass)) {
+          leftPart.push(t);
+        } else {
+          rightPart.push({ ...t, gateCol: centerCol });
+        }
+      }
+      grassTargetsLeft = leftPart;
+      grassTargetsRight = rightPart;
+      sheepCount = Math.min(
+        sheepCountCap,
+        grassTargetsLeft.length + grassTargetsRight.length,
+      );
     }
   }
   // 깔때기: 수학 기반 삼각형 영역 + 스폰 칸. funnelAreaSet = 영역 전체, spawnPositions = 양별 시작 칸.
@@ -624,6 +671,9 @@ export function renderGridSvg(grid: GridCell[]): string {
     const bufferRow1 = -1;
     for (let c = gateMin; c <= gateMax; c++)
       funnelAreaSet.add(key(c, bufferRow1));
+    // 스폰은 입구 바로 위(row -1)부터: 처음 두 마리는 실제 입구 두 칸에 서 있는 상태로 시작
+    if (sheepCount > 0) spawnPositions.push([gateMin, bufferRow1]);
+    if (sheepCount > 1) spawnPositions.push([gateMax, bufferRow1]);
 
     const bufferRow2 = -2;
     let b2Start = gateMin - 1;
@@ -682,35 +732,46 @@ export function renderGridSvg(grid: GridCell[]): string {
     emptyNeighbor: GridCell;
     gateCol: number;
   };
-  // 잔디 한 칸당 양 한 마리만: 먼저 차지한 양이 있으면 다른 잔디를 찾음
-  const assignedGrass = new Set<string>();
+  // 초기 배정: 입구에 가까운 양부터, 입구에서 가까운 잔디를 순서대로 1:1 배정 (흐름이 잘 나가도록)
   const grassKey = (g: GridCell) => `${g.x},${g.y}`;
-  const pickFirstFree = (
-    list: TargetWithGate[],
-  ): TargetWithGate | undefined => {
-    for (const item of list) {
-      if (!assignedGrass.has(grassKey(item.grass))) {
-        assignedGrass.add(grassKey(item.grass));
-        return item;
-      }
-    }
-    return undefined;
-  };
+  const allTargets: TargetWithGate[] = [
+    ...grassTargetsLeft,
+    ...grassTargetsRight,
+  ];
+  const targetBfsLen = new Map<string, number>();
+  for (const t of allTargets) {
+    const d = isFallback
+      ? Math.abs(t.grass.x - t.gateCol) + t.grass.y
+      : (() => {
+          const path = tracePath(
+            t.emptyNeighbor.x,
+            t.emptyNeighbor.y,
+            t.gateCol === centerCol - 1 ? leftBfs.parent : rightBfs.parent,
+          );
+          return path.length + 1;
+        })();
+    targetBfsLen.set(grassKey(t.grass), d);
+  }
+  // 잔디를 입구(게이트)에서 가까운 순으로 정렬 (왼쪽/오른쪽 줄 각각)
+  // 같은 거리면 "바로 아래·바로 옆" 우선: 아래(row 작을수록) → 왼쪽은 더 왼쪽, 오른쪽은 더 오른쪽
+  const sortedLeftByDist = [...grassTargetsLeft].sort((a, b) => {
+    const da = targetBfsLen.get(grassKey(a.grass)) ?? 0;
+    const db = targetBfsLen.get(grassKey(b.grass)) ?? 0;
+    if (da !== db) return da - db;
+    if (a.grass.y !== b.grass.y) return a.grass.y - b.grass.y; // 아래(작은 y) 먼저
+    return a.grass.x - b.grass.x; // 왼쪽(작은 x) 먼저
+  });
+  const sortedRightByDist = [...grassTargetsRight].sort((a, b) => {
+    const da = targetBfsLen.get(grassKey(a.grass)) ?? 0;
+    const db = targetBfsLen.get(grassKey(b.grass)) ?? 0;
+    if (da !== db) return da - db;
+    if (a.grass.y !== b.grass.y) return a.grass.y - b.grass.y; // 아래 먼저
+    return b.grass.x - a.grass.x; // 오른쪽(큰 x) 먼저
+  });
+  // 입구 두 칸에 도착한 양부터 가까운 잔디 순으로 배정 (깔때기에서는 배정 안 함)
   const sheepTargetsWithEmpty: (TargetWithGate | undefined)[] = new Array(
     sheepCount,
   );
-  for (let idx = 0; idx < queueOrderEarly.length; idx++) {
-    const i = queueOrderEarly[idx];
-    const [fcol, frow] = funnelPositionsEarly[i];
-    const entryGate =
-      frow === -1 ? fcol : Math.max(gateColMin, Math.min(gateColMax, fcol));
-    const preferred =
-      entryGate === centerCol - 1 ? grassTargetsLeft : grassTargetsRight;
-    const other =
-      entryGate === centerCol - 1 ? grassTargetsRight : grassTargetsLeft;
-    const item = pickFirstFree(preferred) ?? pickFirstFree(other);
-    if (item) sheepTargetsWithEmpty[i] = item;
-  }
   const queueHeight = -minFunnelRow * (CELL_SIZE + GAP);
   const totalHeight = baseHeight + queueHeight;
 
@@ -778,16 +839,17 @@ export function renderGridSvg(grid: GridCell[]): string {
 
   const fenceRects = fencePieces.join("\n  ");
 
-  const validIndices = Array.from({ length: sheepCount }, (_, i) => i).filter(
-    (i) => sheepTargetsWithEmpty[i] != null,
+  // 시뮬레이션은 전체 양(sheepCount) 기준; 애니메이션은 배정받은 양만
+  const validIndices = Array.from({ length: sheepCount }, (_, i) => i);
+  const sheepTargets = validIndices.map(
+    (i) => sheepTargetsWithEmpty[i]?.grass as GridCell | undefined,
   );
-  const actualSheepCount = validIndices.length;
-  const sheepTargets = validIndices.map((i) => sheepTargetsWithEmpty[i]!.grass);
   // 양 이미지 크기 조정 숫자가 작을수록 크게 보임
   const sheepScale = SHEEP_WIDTH_PX / SHEEP_VIEWBOX_W / 2.5;
-  // 경로: 자기 입구에서 BFS한 parent 사용 → 4방향만, 대각선 없음
+  // 경로는 배정 후에만 의미 있음 (애니메이션은 시뮬 종료 후 assignedIndices 기준으로 생성)
   const paths = validIndices.map((i) => {
-    const t = sheepTargetsWithEmpty[i]!;
+    const t = sheepTargetsWithEmpty[i];
+    if (!t) return [];
     return tracePath(
       t.emptyNeighbor.x,
       t.emptyNeighbor.y,
@@ -795,7 +857,7 @@ export function renderGridSvg(grid: GridCell[]): string {
     ).concat([[t.grass.x, t.grass.y]]);
   });
 
-  const funnelPositions = validIndices.map((i) => funnelPositionsEarly[i]);
+  const funnelPositions = funnelPositionsEarly;
   function funnelToGate(col: number, fromRow: number): [number, number][] {
     const path: [number, number][] = [];
     let c = Math.max(0, Math.min(maxX, col));
@@ -907,10 +969,10 @@ export function renderGridSvg(grid: GridCell[]): string {
 
   const reservedGrass = new Map<string, number>(); // grassKey -> sheepIndex
   const reservedBySheep: (string | null)[] = Array.from(
-    { length: sheepTargets.length },
+    { length: sheepCount },
     () => null,
   );
-  const reservedAtTick: number[] = new Array(sheepTargets.length).fill(-1);
+  const reservedAtTick: number[] = new Array(sheepCount).fill(-1);
 
   function releaseGrassReservation(i: number) {
     const rk = reservedBySheep[i];
@@ -920,12 +982,53 @@ export function renderGridSvg(grid: GridCell[]): string {
     reservedAtTick[i] = -1;
   }
 
+  // 특정 잔디(gk)를 sheepIndex에게 넘겨주는 공통 헬퍼.
+  // 이미 다른 양이 예약/이동 중이라도, 여기서 예약/목표를 해제하고 양보시키고,
+  // sheepIndex가 새 주인이 되도록 만든다.
+  function assignGrassToSheep(
+    sheepIndex: number,
+    grassKey: string,
+    tick: number,
+    availableKeysEarly: Set<string>,
+  ) {
+    const currentOwner = reservedGrass.get(grassKey);
+    if (currentOwner != null && currentOwner !== sheepIndex) {
+      // 기존 주인은 잔디를 양보하고 목표/경로를 다시 잡게 만든다.
+      if (tick < 200) {
+        console.log(
+          `[gate-steal] t=${tick} grass=${grassKey} from=sheep-${currentOwner} to=sheep-${sheepIndex}`,
+        );
+      }
+      releaseGrassReservation(currentOwner);
+      const ownerState = sheepStates[currentOwner];
+      ownerState.goalGrassKey = null;
+      ownerState.plan = [];
+    }
+    if (
+      reservedBySheep[sheepIndex] &&
+      reservedBySheep[sheepIndex] !== grassKey
+    ) {
+      releaseGrassReservation(sheepIndex);
+    }
+    const st = sheepStates[sheepIndex];
+    st.goalGrassKey = grassKey;
+    st.plan = [];
+    reservedGrass.set(grassKey, sheepIndex);
+    reservedBySheep[sheepIndex] = grassKey;
+    reservedAtTick[sheepIndex] = tick;
+    availableKeysEarly.delete(grassKey);
+  }
+
   type ApproachRes = { owner: number; tick: number; dist: number };
   const reservedApproach = new Map<string, ApproachRes>();
   const reservedApproachBySheep: (string | null)[] = Array.from(
-    { length: sheepTargets.length },
+    { length: sheepCount },
     () => null,
   );
+  // 전역 idle 시간: 어떤 칸이든 제자리면 +1, 움직이면 0
+  const idleTicks: number[] = new Array(sheepCount).fill(0);
+  // 입구(row -1, 0)에서 제자리인 틱 수: 입구 전용 병목 감지용
+  const gateIdleTicks: number[] = new Array(sheepCount).fill(0);
 
   const WINDOW_W = 20;
 
@@ -946,6 +1049,10 @@ export function renderGridSvg(grid: GridCell[]): string {
     stuck: 0,
     eatingGrassKey: null,
   }));
+  // 각 양이 처음 깔때기에서 어느 쪽(왼/오른쪽) 레인에 있었는지 고정 저장
+  const sheepLane: ("L" | "R")[] = funnelPositions.map(([c]) =>
+    c < centerCol ? "L" : "R",
+  );
 
   // 출발 순서: (1) 양1·양2 row -1 → (2) 양4·양5 입구 위 → (3) 양3·양6 양옆.
   // "다음 칸에 양이 지나가고 있으면, 그 칸이 완전히 비워질 때까지 확실히 멈췄다가 이동"을 위해
@@ -969,9 +1076,12 @@ export function renderGridSvg(grid: GridCell[]): string {
     priority[queueOrder[rank]] = rank;
   }
 
-  const positionsHistory: [number, number][][] = sheepTargets.map(() => []);
-  // 시뮬레이션 틱 상한: 너무 크면 현실적으로 끝이 안 날 수 있음
-  const maxSteps = 6000;
+  const positionsHistory: [number, number][][] = Array.from(
+    { length: sheepCount },
+    () => [],
+  );
+  // 시뮬레이션 틱 상한: SVG 제한 때문에 중간에 멈추지 않도록 넉넉히
+  const maxSteps = 12000;
   const mealsEaten: number[] = sheepTargets.map(() => 0);
 
   const edgeKey = (a: [number, number], b: [number, number]) =>
@@ -980,7 +1090,7 @@ export function renderGridSvg(grid: GridCell[]): string {
   const resTable = createReservationTable();
 
   // 시간 기반 안전장치: 렌더링에 너무 오래 걸리면 강제로 종료 (양이 움직이다 얼어 멈추지 않도록 여유 있게)
-  const SIMULATION_TIME_LIMIT_MS = 15000;
+  const SIMULATION_TIME_LIMIT_MS = 45000;
   const simStartTime = Date.now();
 
   console.time("[renderGridSvg] simLoop");
@@ -999,10 +1109,111 @@ export function renderGridSvg(grid: GridCell[]): string {
     // 오래된 예약 정리(메모리/충돌 방지): t-2 이하 삭제
     resTable.cell.delete(t - 2);
     resTable.edge.delete(t - 2);
+    // 접근칸 예약은 한 틱만 의미가 있으므로, 매 틱 전체를 비워서 오래된 접근 예약 때문에 길이 영원히 막히는 문제 방지
+    reservedApproach.clear();
+    for (let i = 0; i < reservedApproachBySheep.length; i++) {
+      reservedApproachBySheep[i] = null;
+    }
 
     // 현재 점유는 매 틱 확정 예약(동일 tick)
     for (let i = 0; i < sheepStates.length; i++) {
       reserveCell(resTable, t, sheepStates[i].pos[0], sheepStates[i].pos[1], i);
+    }
+
+    // 깔때기 대기 중(row -2 이하)에는 배정 안 함. row -1 도착 시에만 가장 가까운 잔디 배정.
+    // 왼쪽 입구 → 자기한테 가장 가까운 잔디(나가면 row -1 비움), 오른쪽 입구 → 자기 위치에서 가장 가까운 잔디.
+    const eatingCellSetForAssign = new Set(grassEating.keys());
+    const gateSheep = Array.from(
+      { length: sheepStates.length },
+      (_, i) => i,
+    ).filter(
+      (i) => sheepStates[i].pos[1] === -1 && sheepTargetsWithEmpty[i] == null,
+    );
+    // 왼쪽 먼저 배정 → 왼쪽 양이 가장 가까운 잔디 받고 출발하면 row -1 비움 → row -2 중앙 양들이 내려와서 배정받음
+    gateSheep.sort((a, b) => {
+      const [ca, cb] = [sheepStates[a].pos[0], sheepStates[b].pos[0]];
+      if (ca !== cb) return ca - cb; // 왼쪽 게이트 먼저
+      return a - b;
+    });
+    if (gateSheep.length > 0) {
+      const atLeft = gateSheep.filter(
+        (i) => sheepStates[i].pos[0] === gateColMin,
+      );
+      const atRight = gateSheep.filter(
+        (i) => sheepStates[i].pos[0] === gateColMax,
+      );
+      const fmt = (indices: number[]) =>
+        "[" + indices.map((i) => `양${i + 1}`).join(",") + "]";
+      console.log(`t=${t} 입구 왼쪽: ${fmt(atLeft)}, 오른쪽: ${fmt(atRight)}`);
+    }
+    // 입구/바로 아래에 있는 양들의 상태 스냅샷 (초반 200틱만), 어느 쪽에서 얼마나 멈춰 있는지 확인용
+    if (t < 200) {
+      const gateRegion: string[] = [];
+      for (let i = 0; i < sheepStates.length; i++) {
+        const st = sheepStates[i];
+        if (st.pos[1] === -1 || st.pos[1] === 0) {
+          const side =
+            st.pos[0] <= centerCol - 1
+              ? "L"
+              : st.pos[0] >= centerCol
+                ? "R"
+                : "M";
+          gateRegion.push(
+            `양${i + 1}@${st.pos[0]},${st.pos[1]} side=${side} stuck=${st.stuck} goal=${st.goalGrassKey}`,
+          );
+        }
+      }
+      if (gateRegion.length > 0) {
+        console.log(`[gate-snapshot] t=${t} ${gateRegion.join(" | ")}`);
+      }
+    }
+    for (const i of gateSheep) {
+      const from: [number, number] = [
+        sheepStates[i].pos[0],
+        sheepStates[i].pos[1],
+      ];
+      let assigned = false;
+      // 왼쪽 입구 → 자기한테 가장 가까운 잔디, 오른쪽 입구 → 자기 위치에서 가장 가까운 잔디 (각각 거리순 후보)
+      const isLeftGate = from[0] === gateColMin;
+      const candidatesForLane = isLeftGate
+        ? [...sortedLeftByDist, ...sortedRightByDist]
+        : [...sortedRightByDist, ...sortedLeftByDist];
+      for (const item of candidatesForLane) {
+        const gk = grassKey(item.grass);
+        if (reservedGrass.has(gk)) continue;
+        if (!remainingGrassKeys.has(gk)) continue;
+        const goal: [number, number] = [item.grass.x, item.grass.y];
+        const planned = planWindowed(
+          i,
+          from,
+          t,
+          goal,
+          WINDOW_W,
+          emptyCellSet,
+          funnelCellSet,
+          minFunnelRow,
+          maxX,
+          maxY,
+          resTable,
+          eatingCellSetForAssign,
+        );
+        if (planned) {
+          sheepTargetsWithEmpty[i] = item;
+          sheepStates[i].goalGrassKey = gk;
+          reservedGrass.set(gk, i);
+          reservedBySheep[i] = gk;
+          reservedAtTick[i] = t;
+          assigned = true;
+          break;
+        }
+      }
+      if (!assigned && t < 50) {
+        console.log(
+          `[gate-assign-fail] t=${t} sheep=${i} pos=${from[0]},${from[1]} lane=${
+            isLeftGate ? "L" : "R"
+          }`,
+        );
+      }
     }
 
     // 먹기 완료된 잔디를 실제 길(count=0)로 확정
@@ -1055,6 +1266,8 @@ export function renderGridSvg(grid: GridCell[]): string {
       } else {
         st.eatingGrassKey = null;
         st.eatUntil = -1;
+        st.goalGrassKey = null;
+        st.plan = [];
       }
     }
 
@@ -1108,7 +1321,7 @@ export function renderGridSvg(grid: GridCell[]): string {
     }
 
     // 가는 길 재평가: 목표가 없거나 빼앗겼을 때만 새로 잡음 (매 틱 바꾸면 뭉치고 얼음)
-    // plan이 있으면 목표를 바꾸지 않음 → 왔다갔다 반복 감소
+    // 다만 입구 주변(row -1, 0)에서 오래 멈춰(stuck) 있으면, 기존 목표/예약을 버리고 다시 계산해서 얼타는 양 제거
     const availableKeysEarly = new Set(remainingGrassKeys);
     for (const k of reservedGrass.keys()) availableKeysEarly.delete(k);
     for (let i = 0; i < sheepStates.length; i++) {
@@ -1117,6 +1330,72 @@ export function renderGridSvg(grid: GridCell[]): string {
       if (t < st.eatUntil) continue;
       if (mealsEaten[i] >= MAX_MEALS_PER_SHEEP) continue;
       if (remainingGrassKeys.size === 0) continue;
+      const nearGate = st.pos[1] === -1 || st.pos[1] === 0;
+      const gateIdle = gateIdleTicks[i] >= 2;
+      const globalIdle = idleTicks[i] >= 6;
+
+      // --- 전역 idle 기반 ETA 비교 & 목표 재배정 (ETA-steal) ---
+      // 1) 이 양이 2틱 이상 거의 안 움직였고(전역 idle),
+      // 2) 목표가 잔디이고,
+      // 3) 같은 잔디를 노리는 "아직 먹기 시작하지 않은" 다른 양이 있는데 그 양보다 ETA가 더 좋으면,
+      //    그 잔디를 "뺏어 온다". (이미 먹고 있는 잔디는 절대 뺏지 않는다)
+      if (idleTicks[i] >= 2 && st.goalGrassKey != null) {
+        const currentKey = st.goalGrassKey;
+        const owner = reservedGrass.get(currentKey);
+        if (owner != null && owner !== i) {
+          // 이미 누가 먹기 시작한 잔디면, 남은 양은 도중에 잔디가 사라져 보이므로 스틸 금지
+          if (grassEating.has(currentKey)) {
+            continue;
+          }
+          const ownerState = sheepStates[owner];
+          if (ownerState.eatingGrassKey === currentKey) {
+            continue;
+          }
+          const targetCell = byKey.get(currentKey);
+          if (targetCell) {
+            const target = { grass: targetCell };
+            const etaSelf = estimateEtaTicks(st.pos, target, targetBfsLen);
+            const etaOwner = estimateEtaTicks(
+              ownerState.pos,
+              target,
+              targetBfsLen,
+            );
+            if (etaSelf + 1 < etaOwner) {
+              // 이 양이 더 빨리 도착할 수 있으면, 목표를 뺏어온다.
+              assignGrassToSheep(i, currentKey, t, availableKeysEarly);
+            }
+          }
+        }
+      }
+
+      // 입구 근처에서 오래(2틱 이상) 멈춰 있으면, 현재 목표/예약을 버리고 다시 가장 좋은 잔디를 찾는다
+      if (gateIdle) {
+        if (t < 200) {
+          console.log(
+            `[gate-stuck] t=${t} sheep=${i} pos=${st.pos[0]},${st.pos[1]} idle=${gateIdleTicks[i]} goal=${st.goalGrassKey}`,
+          );
+        }
+        if (reservedBySheep[i]) {
+          releaseGrassReservation(i);
+        }
+        st.goalGrassKey = null;
+        st.plan = [];
+      }
+
+      // 필드 어디서든 10틱 이상 거의 안 움직인 양은,
+      // 현재 목표/예약을 비우고 전체 잔디 기준으로 다시 탐색하게 만들어 "중간에 멈춰 있는" 상태를 없앤다.
+      if (!nearGate && globalIdle) {
+        if (t < 200) {
+          console.log(
+            `[global-stuck] t=${t} sheep=${i} pos=${st.pos[0]},${st.pos[1]} idle=${idleTicks[i]} goal=${st.goalGrassKey}`,
+          );
+        }
+        if (reservedBySheep[i]) {
+          releaseGrassReservation(i);
+        }
+        st.goalGrassKey = null;
+        st.plan = [];
+      }
       if (
         st.goalGrassKey &&
         st.plan.length > 0 &&
@@ -1125,10 +1404,22 @@ export function renderGridSvg(grid: GridCell[]): string {
         continue;
       if (st.plan.length > 0) continue;
 
+      // 기본적으로는 availableKeysEarly를 쓰되,
+      // - 입구 근처에서 2틱 이상 대기한 양(gateIdle && t<12) 이나
+      // - 필드 어디서든 10틱 이상 거의 안 움직인 양(globalIdle)
+      // 은 이미 다른 양이 예약한 잔디까지 포함해(remainingGrassKeys 전체) 다시 탐색하고,
+      // 그 잔디의 현재 주인에게서 양보를 받아올 수 있게 한다.
+      let availableForThisSheep: Set<string>;
+      if ((gateIdle && t < 12) || (!nearGate && globalIdle)) {
+        availableForThisSheep = new Set(remainingGrassKeys);
+      } else {
+        availableForThisSheep = availableKeysEarly;
+      }
+
       const candidates = findNearestReachableGrassCandidates(
         i,
         st.pos,
-        availableKeysEarly,
+        availableForThisSheep,
         emptyCellSet,
         funnelCellSet,
         minFunnelRow,
@@ -1140,18 +1431,11 @@ export function renderGridSvg(grid: GridCell[]): string {
         1,
         grassEating,
       );
-      if (
-        candidates.length > 0 &&
-        `${candidates[0].grass.x},${candidates[0].grass.y}` !== st.goalGrassKey
-      ) {
-        releaseGrassReservation(i);
+      if (candidates.length > 0) {
         const gk = `${candidates[0].grass.x},${candidates[0].grass.y}`;
-        st.goalGrassKey = gk;
-        st.plan = [];
-        reservedGrass.set(gk, i);
-        reservedBySheep[i] = gk;
-        reservedAtTick[i] = t;
-        availableKeysEarly.delete(gk);
+        if (gk !== st.goalGrassKey) {
+          assignGrassToSheep(i, gk, t, availableKeysEarly);
+        }
       }
     }
 
@@ -1159,48 +1443,19 @@ export function renderGridSvg(grid: GridCell[]): string {
     const needPlan: number[] = [];
     for (let i = 0; i < sheepStates.length; i++) {
       if (mealsEaten[i] >= MAX_MEALS_PER_SHEEP) continue;
+      const st = sheepStates[i];
+      if (st.goalGrassKey == null) {
+        if (st.plan.length === 0) needPlan.push(i);
+        continue;
+      }
       if (remainingGrassKeys.size === 0) continue;
 
-      const st = sheepStates[i];
       const onGrass = isOnGrass(st.pos, byKey);
       if (t < st.eatUntil) continue;
 
-      const need =
-        st.plan.length === 0 ||
-        st.goalGrassKey == null ||
-        (onGrass && st.eatUntil === -1);
+      const need = st.plan.length === 0 || (onGrass && st.eatUntil === -1);
       if (need) needPlan.push(i);
     }
-
-    const availableKeys = new Set(remainingGrassKeys);
-    for (const k of reservedGrass.keys()) availableKeys.delete(k);
-
-    // needPlan 정렬: 양별 최단 거리 후보를 한 번씩만 계산 후 정렬 (O(n²) → O(n) 호출)
-    const needPlanDist = new Map<number, number>();
-    for (const i of needPlan) {
-      const cand = findNearestReachableGrassCandidates(
-        i,
-        sheepStates[i].pos,
-        availableKeys,
-        emptyCellSet,
-        funnelCellSet,
-        minFunnelRow,
-        maxX,
-        maxY,
-        byKey,
-        new Map(),
-        reservedApproach,
-        1,
-        grassEating,
-      );
-      needPlanDist.set(i, cand[0]?.dist ?? 1e9);
-    }
-    needPlan.sort((a, b) => {
-      const distA = needPlanDist.get(a) ?? 1e9;
-      const distB = needPlanDist.get(b) ?? 1e9;
-      if (distA !== distB) return distA - distB;
-      return priority[a] - priority[b];
-    });
 
     const occupiedNowMap = new Map<string, number>();
     for (let si = 0; si < sheepStates.length; si++) {
@@ -1209,6 +1464,58 @@ export function renderGridSvg(grid: GridCell[]): string {
         si,
       );
     }
+
+    const availableKeys = new Set(remainingGrassKeys);
+    for (const k of reservedGrass.keys()) availableKeys.delete(k);
+
+    // needPlan 정렬: 배정 전(깔때기) 양은 게이트까지 거리, 배정 후는 잔디까지 거리
+    const needPlanDist = new Map<number, number>();
+    for (const i of needPlan) {
+      const st = sheepStates[i];
+      if (!st.goalGrassKey) {
+        const gateCol = st.pos[0] < centerCol ? gateColMin : gateColMax;
+        needPlanDist.set(i, Math.abs(st.pos[0] - gateCol) + st.pos[1] + 1);
+      } else {
+        const cand = findNearestReachableGrassCandidates(
+          i,
+          st.pos,
+          availableKeys,
+          emptyCellSet,
+          funnelCellSet,
+          minFunnelRow,
+          maxX,
+          maxY,
+          byKey,
+          occupiedNowMap,
+          reservedApproach,
+          1,
+          grassEating,
+        );
+        needPlanDist.set(i, cand[0]?.dist ?? 1e9);
+      }
+    }
+    // 깔때기 안 양을 먼저 계획해 입구 정체 완화 (row 작을수록 뒤쪽)
+    // 그리드 안 양은 틱마다 계획 순서를 돌려서 한 마리만 선점하지 않게 함 (골고루 돌아다니게)
+    // 추가: 입구 근처에서 2틱 이상 제자리(gateIdle>=2)였던 양은 최우선으로 다시 경로/잔디를 가져가게 함
+    needPlan.sort((a, b) => {
+      const inFunnelA = sheepStates[a].pos[1] < 0;
+      const inFunnelB = sheepStates[b].pos[1] < 0;
+      if (inFunnelA !== inFunnelB) return inFunnelA ? -1 : 1;
+      const idleA = gateIdleTicks[a];
+      const idleB = gateIdleTicks[b];
+      const priStuckA = idleA >= 2;
+      const priStuckB = idleB >= 2;
+      if (priStuckA !== priStuckB) return priStuckA ? -1 : 1;
+      if (priStuckA && priStuckB && idleA !== idleB) return idleB - idleA;
+      const distA = needPlanDist.get(a) ?? 1e9;
+      const distB = needPlanDist.get(b) ?? 1e9;
+      if (distA !== distB) return distA - distB;
+      return (
+        ((priority[a] + t) % sheepCount) - ((priority[b] + t) % sheepCount)
+      );
+    });
+
+    const eatingCellSet = new Set(grassEating.keys());
 
     for (const i of needPlan) {
       const st = sheepStates[i];
@@ -1241,7 +1548,64 @@ export function renderGridSvg(grid: GridCell[]): string {
         continue;
       }
 
-      if (!st.goalGrassKey || !availableKeys.has(st.goalGrassKey)) {
+      // 배정 전(깔때기) 양: 목표 = 입구 한 칸 (게이트)
+      // 처음 깔때기에서 어느 쪽(왼/오른쪽)에 있었는지(sheepLane)로 레인을 고정 — 중간에 약간 치우쳐도 출발 쪽 입구로만 나감
+      const gateGoal: [number, number] =
+        sheepLane[i] === "L" ? [gateColMin, -1] : [gateColMax, -1];
+
+      if (!st.goalGrassKey) {
+        // 깔때기 안 → 게이트로만 이동
+        const planned = planWindowed(
+          i,
+          st.pos,
+          t,
+          gateGoal,
+          WINDOW_W,
+          emptyCellSet,
+          funnelCellSet,
+          minFunnelRow,
+          maxX,
+          maxY,
+          resTable,
+          eatingCellSet,
+        );
+        if (planned) {
+          let prev: [number, number] = st.pos;
+          let ok = true;
+          const reserveLimit = Math.min(
+            planned.steps.length,
+            RESERVE_AHEAD_LIMIT,
+          );
+          for (let k = 0; k < reserveLimit; k++) {
+            const tt = t + 1 + k;
+            const cur = planned.steps[k];
+            if (cur[1] < 0) {
+              prev = cur;
+              continue;
+            }
+            if (!reserveCell(resTable, tt, cur[0], cur[1], i)) {
+              ok = false;
+              break;
+            }
+            if (!reserveEdge(resTable, tt, prev, cur, i)) {
+              ok = false;
+              break;
+            }
+            prev = cur;
+          }
+          if (ok) {
+            st.plan = planned.steps;
+            st.stuck = 0;
+          } else {
+            st.stuck += 1;
+          }
+        } else {
+          st.stuck += 1;
+        }
+        continue;
+      }
+
+      if (!availableKeys.has(st.goalGrassKey)) {
         releaseGrassReservation(i);
         const candidates = findNearestReachableGrassCandidates(
           i,
@@ -1289,7 +1653,6 @@ export function renderGridSvg(grid: GridCell[]): string {
 
       const [gc, gr] = st.goalGrassKey.split(",").map(Number);
 
-      const eatingCellSet = new Set(grassEating.keys());
       let planned = planWindowed(
         i,
         st.pos,
@@ -1334,9 +1697,14 @@ export function renderGridSvg(grid: GridCell[]): string {
             if (p2) {
               let prev: [number, number] = st.pos;
               let ok = true;
-              for (let k = 0; k < p2.steps.length; k++) {
+              const limit = Math.min(p2.steps.length, RESERVE_AHEAD_LIMIT);
+              for (let k = 0; k < limit; k++) {
                 const tt = t + 1 + k;
                 const cur = p2.steps[k];
+                if (cur[1] < 0) {
+                  prev = cur;
+                  continue;
+                }
                 if (!reserveCell(resTable, tt, cur[0], cur[1], i)) {
                   ok = false;
                   break;
@@ -1361,9 +1729,14 @@ export function renderGridSvg(grid: GridCell[]): string {
 
       let prev: [number, number] = st.pos;
       let ok = true;
-      for (let k = 0; k < planned.steps.length; k++) {
+      const reserveLimit = Math.min(planned.steps.length, RESERVE_AHEAD_LIMIT);
+      for (let k = 0; k < reserveLimit; k++) {
         const tt = t + 1 + k;
         const cur = planned.steps[k];
+        if (cur[1] < 0) {
+          prev = cur;
+          continue;
+        }
         if (!reserveCell(resTable, tt, cur[0], cur[1], i)) {
           ok = false;
           break;
@@ -1404,9 +1777,10 @@ export function renderGridSvg(grid: GridCell[]): string {
     }
 
     // ---- 실행 단계 (1틱) ----
-    // t+1에 대해 priority 순서대로 "커밋 예약"하면서 이동 → 양보/겹침 해결
+    // 이동 순서를 틱마다 돌려서 한 마리만 항상 먼저 가지 않게 함 (골고루 움직이게)
     const order = Array.from({ length: sheepStates.length }, (_, i) => i).sort(
-      (a, b) => priority[a] - priority[b],
+      (a, b) =>
+        ((priority[a] + t) % sheepCount) - ((priority[b] + t) % sheepCount),
     );
 
     getCellRes(resTable, t + 1);
@@ -1431,6 +1805,27 @@ export function renderGridSvg(grid: GridCell[]): string {
       const from: [number, number] = st.pos;
       let to: [number, number] = intended;
 
+      // 입구(row -1) 또는 바로 아래(row 0)에 서 있는데 안 움직이면 → 아래 칸이 비어 있을 때 강제로 한 칸 내려가서 길 터기
+      if (
+        (from[1] === -1 || from[1] === 0) &&
+        from[1] < maxY &&
+        to[0] === from[0] &&
+        to[1] === from[1]
+      ) {
+        if (t < 200 && gateIdleTicks[i] >= 2) {
+          console.log(
+            `[gate-blocked] t=${t} sheep=${i} pos=${from[0]},${from[1]} idle=${gateIdleTicks[i]} goal=${st.goalGrassKey}`,
+          );
+        }
+        const belowKey = cellKey(from[0], from[1] + 1);
+        if (
+          !occupiedThisTick.has(belowKey) &&
+          isCellFree(resTable, t + 1, from[0], from[1] + 1, i)
+        ) {
+          to = [from[0], from[1] + 1];
+        }
+      }
+
       const toKey = cellKey(to[0], to[1]);
       const fromKey = cellKey(from[0], from[1]);
       let blockedByEating = false;
@@ -1445,6 +1840,24 @@ export function renderGridSvg(grid: GridCell[]): string {
         (to[0] !== from[0] || to[1] !== from[1]) && occupiedThisTick.has(toKey);
       if (blockedByEating || cellTakenByOther) {
         to = from;
+      }
+
+      // 최종 결정된 to를 기준으로 idle / gateIdle 계산
+      const stayedFinal = to[0] === from[0] && to[1] === from[1];
+
+      // 전역 idle 카운터: 최종적으로 한 틱이라도 안 움직였으면 +1, 움직였으면 0
+      if (stayedFinal) {
+        idleTicks[i] += 1;
+      } else {
+        idleTicks[i] = 0;
+      }
+
+      // 입구(row -1, 0)에서 최종적으로 제자리면 gateIdleTicks++, 아니면 0으로 리셋
+      const inGateRegion = from[1] === -1 || from[1] === 0;
+      if (inGateRegion && stayedFinal) {
+        gateIdleTicks[i] += 1;
+      } else {
+        gateIdleTicks[i] = 0;
       }
 
       let moved = false;
@@ -1463,6 +1876,8 @@ export function renderGridSvg(grid: GridCell[]): string {
         } else {
           reserveCell(resTable, t + 1, from[0], from[1], i);
           st.stuck += 1;
+          // 2틱 이상 막히면 계획 비우기 → 다음 틱에 재계획해 다른 경로 시도
+          if (st.stuck >= 2) st.plan = [];
           to = from;
         }
       } else {
@@ -1479,7 +1894,9 @@ export function renderGridSvg(grid: GridCell[]): string {
         const gk = k;
         const es = grassEating.get(gk);
         if (!es) {
-          grassEating.set(gk, { owner: i, doneTick: t + waitTicks });
+          // 잔디 페이드가 끝난 것을 "확인"한 뒤 한 틱 더 머물게 하기 위해
+          // waitTicks 보다 1틱 더 여유를 둔다.
+          grassEating.set(gk, { owner: i, doneTick: t + waitTicks + 1 });
           mealsEaten[i]++;
           st.eatingGrassKey = gk;
           st.eatUntil = t + waitTicks;
@@ -1613,8 +2030,12 @@ export function renderGridSvg(grid: GridCell[]): string {
 
   const CORNER_PAUSE = 0.18;
 
-  const sheepAnimations = sheepTargets.map((target: GridCell, i: number) => {
-    const timeline = positionsHistory[i];
+  const assignedIndices = Array.from(
+    { length: sheepCount },
+    (_, i) => i,
+  ).filter((i) => sheepTargetsWithEmpty[i] != null);
+  const sheepAnimations = assignedIndices.map((si: number) => {
+    const timeline = positionsHistory[si];
     const totalPoints = timeline.length;
     const totalMoves = Math.max(totalPoints - 1, 1);
     const totalTime = totalMoves * SHEEP_CELL_TIME;
@@ -1704,16 +2125,16 @@ export function renderGridSvg(grid: GridCell[]): string {
       );
     }
 
-    const [qCol, qRow] = funnelPositions[i];
+    const [qCol, qRow] = funnelPositionsEarly[si];
     const queuePosPx = getCellCenterPx(gridLeftX, gridTopY, qCol, qRow);
     const initialTransform = `transform: translate(${queuePosPx.x}px, ${queuePosPx.y}px) rotate(180deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); `;
 
     return {
-      id: `sheep-${i}`,
-      keyframes: `@keyframes sheep-${i}-move {\n    ${keyframeEntries.join(
+      id: `sheep-${si}`,
+      keyframes: `@keyframes sheep-${si}-move {\n    ${keyframeEntries.join(
         "\n    ",
       )}\n  }`,
-      animationCSS: `${initialTransform}animation: sheep-${i}-move ${totalTime}s linear 0s forwards;`,
+      animationCSS: `${initialTransform}animation: sheep-${si}-move ${totalTime}s linear 0s forwards;`,
     };
   });
 

@@ -36,6 +36,10 @@ export const APPROACH_TTL = 12;
 // 거리 기반 뺏기: 예약 후 이 틱 수 지나면, 더 가까운 양이 뺏을 수 있음
 export const APPROACH_STEAL_AFTER = 6;
 export const APPROACH_STEAL_MARGIN = 2;
+// 입구(깔때기) 셀 예약 TTL: 이 틱 수까지만 예약해 뒤쪽 양이 경로를 찾을 수 있게 함
+export const FUNNEL_RESERVATION_TICKS = 2;
+// 경로 계획 시 앞으로 예약하는 최대 틱 수 (이 값만 예약해 뒤쪽 양이 경로를 찾을 수 있게)
+export const RESERVE_AHEAD_LIMIT = 4;
 // 잔디 예약 TTL: 이 틱 수 지나면 또는 stuck이 크면 예약 해제 (너무 짧으면 왔다갔다 반복)
 export const GRASS_RES_TTL = 50;
 
