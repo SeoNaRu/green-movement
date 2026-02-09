@@ -37,7 +37,7 @@ jobs:
           REPO_OWNER="${{ github.repository_owner }}"
           PROFILE_REPO="${REPO_OWNER}/${REPO_OWNER}"
           mkdir -p ../profile-repo
-          git clone "https://x-access-token:${{ secrets.SEONARU_README }}@github.com/${PROFILE_REPO}.git" ../profile-repo
+          git clone "https://x-access-token:${{ secrets.PROFILE_README_TOKEN }}@github.com/${PROFILE_REPO}.git" ../profile-repo
           mkdir -p ../profile-repo/assets
           cp assets/live.svg ../profile-repo/assets/
           cd ../profile-repo

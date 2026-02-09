@@ -492,10 +492,20 @@ export function renderGridSvg(grid: GridCell[]): string {
   const grassCells = grid.filter(
     (c) => (initialCountByKey.get(`${c.x},${c.y}`) ?? 0) > 0,
   );
-  const sheepCountCap = Math.min(
-    40, // 양 절대 상한
-    Math.floor(grassCells.length / 7),
-  );
+  // 잔디가 별로 없는 사람도 양이 너무 적게 나오지 않도록,
+  // "잔디 수 / 3" 비율에 더해서, 잔디가 조금이라도 있으면 최소 몇 마리 이상은 보장한다.
+  const sheepCountCap = (() => {
+    const grassCount = grassCells.length;
+    if (grassCount <= 0) return 0;
+    // 기본 비율: 잔디 3칸당 양 1마리
+    const base = Math.floor(grassCount / 3);
+    // 최소 보장: 잔디가 적어도 있으면 최대 5마리까지는 잔디 칸 수만큼 허용
+    const minSheepIfAnyGrass = Math.min(5, grassCount);
+    return Math.min(
+      40, // 양 절대 상한
+      Math.max(base, minSheepIfAnyGrass),
+    );
+  })();
   const inBounds = (col: number, row: number) =>
     col >= 0 && col <= maxX && row >= 0 && row <= maxY;
   const dirs4: [number, number][] = [
@@ -581,7 +591,7 @@ export function renderGridSvg(grid: GridCell[]): string {
     );
     const allGrassTargets = buildGrassTargets(allEmptyCells, centerCol - 1);
     if (allGrassTargets.length > 0) {
-      if (process.env.NODE_ENV !== "production") {
+      if (process.env?.NODE_ENV !== "production") {
         console.log(
           "[renderGridSvg] no reachable grass from gates; using fallback targets:",
           allGrassTargets.length,
@@ -1491,7 +1501,7 @@ export function renderGridSvg(grid: GridCell[]): string {
     if (mealsEaten.every((m) => m >= MAX_MEALS_PER_SHEEP)) break;
   }
   console.timeEnd("[renderGridSvg] simLoop");
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env?.NODE_ENV !== "production") {
     console.log(
       "[renderGridSvg] simLoop finished at tick",
       lastTick,
@@ -1518,7 +1528,7 @@ export function renderGridSvg(grid: GridCell[]): string {
       }
     }
   }
-  if (collisionLog.length > 0 && process.env.NODE_ENV !== "production") {
+  if (collisionLog.length > 0 && process.env?.NODE_ENV !== "production") {
     console.warn(
       "[renderGridSvg] 양 위치 충돌: 같은 틱에 같은 칸에 2마리 이상",
       collisionLog.slice(0, 5),
