@@ -19,6 +19,7 @@ import {
   UFO_VIEWBOX,
   UFO_WIDTH_PX,
   UFO_CONTENT,
+  UFO_BEAM_DELAY_S,
 } from "../constants.js";
 import { getCellCenterPx } from "../gridLayout.js";
 import { getContributionLevel, getColor } from "../contribution.js";
@@ -82,9 +83,11 @@ export function buildGrassLayer(params: {
 export function buildUfoLayer(params: {
   funnelPositionsEarly: [number, number][];
   spawnAbsS: number[];
+  arriveAbsS: number[];
   maxTotalTime: number;
   gridLeftX: number;
   gridTopY: number;
+  beamDelayS: number;
   lightRampS: number;
   lightFadeOutS: number;
   moveStartAbsS: number[];
@@ -104,9 +107,11 @@ export function buildUfoLayer(params: {
   const {
     funnelPositionsEarly,
     spawnAbsS,
+    arriveAbsS,
     maxTotalTime,
     gridLeftX,
     gridTopY,
+    beamDelayS,
     lightRampS,
     lightFadeOutS,
     moveStartAbsS,
@@ -126,13 +131,6 @@ export function buildUfoLayer(params: {
   const pickupLight = pickupLightS ?? 0.22;
 
   const ufoCenter = UFO_WIDTH_PX / 2;
-  const travelDuration = (from: [number, number], to: [number, number]) => {
-    const dist = Math.abs(to[0] - from[0]) + Math.abs(to[1] - from[1]);
-    return Math.min(
-      UFO_MOVE_MAX_S,
-      Math.max(UFO_MOVE_MIN_S, dist * UFO_CELL_TIME),
-    );
-  };
   const dirAngle = (
     fromPx: { x: number; y: number },
     toPx: { x: number; y: number },
@@ -183,7 +181,8 @@ export function buildUfoLayer(params: {
       `0% { transform: translate(${x0}px, ${entryY}px); }`,
     );
     ufoRotKeyframePcts.push(`0% { transform: rotate(${entryAngle}deg); }`);
-    const pctArrive0 = maxTotalTime > 0 ? (ufoEntryS * 100) / maxTotalTime : 0;
+    const arrive0 = arriveAbsS[0] ?? ufoEntryS;
+    const pctArrive0 = maxTotalTime > 0 ? (arrive0 * 100) / maxTotalTime : 0;
     const angle0 =
       funnelPositionsEarly.length > 1
         ? dirAngle(
@@ -212,11 +211,7 @@ export function buildUfoLayer(params: {
         funnelPositionsEarly[1][0],
         funnelPositionsEarly[1][1],
       );
-      const travelS = travelDuration(
-        funnelPositionsEarly[0],
-        funnelPositionsEarly[1],
-      );
-      const arrive1 = stayEnd0 + travelS;
+      const arrive1 = arriveAbsS[1] ?? stayEnd0;
       const pctArrive1 = maxTotalTime > 0 ? (arrive1 * 100) / maxTotalTime : 0;
       const angle1 = dirAngle(pos0, nextPos);
       const bankTf1 = bankForDelta(pos0, nextPos);
@@ -299,11 +294,7 @@ export function buildUfoLayer(params: {
         funnelPositionsEarly[i + 1][0],
         funnelPositionsEarly[i + 1][1],
       );
-      const travelS = travelDuration(
-        funnelPositionsEarly[i],
-        funnelPositionsEarly[i + 1],
-      );
-      const arriveNext = stayEndI + travelS;
+      const arriveNext = arriveAbsS[i + 1] ?? stayEndI;
       const pctArriveNext =
         maxTotalTime > 0 ? (arriveNext * 100) / maxTotalTime : 0;
       const angleNext = dirAngle(currPos, nextPos);
@@ -490,18 +481,21 @@ export function buildUfoLayer(params: {
 
   const lightKeyframeEntries: { pct: number; opacity: number }[] = [];
   for (let i = 0; i < funnelPositionsEarly.length; i++) {
-    const t = spawnAbsS[i] ?? 0;
-    const pctArrive = maxTotalTime > 0 ? (t * 100) / maxTotalTime : 0;
-    const pctOn =
-      maxTotalTime > 0 ? ((t + lightRampS) * 100) / maxTotalTime : 0;
-    const moveStart = moveStartAbsS[i] ?? t;
+    const tArrive = arriveAbsS[i] ?? spawnAbsS[i] ?? 0;
+    const tBeamOn = tArrive + beamDelayS;
+    const tBeamFull = tBeamOn + lightRampS;
+
+    const pctOn = maxTotalTime > 0 ? (tBeamOn * 100) / maxTotalTime : 0;
+    const pctFull = maxTotalTime > 0 ? (tBeamFull * 100) / maxTotalTime : 0;
+
+    const moveStart = moveStartAbsS[i] ?? tBeamFull;
     const pctMoveStart =
       maxTotalTime > 0 ? (moveStart * 100) / maxTotalTime : 0;
     const lightOffComplete = moveStart + lightFadeOutS;
     const pctOff =
       maxTotalTime > 0 ? (lightOffComplete * 100) / maxTotalTime : 0;
-    lightKeyframeEntries.push({ pct: pctArrive, opacity: 0 });
-    lightKeyframeEntries.push({ pct: pctOn, opacity: 0.1 });
+    lightKeyframeEntries.push({ pct: pctOn, opacity: 0 });
+    lightKeyframeEntries.push({ pct: pctFull, opacity: 0.1 });
     lightKeyframeEntries.push({ pct: pctMoveStart, opacity: 0.1 });
     lightKeyframeEntries.push({ pct: pctOff, opacity: 0 });
   }

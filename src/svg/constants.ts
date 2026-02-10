@@ -43,8 +43,12 @@ export const UFO_MOVE_MIN_S = 0.75; // 0.30 -> 0.75  (핵심)
 export const UFO_MOVE_MAX_S = 1.8; // 0.80 -> 1.80
 // UFO 이동 중 방향 기울기(deg). 기본 아래(▼) 기준.
 export const UFO_TILT_DEG = 14; // 기존 8 → 12~16 권장
-// 시간 관계: waitTicks = round(GRASS_FADE_DURATION / SHEEP_CELL_TIME).
-export const waitTicks = Math.round(GRASS_FADE_DURATION / SHEEP_CELL_TIME);
+export const EAT_HOLD_MULT = 1.4; // 1.0 = 동일, 1.6 = 60% 더 머묾, 2.0 = 두 배
+// 시간 관계: waitTicks ≈ GRASS_FADE_DURATION / SHEEP_CELL_TIME (잔디 페이드 동안 양이 멈춰 있게)
+export const waitTicks = Math.max(
+  1,
+  Math.ceil((GRASS_FADE_DURATION * EAT_HOLD_MULT) / SHEEP_CELL_TIME),
+);
 // 각 양이 최대 몇 칸의 잔디를 먹을지 (전체 잔디 전부를 원하면 크게)
 export const MAX_MEALS_PER_SHEEP = 50;
 // 접근칸 예약 TTL: 이 틱 수 지나면 예약 자동 해제 (입구 독점 완화)
@@ -58,6 +62,8 @@ export const FUNNEL_RESERVATION_TICKS = 2;
 export const RESERVE_AHEAD_LIMIT = 6;
 // 잔디 예약 TTL: 이 틱 수 지나면 또는 stuck이 크면 예약 해제 (너무 짧으면 왔다갔다 반복)
 export const GRASS_RES_TTL = 80;
+// UFO가 타일 도착 후 빔 켜기까지 지연
+export const UFO_BEAM_DELAY_S = 0.2;
 
 // Sheep (assets/sheep.svg) — viewBox 0.5 0 15 12.5, 중심 (8, 6.25)
 // assets/sheep.svg 의 <g id="sheep"> 내용과 동일하게 유지해야 함.

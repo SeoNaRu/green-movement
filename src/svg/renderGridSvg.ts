@@ -12,6 +12,7 @@ import {
   UFO_CELL_TIME,
   UFO_MOVE_MIN_S,
   UFO_MOVE_MAX_S,
+  UFO_BEAM_DELAY_S,
 } from "./constants.js";
 import { getCellCenterPx, buildFencePieces } from "./gridLayout.js";
 import { emptyBfsFromSeeds, pathBetweenCells } from "./pathUtils.js";
@@ -403,15 +404,15 @@ export function renderGridSvg(grid: GridCell[]): string {
   }
 
   // UFO 한 마리씩 드롭: 양 i는 spawnTick[i] 틱에 등장 (충돌 방지 위해 간격 확보)
-  const DROP_TICKS = 16;
+  const DROP_TICKS = 8;
   const spawnTick: number[] = Array.from(
     { length: sheepCount },
     (_, i) => i * DROP_TICKS,
   );
   // UFO 드롭 타이밍: 빛 빠르게 → 양 내려옴 → 대기 → 함께 출발
-  const LIGHT_RAMP_S = 0.12;
-  const SHEEP_FADE_S = 2.0;
-  const DROP_STAY_S = 1.2;
+  const LIGHT_RAMP_S = 0.08;
+  const SHEEP_FADE_S = 0.25;
+  const DROP_STAY_S = 0.25;
   const MOVE_START_S = Math.max(DROP_STAY_S, LIGHT_RAMP_S + SHEEP_FADE_S);
   const DROP_DESCENT_PX = 0;
   // 시뮬레이션 틱 상한: SVG 제한 때문에 중간에 멈추지 않도록 넉넉히
@@ -436,6 +437,7 @@ export function renderGridSvg(grid: GridCell[]): string {
     targetBfsLen,
   });
 
+  const MAX_VISUAL_EXTRA_S = 0.25;
   const moveStartAbsS = Array.from({ length: sheepCount }, (_, i) => {
     const timeline = positionsHistory[i];
     if (!timeline || timeline.length === 0) {
@@ -450,10 +452,11 @@ export function renderGridSvg(grid: GridCell[]): string {
         break;
       }
     }
-    const extra =
+    const simExtra =
       firstMoveIdx < 0
         ? (timeline.length - 1) * SHEEP_CELL_TIME
         : (firstMoveIdx - 1) * SHEEP_CELL_TIME;
+    const extra = Math.min(MAX_VISUAL_EXTRA_S, Math.max(0, simExtra));
     return spawnTick[i] * SHEEP_CELL_TIME + MOVE_START_S + extra;
   });
 
@@ -465,51 +468,6 @@ export function renderGridSvg(grid: GridCell[]): string {
     Infinity,
   );
   const ufoLeaveAbsS: number[] = new Array(sheepCount).fill(0);
-
-  for (let i = 0; i < sheepCount; i++) {
-    const prevLeave = i === 0 ? 0 : ufoLeaveAbsS[i - 1];
-    let minSpawn = prevLeave;
-    if (i >= 1 && funnelPositionsEarly[i] && funnelPositionsEarly[i - 1]) {
-      const distCells =
-        Math.abs(funnelPositionsEarly[i][0] - funnelPositionsEarly[i - 1][0]) +
-        Math.abs(funnelPositionsEarly[i][1] - funnelPositionsEarly[i - 1][1]);
-      const travelS = Math.min(
-        UFO_MOVE_MAX_S,
-        Math.max(UFO_MOVE_MIN_S, distCells * UFO_CELL_TIME),
-      );
-      minSpawn = prevLeave + travelS;
-    }
-    visualSpawnAbsS[i] = Math.max(simSpawnAbsS[i] ?? 0, minSpawn);
-
-    readyAbsS[i] = visualSpawnAbsS[i] + (LIGHT_RAMP_S + SHEEP_FADE_S);
-
-    const simOffset = (moveStartAbsS[i] ?? 0) - (simSpawnAbsS[i] ?? 0);
-    visualMoveStartAbsS[i] = Math.max(
-      readyAbsS[i],
-      visualSpawnAbsS[i] + Math.max(0, simOffset),
-    );
-
-    const timeline = positionsHistory[i];
-    if (timeline?.length) {
-      for (let idx = 0; idx < timeline.length; idx++) {
-        const [c, r] = timeline[idx];
-        const key = `${c},${r}`;
-        if ((initialCountByKey.get(key) ?? 0) > 0) {
-          sheepFirstGrassArrivalS[i] =
-            (visualSpawnAbsS[i] ?? 0) + idx * SHEEP_CELL_TIME;
-          break;
-        }
-      }
-    }
-
-    const lightOffDone = (visualMoveStartAbsS[i] ?? 0) + LIGHT_FADE_OUT_S;
-    ufoLeaveAbsS[i] = Math.max(
-      lightOffDone,
-      sheepFirstGrassArrivalS[i] === Infinity
-        ? lightOffDone
-        : sheepFirstGrassArrivalS[i],
-    );
-  }
 
   // ---- ACTIVE SHEEP: 실제로 화면에 존재하는 양만 회수 대상으로 잡는다 ----
   const activeSheepIndices = Array.from(
@@ -534,14 +492,30 @@ export function renderGridSvg(grid: GridCell[]): string {
   });
 
   // --- [PICKUP PHASE] 추가: 모든 양이 멈춘 뒤 UFO가 회수하고 나간다 ---
-  const DROP_WAIT_S = 0.6; // 도착 후 기다렸다가 드롭
+  const DROP_WAIT_S = 0.15; // 도착 후 기다렸다가 드롭
   const PICKUP_WAIT_S = 0.35; // 회수 위치 도착 후 잠깐 대기
   const PICKUP_LIGHT_S = 0.22; // 회수 빛 켜지는 시간(짧게)
   const PICKUP_FADE_S = 0.25; // 양 사라지는 시간
-
-  const ufoArriveAbsS: number[] = visualSpawnAbsS.slice();
+  const ufoArriveAbsS: number[] = new Array(sheepCount).fill(0);
   for (let i = 0; i < sheepCount; i++) {
-    visualSpawnAbsS[i] = ufoArriveAbsS[i] + DROP_WAIT_S;
+    const prevLeave = i === 0 ? 0 : ufoLeaveAbsS[i - 1];
+    let arrive = prevLeave;
+
+    if (i >= 1 && funnelPositionsEarly[i] && funnelPositionsEarly[i - 1]) {
+      const distCells =
+        Math.abs(funnelPositionsEarly[i][0] - funnelPositionsEarly[i - 1][0]) +
+        Math.abs(funnelPositionsEarly[i][1] - funnelPositionsEarly[i - 1][1]);
+      const travelS = Math.min(
+        UFO_MOVE_MAX_S,
+        Math.max(UFO_MOVE_MIN_S, distCells * UFO_CELL_TIME),
+      );
+      arrive = prevLeave + travelS;
+    }
+
+    ufoArriveAbsS[i] = arrive;
+
+    const baseSpawn = arrive + DROP_WAIT_S;
+    visualSpawnAbsS[i] = Math.max(simSpawnAbsS[i] ?? 0, baseSpawn);
     readyAbsS[i] = visualSpawnAbsS[i] + (LIGHT_RAMP_S + SHEEP_FADE_S);
 
     const simOffset = (moveStartAbsS[i] ?? 0) - (simSpawnAbsS[i] ?? 0);
@@ -564,12 +538,8 @@ export function renderGridSvg(grid: GridCell[]): string {
     }
 
     const lightOffDone = (visualMoveStartAbsS[i] ?? 0) + LIGHT_FADE_OUT_S;
-    ufoLeaveAbsS[i] = Math.max(
-      lightOffDone,
-      sheepFirstGrassArrivalS[i] === Infinity
-        ? lightOffDone
-        : sheepFirstGrassArrivalS[i] + DROP_WAIT_S,
-    );
+    // 불빛이 완전히 꺼지면 바로 다음 위치로 이동
+    ufoLeaveAbsS[i] = lightOffDone;
   }
 
   const allSheepDoneAbsS = Math.max(0, ...sheepEndAbsSActive, ...ufoLeaveAbsS);
@@ -609,6 +579,7 @@ export function renderGridSvg(grid: GridCell[]): string {
   const timelineOffset = UFO_ENTRY_S;
   const maxTotalTimeWithEntryExit =
     Math.max(timelineOffset + maxTotalTime, pickupEndAbsS) + UFO_EXIT_S;
+  const ufoArriveAbsSOffset = ufoArriveAbsS.map((t) => t + timelineOffset);
   const spawnAbsSOffset = visualSpawnAbsS.map((s) => s + timelineOffset);
   const readyAbsSOffset = readyAbsS.map((r) => r + timelineOffset);
   const moveStartAbsSOffset = visualMoveStartAbsS.map(
@@ -717,6 +688,8 @@ export function renderGridSvg(grid: GridCell[]): string {
   const { ufoKeyframesStr, ufoLightKeyframesStr, ufoGroupStr } = buildUfoLayer({
     funnelPositionsEarly,
     spawnAbsS: spawnAbsSOffset,
+    arriveAbsS: ufoArriveAbsSOffset,
+    beamDelayS: UFO_BEAM_DELAY_S,
     maxTotalTime: maxTotalTimeWithEntryExit,
     gridLeftX,
     gridTopY,
