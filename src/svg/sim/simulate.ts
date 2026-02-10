@@ -1,4 +1,5 @@
 import type { GridCell } from "../../grid/mapGrid.js";
+import type { SheepState } from "../../domain/sheep.js";
 import {
   SHEEP_CELL_TIME,
   waitTicks,
@@ -26,14 +27,7 @@ import {
 } from "../simHelpers.js";
 import { getContributionLevel } from "../contribution.js";
 
-export type SheepState = {
-  pos: [number, number];
-  plan: [number, number][];
-  goalGrassKey: string | null;
-  eatUntil: number;
-  stuck: number;
-  eatingGrassKey: string | null;
-};
+export type { SheepState } from "../../domain/sheep.js";
 
 type EatingState = { owner: number; doneTick: number };
 

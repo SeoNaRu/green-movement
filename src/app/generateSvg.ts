@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { fetchContributionGrid } from "../github/fetchGrid.js";
 import { mapGrid } from "../grid/mapGrid.js";
-import { renderGridSvg } from "../svg/renderGridSvg.js";
+import { renderGridSvg } from "../renderGridSvg.js";
 import { writeFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";

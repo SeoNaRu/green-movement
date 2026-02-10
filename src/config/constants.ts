@@ -1,10 +1,6 @@
-// SVG 계층에서 사용하는 상수 모듈.
-// 실제 값 정의는 `src/config/constants.ts`에 있고,
-// 여기서는 그대로 re-export만 수행해 레이어 분리를 유지한다.
-
-export * from "../config/constants.js";
-
-// 공통 상수·스타일 정의
+// 공통 상수·스타일 정의 (시뮬레이션 + SVG 공용)
+// NOTE: 기존 `src/svg/constants.ts`에서 이동한 실제 소스입니다.
+//       SVG 계층은 `../svg/constants.js`를 통해 이 모듈을 재사용합니다.
 
 // GitHub official specs
 export const CELL_SIZE = 10;
@@ -88,6 +84,7 @@ export const SHEEP_CONTENT = `<g transform="translate(0,7.5) scale(1,1.25) trans
        C11.0 10.4 9.6 10.9 8.0 10.5
        Z"
     fill="#f0f0f0" stroke="#d0d0d0" stroke-width="0.5"/>
+
 </g>
 <g transform="translate(0,-1.55)">
   <!-- 머리 -->

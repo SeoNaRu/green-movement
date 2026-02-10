@@ -115,9 +115,8 @@ npm run generate
 
 ## Dev Notes
 
+- 파일 구조: `docs/FILE_STRUCTURE.md`
 - SVG 렌더링 구조: `docs/SVG_RENDER_STRUCTURE.md`
-- 그리드 레이아웃 / 울타리: `src/svg/gridLayout.ts`
-- 메인 렌더 / 시뮬레이션: `src/svg/renderGridSvg.ts`
 
 ---
 
