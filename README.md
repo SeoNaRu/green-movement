@@ -115,14 +115,14 @@ GitHub 프로필에 보이는 README는 **사용자명과 같은 이름의 공�
 
 ### 요약
 
-| 단계 | 할 일 |
-|------|--------|
-| 1 | 이 저장소 Fork 또는 Use this template |
-| 2 | 프로필용 저장소 `본인사용자명/본인사용자명` 만들기 (없으면) |
-| 3 | PAT 만들기 (repo 권한) |
-| 4 | Fork한 green-movement → Settings → Actions secrets에 `PROFILE_README_TOKEN` 추가 |
-| 5 | 프로필 README에 `![grass](https://raw.githubusercontent.com/본인사용자명/본인사용자명/main/assets/live.svg)` 넣기 |
-| 6 | 필요하면 `assets/live.svg` 한 번 수동 생성 또는 워크플로 수동 실행 |
+| 단계 | 할 일                                                                                                             |
+| ---- | ----------------------------------------------------------------------------------------------------------------- |
+| 1    | 이 저장소 Fork 또는 Use this template                                                                             |
+| 2    | 프로필용 저장소 `본인사용자명/본인사용자명` 만들기 (없으면)                                                       |
+| 3    | PAT 만들기 (repo 권한)                                                                                            |
+| 4    | Fork한 green-movement → Settings → Actions secrets에 `PROFILE_README_TOKEN` 추가                                  |
+| 5    | 프로필 README에 `![grass](https://raw.githubusercontent.com/본인사용자명/본인사용자명/main/assets/live.svg)` 넣기 |
+| 6    | 필요하면 `assets/live.svg` 한 번 수동 생성 또는 워크플로 수동 실행                                                |
 
 이렇게 하면 친구도 자기 프로필에 같은 스타일의 잔디를 넣고, 매일 자동으로 갱신할 수 있다.
 
@@ -153,4 +153,12 @@ npm run generate
 
 ---
 
-*원본 아이디어: [green-movement](https://github.com/SeoNaRu/green-movement)*
+### 개발 시 참고
+
+- **SVG 렌더링 코드 구조** (어디에 어떤 코드를 넣을지): [docs/SVG_RENDER_STRUCTURE.md](docs/SVG_RENDER_STRUCTURE.md)
+- 그리드 레이아웃·울타리: `src/svg/gridLayout.ts`
+- 메인 렌더 흐름·시뮬레이션·레이어 조립: `src/svg/renderGridSvg.ts` (섹션 주석으로 구분)
+
+---
+
+_원본 아이디어: [green-movement](https://github.com/SeoNaRu/green-movement)_

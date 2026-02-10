@@ -20,6 +20,9 @@ function dayOfWeek(dateStr: string): number {
  * For the current week (last column), only shows days up to today.
  */
 export function mapGrid(weeks: ContributionDay[][]): GridCell[] {
+  if (!Array.isArray(weeks) || weeks.length === 0) {
+    return [];
+  }
   const byKey = new Map<string, GridCell>();
 
   for (let x = 0; x < weeks.length; x++) {

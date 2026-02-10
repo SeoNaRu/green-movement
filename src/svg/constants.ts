@@ -27,21 +27,37 @@ export const FENCE_GROUP_STYLE =
 export const SHEEP_CELL_TIME = 0.5;
 // 양이 잔디에 도착한 뒤 잔디 색이 레벨 4→0으로 줄어드는 시간(초).
 export const GRASS_FADE_DURATION = 2;
+// 양이 잔디에 도착한 뒤 페이드가 시작되기까지 대기(초). 도착 전에 잔디가 사라지지 않도록.
+export const GRASS_FADE_START_DELAY = 0.4;
+// 우주선이 양이 완전히 내린 뒤(ready) 추가로 대기하는 시간(초). 양이 보인 뒤에 우주선이 움직이도록.
+export const UFO_STAY_BUFFER_S = 0.08;
+// 스펙: 우주선 밖에서 진입하는 데 걸리는 시간(초).
+export const UFO_ENTRY_S = 1.5;
+// 스펙: 잔디 다 먹은 뒤 우주선이 양 태우고 밖으로 나가는 시간(초).
+export const UFO_EXIT_S = 2;
+// 스펙: 양이 움직이기 시작할 때 불빛이 점점 꺼지는 데 걸리는 시간(초).
+export const LIGHT_FADE_OUT_S = 0.5;
+// UFO 이동: 1칸당 시간(초), 이동만 빠르게
+export const UFO_CELL_TIME = 0.14; // 0.09 -> 0.14
+export const UFO_MOVE_MIN_S = 0.75; // 0.30 -> 0.75  (핵심)
+export const UFO_MOVE_MAX_S = 1.8; // 0.80 -> 1.80
+// UFO 이동 중 방향 기울기(deg). 기본 아래(▼) 기준.
+export const UFO_TILT_DEG = 14; // 기존 8 → 12~16 권장
 // 시간 관계: waitTicks = round(GRASS_FADE_DURATION / SHEEP_CELL_TIME).
 export const waitTicks = Math.round(GRASS_FADE_DURATION / SHEEP_CELL_TIME);
 // 각 양이 최대 몇 칸의 잔디를 먹을지 (전체 잔디 전부를 원하면 크게)
 export const MAX_MEALS_PER_SHEEP = 50;
 // 접근칸 예약 TTL: 이 틱 수 지나면 예약 자동 해제 (입구 독점 완화)
-export const APPROACH_TTL = 12;
+export const APPROACH_TTL = 20;
 // 거리 기반 뺏기: 예약 후 이 틱 수 지나면, 더 가까운 양이 뺏을 수 있음
-export const APPROACH_STEAL_AFTER = 6;
-export const APPROACH_STEAL_MARGIN = 2;
+export const APPROACH_STEAL_AFTER = 12;
+export const APPROACH_STEAL_MARGIN = 4;
 // 입구(깔때기) 셀 예약 TTL: 이 틱 수까지만 예약해 뒤쪽 양이 경로를 찾을 수 있게 함
 export const FUNNEL_RESERVATION_TICKS = 2;
 // 경로 계획 시 앞으로 예약하는 최대 틱 수 (이 값만 예약해 뒤쪽 양이 경로를 찾을 수 있게)
 export const RESERVE_AHEAD_LIMIT = 6;
 // 잔디 예약 TTL: 이 틱 수 지나면 또는 stuck이 크면 예약 해제 (너무 짧으면 왔다갔다 반복)
-export const GRASS_RES_TTL = 50;
+export const GRASS_RES_TTL = 80;
 
 // Sheep (assets/sheep.svg) — viewBox 0.5 0 15 12.5, 중심 (8, 6.25)
 // assets/sheep.svg 의 <g id="sheep"> 내용과 동일하게 유지해야 함.
@@ -81,6 +97,47 @@ export const SHEEP_VIEWBOX_CX = 8;
 export const SHEEP_VIEWBOX_CY = 6.25;
 export const SHEEP_VIEWBOX_W = 15;
 export const SHEEP_WIDTH_PX = 24;
+
+// UFO (assets/ufo.svg) — viewBox 0 0 512 512, 그리드에서는 양과 같은 크기(24px)로 표시
+// assets/ufo.svg 의 내부 <g> 내용과 동일하게 유지해야 함.
+export const UFO_VIEWBOX = "0 0 512 512";
+export const UFO_WIDTH_PX = SHEEP_WIDTH_PX;
+export const UFO_Y_OFFSET = -20;
+export const UFO_CONTENT = `<g>
+  <circle cx="256" cy="256" r="200" fill="#dfe3ea" stroke="#6c7482" stroke-width="10"/>
+  <g fill="#f2f4f8" stroke="#6c7482" stroke-width="6">
+    <circle cx="256" cy="56" r="14"/><circle cx="356" cy="86" r="14"/>
+    <circle cx="426" cy="156" r="14"/><circle cx="456" cy="256" r="14"/>
+    <circle cx="426" cy="356" r="14"/><circle cx="356" cy="426" r="14"/>
+    <circle cx="256" cy="456" r="14"/><circle cx="156" cy="426" r="14"/>
+    <circle cx="86" cy="356" r="14"/><circle cx="56" cy="256" r="14"/>
+    <circle cx="86" cy="156" r="14"/><circle cx="156" cy="86" r="14"/>
+  </g>
+  <circle cx="256" cy="256" r="160" fill="none" stroke="#8a92a1" stroke-width="12"/>
+  <circle cx="256" cy="256" r="130" fill="#c9ced8" stroke="#5e6675" stroke-width="10"/>
+</g>
+<g>
+  <circle cx="256" cy="256" r="100" fill="#2c3e50" stroke="#4e5563" stroke-width="8"/>
+  <g>
+    <ellipse cx="256" cy="285" rx="50" ry="35" fill="#2ecc71"/>
+    <path d="M 256 285 Q 256 315 256 325" stroke="#27ae60" stroke-width="4" fill="none" opacity="0.6"/>
+    <ellipse cx="215" cy="290" rx="15" ry="25" fill="#2ecc71" transform="rotate(30 215 290)"/>
+    <ellipse cx="297" cy="290" rx="15" ry="25" fill="#2ecc71" transform="rotate(-30 297 290)"/>
+    <circle cx="210" cy="310" r="8" fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
+    <circle cx="302" cy="310" r="8" fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
+    <ellipse cx="256" cy="250" rx="55" ry="51" fill="#38e54d"/>
+    <ellipse cx="232" cy="264" rx="14" ry="18" fill="#0b0f14"/>
+    <ellipse cx="280" cy="264" rx="14" ry="18" fill="#0b0f14"/>
+    <circle cx="228" cy="258" r="3" fill="#ffffff" opacity="0.6"/>
+    <circle cx="276" cy="258" r="3" fill="#ffffff" opacity="0.6"/>
+  </g>
+  <path d="M 210 210 Q 256 190 302 210" stroke="#3498db" stroke-width="4" fill="none" opacity="0.7"/>
+  <circle cx="256" cy="205" r="5" fill="#e74c3c" opacity="0.8"/>
+  <circle cx="236" cy="210" r="3" fill="#f1c40f" opacity="0.8"/>
+  <circle cx="276" cy="210" r="3" fill="#2ecc71" opacity="0.8"/>
+  <circle cx="256" cy="256" r="100" fill="#85c1e9" opacity="0.3" stroke="#aed6f1" stroke-width="4"/>
+  <ellipse cx="230" cy="200" rx="60" ry="30" fill="#ffffff" opacity="0.2" transform="rotate(-20 230 200)"/>
+</g>`;
 
 // 길(이동 가능한 타일).
 export const TILE_PATH = "#161b22";

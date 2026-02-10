@@ -10,6 +10,7 @@ export function getContributionLevel(
   quartiles: number[],
 ): number {
   if (count === 0) return 0;
+  if (!quartiles || quartiles.length < 3) return 1;
   if (count < quartiles[0]) return 1;
   if (count < quartiles[1]) return 2;
   if (count < quartiles[2]) return 3;

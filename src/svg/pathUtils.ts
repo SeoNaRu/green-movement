@@ -60,6 +60,64 @@ export function emptyBfsFromGate(
 }
 
 /**
+ * 여러 시드 칸에서 BFS, 길(빈 칸)만 확장. UFO 드롭용: 게이트 없이 그리드 빈칸 전체 연결 성분.
+ */
+export function emptyBfsFromSeeds(
+  grid: GridCell[],
+  maxX: number,
+  maxY: number,
+  seeds: [number, number][],
+): { emptyOrder: GridCell[]; parent: Map<string, string | null> } {
+  const byKey = new Map<string, GridCell>();
+  for (const c of grid) byKey.set(`${c.x},${c.y}`, c);
+
+  const visited = new Set<string>();
+  const parent = new Map<string, string | null>();
+  const queue: [number, number][] = [];
+  const emptyOrder: GridCell[] = [];
+
+  const key = (col: number, row: number) => `${col},${row}`;
+  const inBounds = (col: number, row: number) =>
+    col >= 0 && col <= maxX && row >= 0 && row <= maxY;
+
+  const dirs: [number, number][] = [
+    [0, 1],
+    [1, 0],
+    [-1, 0],
+    [0, -1],
+  ];
+
+  for (const [col, row] of seeds) {
+    if (!inBounds(col, row) || visited.has(key(col, row))) continue;
+    const cell = byKey.get(key(col, row));
+    if (!cell || cell.count !== 0) continue;
+    visited.add(key(col, row));
+    parent.set(key(col, row), null);
+    emptyOrder.push(cell);
+    queue.push([col, row]);
+  }
+
+  while (queue.length > 0) {
+    const [col, row] = queue.shift()!;
+    for (const [dc, dr] of dirs) {
+      const nc = col + dc;
+      const nr = row + dr;
+      if (!inBounds(nc, nr) || visited.has(key(nc, nr))) continue;
+
+      const next = byKey.get(key(nc, nr));
+      if (!next || next.count !== 0) continue;
+
+      visited.add(key(nc, nr));
+      parent.set(key(nc, nr), key(col, row));
+      emptyOrder.push(next);
+      queue.push([nc, nr]);
+    }
+  }
+
+  return { emptyOrder, parent };
+}
+
+/**
  * 상하좌우 인접 여부 (한 칸만 차이)
  */
 export function isAdjacent4(a: [number, number], b: [number, number]): boolean {
