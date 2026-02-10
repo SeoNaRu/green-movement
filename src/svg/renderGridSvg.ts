@@ -240,8 +240,9 @@ function findPullOverTarget(
   minFunnelRow: number,
   maxX: number,
   maxY: number,
+  goal?: [number, number],
 ): [number, number] | null {
-  const radius = 4;
+  const radius = 6;
   let best: { pos: [number, number]; score: number } | null = null;
   for (let r = from[1] - radius; r <= from[1] + radius; r++) {
     if (r < minFunnelRow || r > maxY) continue;
@@ -254,7 +255,15 @@ function findPullOverTarget(
       const dist = Math.abs(c - from[0]) + Math.abs(r - from[1]);
       // 그리드 쪽(아래)으로 치우쳐서 왔다갔다 줄이기: 위쪽(r < from[1])이면 페널티
       const backwardPenalty = r < from[1] ? 20 : 0;
-      const score = dist + backwardPenalty;
+      // 목표 방향: 비켜선 칸이 목표에서 더 멀어지면 페널티 (목표 쪽으로 가깝게 비켜서기)
+      let goalPenalty = 0;
+      if (goal) {
+        const distFromToGoal =
+          Math.abs(from[0] - goal[0]) + Math.abs(from[1] - goal[1]);
+        const distCellToGoal = Math.abs(c - goal[0]) + Math.abs(r - goal[1]);
+        if (distCellToGoal > distFromToGoal) goalPenalty = 8;
+      }
+      const score = dist + backwardPenalty + goalPenalty;
       if (!best || score < best.score) best = { pos: [c, r], score };
     }
   }
@@ -380,6 +389,35 @@ function findNearestReachableGrassCandidates(
   }
 
   return results;
+}
+
+/**
+ * 후보 중 거리(가까울수록 좋음), 풍부함(initialCount 클수록 좋음), 경쟁(다른 양이 가는 잔디는 패널티)으로 최선 선택.
+ * score = dist * 2 - rich * RICHNESS_WEIGHT + (다른 양이 예약 중이면 RESERVED_BY_OTHER_PENALTY) → 낮을수록 좋음.
+ */
+const RESERVED_BY_OTHER_PENALTY = 6;
+const RICHNESS_WEIGHT = 1.5;
+
+function pickBestGrassCandidate(
+  candidates: GrassCandidate[],
+  initialCountByKey: Map<string, number>,
+  reservedGrass?: Map<string, number>,
+  selfIndex: number = -1,
+): GrassCandidate | null {
+  if (candidates.length === 0) return null;
+  const scored = candidates.map((c) => {
+    const gk = `${c.grass.x},${c.grass.y}`;
+    const rich = initialCountByKey.get(gk) ?? c.grass.count;
+    let score = c.dist * 2 - rich * RICHNESS_WEIGHT;
+    if (reservedGrass != null && selfIndex >= 0) {
+      const owner = reservedGrass.get(gk);
+      if (owner != null && owner !== selfIndex)
+        score += RESERVED_BY_OTHER_PENALTY;
+    }
+    return { c, score };
+  });
+  scored.sort((a, b) => a.score - b.score);
+  return scored[0].c;
 }
 
 /**
@@ -1030,7 +1068,7 @@ export function renderGridSvg(grid: GridCell[]): string {
   // 입구(row -1, 0)에서 제자리인 틱 수: 입구 전용 병목 감지용
   const gateIdleTicks: number[] = new Array(sheepCount).fill(0);
 
-  const WINDOW_W = 20;
+  const WINDOW_W = 30;
 
   type SheepState = {
     pos: [number, number];
@@ -1331,15 +1369,15 @@ export function renderGridSvg(grid: GridCell[]): string {
       if (mealsEaten[i] >= MAX_MEALS_PER_SHEEP) continue;
       if (remainingGrassKeys.size === 0) continue;
       const nearGate = st.pos[1] === -1 || st.pos[1] === 0;
-      const gateIdle = gateIdleTicks[i] >= 2;
+      const gateIdle = gateIdleTicks[i] >= 1;
       const globalIdle = idleTicks[i] >= 6;
 
       // --- 전역 idle 기반 ETA 비교 & 목표 재배정 (ETA-steal) ---
-      // 1) 이 양이 2틱 이상 거의 안 움직였고(전역 idle),
+      // 1) 이 양이 1틱 이상 거의 안 움직였고(전역 idle),
       // 2) 목표가 잔디이고,
       // 3) 같은 잔디를 노리는 "아직 먹기 시작하지 않은" 다른 양이 있는데 그 양보다 ETA가 더 좋으면,
       //    그 잔디를 "뺏어 온다". (이미 먹고 있는 잔디는 절대 뺏지 않는다)
-      if (idleTicks[i] >= 2 && st.goalGrassKey != null) {
+      if (idleTicks[i] >= 1 && st.goalGrassKey != null) {
         const currentKey = st.goalGrassKey;
         const owner = reservedGrass.get(currentKey);
         if (owner != null && owner !== i) {
@@ -1360,7 +1398,9 @@ export function renderGridSvg(grid: GridCell[]): string {
               target,
               targetBfsLen,
             );
-            if (etaSelf + 1 < etaOwner) {
+            // 경쟁 패널티: 다른 양이 가는 잔디는 뺏을 때 여유(2틱)를 두어 불필요한 스틸 감소
+            const stealMargin = 2;
+            if (etaSelf + stealMargin < etaOwner) {
               // 이 양이 더 빨리 도착할 수 있으면, 목표를 뺏어온다.
               assignGrassToSheep(i, currentKey, t, availableKeysEarly);
             }
@@ -1405,7 +1445,7 @@ export function renderGridSvg(grid: GridCell[]): string {
       if (st.plan.length > 0) continue;
 
       // 기본적으로는 availableKeysEarly를 쓰되,
-      // - 입구 근처에서 2틱 이상 대기한 양(gateIdle && t<12) 이나
+      // - 입구 근처에서 1틱 이상 대기한 양(gateIdle && t<12) 이나
       // - 필드 어디서든 10틱 이상 거의 안 움직인 양(globalIdle)
       // 은 이미 다른 양이 예약한 잔디까지 포함해(remainingGrassKeys 전체) 다시 탐색하고,
       // 그 잔디의 현재 주인에게서 양보를 받아올 수 있게 한다.
@@ -1428,11 +1468,17 @@ export function renderGridSvg(grid: GridCell[]): string {
         byKey,
         new Map(),
         reservedApproach,
-        1,
+        8,
         grassEating,
       );
-      if (candidates.length > 0) {
-        const gk = `${candidates[0].grass.x},${candidates[0].grass.y}`;
+      const best = pickBestGrassCandidate(
+        candidates,
+        initialCountByKey,
+        reservedGrass,
+        i,
+      );
+      if (best) {
+        const gk = `${best.grass.x},${best.grass.y}`;
         if (gk !== st.goalGrassKey) {
           assignGrassToSheep(i, gk, t, availableKeysEarly);
         }
@@ -1488,23 +1534,29 @@ export function renderGridSvg(grid: GridCell[]): string {
           byKey,
           occupiedNowMap,
           reservedApproach,
-          1,
+          8,
           grassEating,
         );
-        needPlanDist.set(i, cand[0]?.dist ?? 1e9);
+        const bestCand = pickBestGrassCandidate(
+          cand,
+          initialCountByKey,
+          reservedGrass,
+          i,
+        );
+        needPlanDist.set(i, bestCand?.dist ?? 1e9);
       }
     }
     // 깔때기 안 양을 먼저 계획해 입구 정체 완화 (row 작을수록 뒤쪽)
     // 그리드 안 양은 틱마다 계획 순서를 돌려서 한 마리만 선점하지 않게 함 (골고루 돌아다니게)
-    // 추가: 입구 근처에서 2틱 이상 제자리(gateIdle>=2)였던 양은 최우선으로 다시 경로/잔디를 가져가게 함
+    // 추가: 입구 근처에서 1틱 이상 제자리(gateIdle>=1)였던 양은 최우선으로 다시 경로/잔디를 가져가게 함
     needPlan.sort((a, b) => {
       const inFunnelA = sheepStates[a].pos[1] < 0;
       const inFunnelB = sheepStates[b].pos[1] < 0;
       if (inFunnelA !== inFunnelB) return inFunnelA ? -1 : 1;
       const idleA = gateIdleTicks[a];
       const idleB = gateIdleTicks[b];
-      const priStuckA = idleA >= 2;
-      const priStuckB = idleB >= 2;
+      const priStuckA = idleA >= 1;
+      const priStuckB = idleB >= 1;
       if (priStuckA !== priStuckB) return priStuckA ? -1 : 1;
       if (priStuckA && priStuckB && idleA !== idleB) return idleB - idleA;
       const distA = needPlanDist.get(a) ?? 1e9;
@@ -1623,20 +1675,13 @@ export function renderGridSvg(grid: GridCell[]): string {
           grassEating,
         );
 
-        if (candidates.length > 0) {
-          candidates.sort((a, b) => {
-            if (a.dist !== b.dist) return a.dist - b.dist;
-            const ai =
-              initialCountByKey.get(`${a.grass.x},${a.grass.y}`) ??
-              a.grass.count;
-            const bi =
-              initialCountByKey.get(`${b.grass.x},${b.grass.y}`) ??
-              b.grass.count;
-            if (ai !== bi) return bi - ai;
-            if (a.grass.y !== b.grass.y) return a.grass.y - b.grass.y;
-            return a.grass.x - b.grass.x;
-          });
-          const chosen = candidates[0];
+        const chosen = pickBestGrassCandidate(
+          candidates,
+          initialCountByKey,
+          reservedGrass,
+          i,
+        );
+        if (chosen) {
           const gk = `${chosen.grass.x},${chosen.grass.y}`;
           st.goalGrassKey = gk;
           availableKeys.delete(gk);
@@ -1649,6 +1694,43 @@ export function renderGridSvg(grid: GridCell[]): string {
       if (!st.goalGrassKey) {
         st.stuck += 1;
         continue;
+      }
+
+      // Stuck 2~5: 경로가 막혀 있으면 현재 목표를 버리고 다른 잔디로 전환 시도
+      if (st.stuck >= 2 && st.stuck < 6 && availableKeys.size > 0) {
+        const candidatesSwitch = findNearestReachableGrassCandidates(
+          i,
+          st.pos,
+          availableKeys,
+          emptyCellSet,
+          funnelCellSet,
+          minFunnelRow,
+          maxX,
+          maxY,
+          byKey,
+          occupiedNowMap,
+          reservedApproach,
+          8,
+          grassEating,
+        );
+        const chosenSwitch = pickBestGrassCandidate(
+          candidatesSwitch,
+          initialCountByKey,
+          reservedGrass,
+          i,
+        );
+        if (chosenSwitch) {
+          const gkNew = `${chosenSwitch.grass.x},${chosenSwitch.grass.y}`;
+          if (gkNew !== st.goalGrassKey) {
+            releaseGrassReservation(i);
+            st.goalGrassKey = gkNew;
+            availableKeys.delete(gkNew);
+            reservedGrass.set(gkNew, i);
+            reservedBySheep[i] = gkNew;
+            reservedAtTick[i] = t;
+            st.stuck = 0;
+          }
+        }
       }
 
       const [gc, gr] = st.goalGrassKey.split(",").map(Number);
@@ -1669,8 +1751,55 @@ export function renderGridSvg(grid: GridCell[]): string {
       );
 
       if (!planned) {
+        // fallback: 현재 목표로 경로가 없으면 다른 잔디로 목표를 바꿔서 막힘 완화
+        const releasedKey = st.goalGrassKey;
+        releaseGrassReservation(i);
+        const availableForFallback = new Set(availableKeys);
+        if (releasedKey) availableForFallback.add(releasedKey);
+        const candidatesFallback = findNearestReachableGrassCandidates(
+          i,
+          st.pos,
+          availableForFallback,
+          emptyCellSet,
+          funnelCellSet,
+          minFunnelRow,
+          maxX,
+          maxY,
+          byKey,
+          occupiedNowMap,
+          reservedApproach,
+          8,
+          grassEating,
+        );
+        const chosenFallback = pickBestGrassCandidate(
+          candidatesFallback,
+          initialCountByKey,
+          reservedGrass,
+          i,
+        );
+        if (chosenFallback) {
+          const gkFallback = `${chosenFallback.grass.x},${chosenFallback.grass.y}`;
+          st.goalGrassKey = gkFallback;
+          availableKeys.delete(gkFallback);
+          reservedGrass.set(gkFallback, i);
+          reservedBySheep[i] = gkFallback;
+          reservedAtTick[i] = t;
+          st.stuck = 0;
+          continue;
+        }
+        // fallback 실패 시 기존 목표 복구(예약만 해제된 상태)하고 stuck·pull-over 진행
+        if (releasedKey) {
+          st.goalGrassKey = releasedKey;
+          reservedGrass.set(releasedKey, i);
+          reservedBySheep[i] = releasedKey;
+          reservedAtTick[i] = t;
+        }
+
         st.stuck += 1;
         if (st.stuck >= 6) {
+          const goalForPull = st.goalGrassKey
+            ? (st.goalGrassKey.split(",").map(Number) as [number, number])
+            : undefined;
           const pull = findPullOverTarget(
             st.pos,
             emptyCellSet,
@@ -1678,6 +1807,7 @@ export function renderGridSvg(grid: GridCell[]): string {
             minFunnelRow,
             maxX,
             maxY,
+            goalForPull,
           );
           if (pull) {
             const p2 = planWindowed(
@@ -1777,10 +1907,33 @@ export function renderGridSvg(grid: GridCell[]): string {
     }
 
     // ---- 실행 단계 (1틱) ----
-    // 이동 순서를 틱마다 돌려서 한 마리만 항상 먼저 가지 않게 함 (골고루 움직이게)
+    // 이동 순서: 막힌 양(stuck 큰 쪽)을 먼저 움직여 빠져나가게, 동일하면 목표까지 가까운 쪽, 그 다음 (priority+t) 로테이션
     const order = Array.from({ length: sheepStates.length }, (_, i) => i).sort(
-      (a, b) =>
-        ((priority[a] + t) % sheepCount) - ((priority[b] + t) % sheepCount),
+      (a, b) => {
+        const stuckA = sheepStates[a].stuck;
+        const stuckB = sheepStates[b].stuck;
+        if (stuckB !== stuckA) return stuckB - stuckA;
+        const goalA = sheepStates[a].goalGrassKey;
+        const goalB = sheepStates[b].goalGrassKey;
+        let distA = 1e9;
+        let distB = 1e9;
+        if (goalA) {
+          const [gc, gr] = goalA.split(",").map(Number);
+          distA =
+            Math.abs(sheepStates[a].pos[0] - gc) +
+            Math.abs(sheepStates[a].pos[1] - gr);
+        }
+        if (goalB) {
+          const [gc, gr] = goalB.split(",").map(Number);
+          distB =
+            Math.abs(sheepStates[b].pos[0] - gc) +
+            Math.abs(sheepStates[b].pos[1] - gr);
+        }
+        if (distA !== distB) return distA - distB;
+        return (
+          ((priority[a] + t) % sheepCount) - ((priority[b] + t) % sheepCount)
+        );
+      },
     );
 
     getCellRes(resTable, t + 1);

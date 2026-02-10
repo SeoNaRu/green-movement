@@ -82,6 +82,11 @@ export async function fetchContributionGrid(
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error(
+        "GitHub API 401 Unauthorized. Check .env GITHUB_TOKEN: token may be expired, revoked, or missing scope 'read:user'. Create a new PAT at https://github.com/settings/tokens",
+      );
+    }
     throw new Error(`GitHub API HTTP ${res.status}: ${res.statusText}`);
   }
 

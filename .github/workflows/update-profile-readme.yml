@@ -38,6 +38,10 @@ jobs:
           PROFILE_USER="${{ secrets.PROFILE_README_USERNAME || github.repository_owner }}"
           PROFILE_REPO="${PROFILE_USER}/${PROFILE_USER}"
           echo "Target profile repo: ${PROFILE_REPO}"
+          if [ -z "${{ secrets.PROFILE_README_TOKEN }}" ]; then
+            echo "::error::PROFILE_README_TOKEN 시크릿이 없습니다. Settings → Secrets and variables → Actions에서 PAT를 PROFILE_README_TOKEN 이름으로 추가하세요. (docs/PROFILE_README_SETUP.md 참고)"
+            exit 1
+          fi
           mkdir -p ../profile-repo
           git clone "https://x-access-token:${{ secrets.PROFILE_README_TOKEN }}@github.com/${PROFILE_REPO}.git" ../profile-repo
           mkdir -p ../profile-repo/assets
