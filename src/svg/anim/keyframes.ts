@@ -656,7 +656,7 @@ export function buildUfoLayer(params: {
       maxTotalTime > 0 ? (lightOffComplete * 100) / maxTotalTime : 0;
     lightKeyframeEntries.push({ pct: pctOn, opacity: 0 });
     lightKeyframeEntries.push({ pct: pctFull, opacity: 0.1 });
-    lightKeyframeEntries.push({ pct: pctMoveStart, opacity: 0.1 });
+    lightKeyframeEntries.push({ pct: pctMoveStart, opacity: 0.4 });
     lightKeyframeEntries.push({ pct: pctOff, opacity: 0 });
   }
 
@@ -695,12 +695,12 @@ export function buildUfoLayer(params: {
   }`
       : "";
 
-  const glowR = UFO_WIDTH_PX * 0.96;
+  const glowR = UFO_WIDTH_PX * 0.68;
   const ufoGroupStr = hasUfo
     ? `<g class="ufo-move" style="transform: translate(${firstPosPx.x - UFO_WIDTH_PX / 2}px, ${entryY}px); animation: ufo-move ${maxTotalTime}s linear 0s 1 both;">
         <g class="ufo-rot" style="transform-box: fill-box; transform-origin: center; animation: ufo-rot ${maxTotalTime}s linear 0s 1 both;">
           <svg width="${UFO_WIDTH_PX}" height="${UFO_WIDTH_PX}" viewBox="${UFO_VIEWBOX}" x="0" y="0">${UFO_CONTENT}</svg>
-          <circle cx="${ufoCenter}" cy="${ufoCenter}" r="${glowR}" fill="#a8e6cf" style="opacity: 0; animation: ufo-light ${maxTotalTime}s linear 0s 1 both; pointer-events: none;"/>
+          <circle cx="${ufoCenter}" cy="${ufoCenter}" r="${glowR}" fill="#d6bcfa" style="opacity: 0; animation: ufo-light ${maxTotalTime}s linear 0s 1 both; pointer-events: none;"/>
         </g>
       </g>`
     : "";
