@@ -173,9 +173,24 @@ export function buildTimeline(
   }
   const pickupEndAbsS = tCursor;
 
+  // ---- 페인트 파동: 회수 후 그리드 중앙으로 이동 → 파동 쏘면 거리순으로 칠해짐 → 퇴장 ----
+  const { maxX, maxY } = ctx;
+  const paintCenterCol = Math.floor(maxX / 2);
+  const paintCenterRow = Math.floor(maxY / 2);
+  const PAINT_WAVE_SPEED_S = 0.1;
+  const maxDist =
+    Math.max(paintCenterCol, maxX - paintCenterCol) +
+    Math.max(paintCenterRow, maxY - paintCenterRow);
+  const paintSweepStartAbsS = pickupEndAbsS;
+  const paintSweepDuration = maxDist * PAINT_WAVE_SPEED_S;
+  const sweepPositions: [number, number][] = [[paintCenterCol, paintCenterRow]];
+  const sweepArriveAbsS: number[] = [paintSweepStartAbsS];
+
   const timelineOffset = timing.ufoEntryS;
   const maxTotalTimeWithEntryExit =
-    Math.max(timelineOffset + maxTotalTime, pickupEndAbsS) + timing.ufoExitS;
+    Math.max(timelineOffset + maxTotalTime, pickupEndAbsS) +
+    paintSweepDuration +
+    timing.ufoExitS;
   const ufoArriveAbsSOffset = ufoArriveAbsS.map(
     (t: number) => t + timelineOffset,
   );
@@ -185,6 +200,8 @@ export function buildTimeline(
     (m) => m + timelineOffset,
   );
   const ufoLeaveAbsSOffset = ufoLeaveAbsS.map((u) => u + timelineOffset);
+  const sweepArriveAbsSOffset = sweepArriveAbsS.map((t) => t + timelineOffset);
+  const paintSweepStartAbsSOffset = paintSweepStartAbsS + timelineOffset;
 
   if (process.env?.DEBUG_TIMING === "1") {
     const sample = Math.min(5, sheepCount);
@@ -293,6 +310,13 @@ export function buildTimeline(
     pickupArriveBySheep,
     pickupArriveAbsSOffsetForUfo,
     pickupArriveAbsSOffset,
+    sweepPositions,
+    sweepArriveAbsSOffset,
+    paintSweepStartAbsSOffset,
+    paintSweepDuration,
+    paintWaveSpeedS: PAINT_WAVE_SPEED_S,
+    paintCenterCol,
+    paintCenterRow,
     activeSheepIndices,
     assignedIndices,
   };

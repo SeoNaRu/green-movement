@@ -2,12 +2,13 @@ import "dotenv/config";
 import { fetchContributionGrid } from "../github/fetchGrid.js";
 import { mapGrid } from "../grid/mapGrid.js";
 import { renderGridSvg } from "../renderGridSvg.js";
-import { writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = join(__dirname, "..", "..", "assets", "live.svg");
+const CIRCLE_JSON_PATH = join(__dirname, "..", "..", "assets", "circle.json");
 
 export async function generateSvg(): Promise<void> {
   const username = process.env.GITHUB_USERNAME?.trim() || undefined;
@@ -26,8 +27,16 @@ export async function generateSvg(): Promise<void> {
     "기여 합계": totalContributions,
   });
 
+  let paintMap: Record<string, string> = {};
+  try {
+    const raw = readFileSync(CIRCLE_JSON_PATH, "utf-8");
+    paintMap = JSON.parse(raw) as Record<string, string>;
+  } catch {
+    // circle.json 없거나 파싱 실패 시 페인트 없음
+  }
+
   console.time("renderGridSvg");
-  const svg = renderGridSvg(grid);
+  const svg = renderGridSvg(grid, { paintMap });
   console.timeEnd("renderGridSvg");
   writeFileSync(OUT_PATH, svg, "utf-8");
   console.log("Written:", OUT_PATH);

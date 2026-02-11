@@ -6,8 +6,12 @@ export function composeSvg(params: {
   backgroundColor: string;
   fenceRects: string;
   rects: string;
+  flowerRects: string;
+  flowerKeyframes: string;
   sheepGroups: string;
   ufoGroupStr: string;
+  ufoRippleKeyframesStr: string;
+  ufoRippleGroupStr: string;
   debugLayer: string;
   dotRects: string;
   grassFadeKeyframes: string;
@@ -23,8 +27,12 @@ export function composeSvg(params: {
     backgroundColor,
     fenceRects,
     rects,
+    flowerRects,
+    flowerKeyframes,
     sheepGroups,
     ufoGroupStr,
+    ufoRippleKeyframesStr,
+    ufoRippleGroupStr,
     debugLayer,
     dotRects,
     grassFadeKeyframes,
@@ -38,15 +46,19 @@ export function composeSvg(params: {
   <defs>
     <style>
   ${grassFadeKeyframes}
+  ${flowerKeyframes}
   ${animationStyles}
   ${ufoKeyframesStr}
   ${ufoLightKeyframesStr}
+  ${ufoRippleKeyframesStr}
     </style>
   </defs>
   <rect x="0" y="${viewBoxMinY}" width="${totalWidth}" height="${viewBoxHeight}" fill="${backgroundColor}"/>
   ${fenceRects}
   ${rects}
+  <g id="flower-layer">${flowerRects}</g>
   ${sheepGroups}
+  ${ufoRippleGroupStr}
   ${ufoGroupStr}
   ${debugLayer}
   ${dotRects}

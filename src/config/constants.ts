@@ -159,3 +159,13 @@ export const COLORS = {
   LEVEL_3: "#26a641", // medium-high
   LEVEL_4: "#39d353", // high
 } as const;
+
+// 양이 밟은 빈 칸에 피어나는 꽃 (1x1px, 양별 색상)
+export const FLOWER_SIZE = 1;
+/** 양 번호별 꽃 색: 0 데이지, 1 코스모스, 2 라벤더, 3 물망초 → 반복 */
+export const SHEEP_FLOWER_COLORS = [
+  "#FFFFFF", // 0: 순백 데이지
+  "#F472B6", // 1: 분홍 코스모스
+  "#D8B4FE", // 2: 라벤더
+  "#A5F3FC", // 3: 시원한 물망초
+] as const;

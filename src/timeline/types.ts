@@ -12,6 +12,13 @@ export type TimelineResult = {
   pickupArriveBySheep: (number | null)[];
   pickupArriveAbsSOffsetForUfo: number[];
   pickupArriveAbsSOffset: (number | null)[];
+  sweepPositions: [number, number][];
+  sweepArriveAbsSOffset: number[];
+  paintSweepStartAbsSOffset: number;
+  paintSweepDuration: number;
+  paintWaveSpeedS: number;
+  paintCenterCol: number;
+  paintCenterRow: number;
   activeSheepIndices: number[];
   assignedIndices: number[];
 };
