@@ -7,7 +7,7 @@ export const CELL_SIZE = 10;
 export const GAP = 2;
 
 /** README/프로필에 넣을 때 SVG 가로를 이 픽셀에 맞춤. 0이면 스케일 안 함(내부 크기 그대로). */
-export const README_TARGET_WIDTH = 896;
+export const README_TARGET_WIDTH = 1400;
 export const BORDER_RADIUS = 2;
 export const BACKGROUND_COLOR = "#0d1117"; // GitHub dark background
 
