@@ -3,6 +3,10 @@ export function composeSvg(params: {
   totalHeight: number;
   viewBoxMinY: number;
   viewBoxHeight: number;
+  /** 출력 SVG의 width. 없으면 totalWidth 사용 */
+  displayWidth?: number;
+  /** 출력 SVG의 height. 없으면 totalHeight 사용 (displayWidth 있으면 비율에 맞춤) */
+  displayHeight?: number;
   backgroundColor: string;
   fenceRects: string;
   rects: string;
@@ -24,6 +28,8 @@ export function composeSvg(params: {
     totalHeight,
     viewBoxMinY,
     viewBoxHeight,
+    displayWidth = totalWidth,
+    displayHeight = totalHeight,
     backgroundColor,
     fenceRects,
     rects,
@@ -42,7 +48,7 @@ export function composeSvg(params: {
   } = params;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="${totalHeight}" viewBox="0 ${viewBoxMinY} ${totalWidth} ${viewBoxHeight}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${displayWidth}" height="${displayHeight}" viewBox="0 ${viewBoxMinY} ${totalWidth} ${viewBoxHeight}">
   <defs>
     <style>
   ${grassFadeKeyframes}

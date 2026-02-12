@@ -7,16 +7,19 @@ export type FlowerSpot = {
   color: string;
 };
 
-/** 셀(10x10) 외곽 제외 내부(1~8)에서 완전 랜덤 위치. */
+/** 셀 내부(외곽 약 10% 제외) 랜덤 위치. CELL_SIZE에 비례해 스케일됨. */
 function randomPosInCell(): { x: number; y: number } {
-  const x = 1 + Math.random() * 8;
-  const y = 1 + Math.random() * 8;
+  const margin = Math.max(0.5, CELL_SIZE * 0.1);
+  const inner = CELL_SIZE - 2 * margin;
+  const x = margin + Math.random() * inner;
+  const y = margin + Math.random() * inner;
   return { x, y };
 }
 
-/** 꽃 한 송이당 0.5~1.5px 크기. 완전 랜덤. */
+/** 꽃 한 송이당 크기. CELL_SIZE에 비례 (기본 10일 때 0.7~1.3). */
 function randomFlowerSize(): number {
-  return 0.7 + Math.random() * 0.6;
+  const base = (CELL_SIZE / 10) * (0.7 + Math.random() * 0.6);
+  return Math.max(0.4, base);
 }
 
 /**

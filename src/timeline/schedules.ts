@@ -151,7 +151,16 @@ export function buildTimeline(
     ufoLeaveAbsS[i] = (visualMoveStartAbsS[i] ?? 0) + LIGHT_FADE_OUT_S;
   }
 
-  const allSheepDoneAbsS = Math.max(0, ...sheepEndAbsSActive, ...ufoLeaveAbsS);
+  // 잔디를 다 먹고 모든 양이 멈춘 시점(시뮬 기준)부터 회수 시작. UFO leave는 포함하지 않음.
+  const allSheepDoneAbsS =
+    sheepEndAbsSActive.length > 0 ? Math.max(0, ...sheepEndAbsSActive) : 0;
+  // 그 시점 이후로는 UFO가 드롭 위치로 가지 않도록, 방문할 드롭 개수 제한
+  let lastDropIndex = 0;
+  for (let i = 0; i < sheepCount; i++) {
+    if (ufoLeaveAbsS[i] <= allSheepDoneAbsS) lastDropIndex = i;
+  }
+  const effectiveDropCount = lastDropIndex + 1;
+
   const travelSCells = (from: [number, number], to: [number, number]) => {
     const dist = Math.abs(to[0] - from[0]) + Math.abs(to[1] - from[1]);
     return Math.min(
@@ -160,8 +169,11 @@ export function buildTimeline(
     );
   };
   let tCursor = allSheepDoneAbsS;
-  let prevCell: [number, number] = funnelPositionsEarly[sheepCount - 1] ??
+  const pickupStartCell: [number, number] = funnelPositionsEarly[
+    lastDropIndex
+  ] ??
     funnelPositionsEarly[0] ?? [0, 0];
+  let prevCell: [number, number] = pickupStartCell;
   for (let k = 0; k < activeSheepIndices.length; k++) {
     const sheepIndex = activeSheepIndices[k];
     const nextCell = pickupCells[k];
@@ -306,6 +318,7 @@ export function buildTimeline(
     readyAbsSOffset,
     moveStartAbsSOffset,
     ufoLeaveAbsSOffset,
+    effectiveDropCount,
     pickupCells,
     pickupArriveBySheep,
     pickupArriveAbsSOffsetForUfo,

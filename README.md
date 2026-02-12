@@ -117,6 +117,7 @@ npm run generate
 
 - 파일 구조: `docs/FILE_STRUCTURE.md`
 - SVG 렌더링 구조: `docs/SVG_RENDER_STRUCTURE.md`
+- **그리드를 README 가로에 맞추기**: 생성되는 SVG는 기본적으로 가로 **896px**로 스케일됩니다. 변경하려면 `src/config/constants.ts`의 `README_TARGET_WIDTH`를 수정하거나, `renderGridSvg(grid, { targetWidth: 700 })`처럼 `targetWidth` 옵션을 주면 됩니다. `0`이면 스케일 없이 내부 크기 그대로 출력됩니다.
 
 ---
 

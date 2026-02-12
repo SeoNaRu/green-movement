@@ -1,6 +1,7 @@
 import type { GridCell } from "../grid/mapGrid.js";
 import {
   BACKGROUND_COLOR,
+  README_TARGET_WIDTH,
   UFO_BEAM_DELAY_S,
   LIGHT_FADE_OUT_S,
   UFO_ENTRY_S,
@@ -50,7 +51,11 @@ function paintMapToGridKeys(
 
 export function renderGridSvg(
   grid: GridCell[],
-  options?: { paintMap?: Record<string, string> },
+  options?: {
+    paintMap?: Record<string, string>;
+    /** SVG 가로를 이 픽셀에 맞춤. 0이면 스케일 안 함. 기본값: README_TARGET_WIDTH */
+    targetWidth?: number;
+  },
 ): string {
   if (grid.length === 0) {
     return `<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0"/>`;
@@ -102,6 +107,7 @@ export function renderGridSvg(
     paintTimes: Object.keys(paintTimes).length > 0 ? paintTimes : undefined,
   });
 
+  const n = timeline.effectiveDropCount;
   const {
     ufoKeyframesStr,
     ufoLightKeyframesStr,
@@ -109,18 +115,18 @@ export function renderGridSvg(
     ufoRippleKeyframesStr,
     ufoRippleGroupStr,
   } = buildUfoLayer({
-    funnelPositionsEarly: plan.funnelPositionsEarly,
-    spawnAbsS: timeline.spawnAbsSOffset,
-    arriveAbsS: timeline.ufoArriveAbsSOffset,
+    funnelPositionsEarly: plan.funnelPositionsEarly.slice(0, n),
+    spawnAbsS: timeline.spawnAbsSOffset.slice(0, n),
+    arriveAbsS: timeline.ufoArriveAbsSOffset.slice(0, n),
     beamDelayS: UFO_BEAM_DELAY_S,
     maxTotalTime: timeline.maxTotalTimeWithEntryExit,
     gridLeftX: ctx.gridLeftX,
     gridTopY: ctx.gridTopY,
     lightRampS: LIGHT_RAMP_S,
     lightFadeOutS: LIGHT_FADE_OUT_S,
-    moveStartAbsS: timeline.moveStartAbsSOffset,
-    ufoLeaveAbsS: timeline.ufoLeaveAbsSOffset,
-    readyAbsS: timeline.readyAbsSOffset,
+    moveStartAbsS: timeline.moveStartAbsSOffset.slice(0, n),
+    ufoLeaveAbsS: timeline.ufoLeaveAbsSOffset.slice(0, n),
+    readyAbsS: timeline.readyAbsSOffset.slice(0, n),
     ufoEntryS: UFO_ENTRY_S,
     ufoExitS: UFO_EXIT_S,
     maxX: ctx.maxX,
@@ -266,11 +272,21 @@ export function renderGridSvg(
   const viewBoxMinY = 0;
   const viewBoxHeight = ctx.totalHeight;
 
+  const targetW = options?.targetWidth ?? README_TARGET_WIDTH;
+  const displayWidth =
+    targetW > 0 && ctx.totalWidth > 0 ? targetW : ctx.totalWidth;
+  const displayHeight =
+    targetW > 0 && ctx.totalWidth > 0
+      ? Math.round(ctx.totalHeight * (targetW / ctx.totalWidth))
+      : ctx.totalHeight;
+
   return composeSvg({
     totalWidth: ctx.totalWidth,
     totalHeight: ctx.totalHeight,
     viewBoxMinY,
     viewBoxHeight,
+    displayWidth,
+    displayHeight,
     backgroundColor: BACKGROUND_COLOR,
     fenceRects: ctx.fenceRects,
     rects,

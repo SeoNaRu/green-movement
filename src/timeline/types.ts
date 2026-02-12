@@ -8,6 +8,8 @@ export type TimelineResult = {
   readyAbsSOffset: number[];
   moveStartAbsSOffset: number[];
   ufoLeaveAbsSOffset: number[];
+  /** UFO가 실제로 방문하는 드롭 개수 (잔디 소모 후 회수 시작 시점에 맞춤) */
+  effectiveDropCount: number;
   pickupCells: [number, number][];
   pickupArriveBySheep: (number | null)[];
   pickupArriveAbsSOffsetForUfo: number[];
