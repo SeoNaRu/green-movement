@@ -2,7 +2,7 @@ import type { GridCell } from "../../grid/mapGrid.js";
 import type { SheepState } from "../../domain/sheep.js";
 import {
   SHEEP_CELL_TIME,
-  waitTicks,
+  getWaitTicksForLevel,
   MAX_MEALS_PER_SHEEP,
   GRASS_RES_TTL,
   RESERVE_AHEAD_LIMIT,
@@ -37,6 +37,8 @@ export type Arrival = {
   arrivalTime: number;
   level: number;
   sheepIndex: number;
+  /** 양이 이 칸에 들어온 방향(rad). 그리드 기준: 오른쪽=0, 아래=π/2, 왼쪽=π, 위=-π/2. 파티클 퍼짐 방향에 사용 */
+  directionRad?: number;
 };
 
 export type SimulationResult = {
@@ -705,10 +707,12 @@ export function simulateGrid(params: {
         const gk = k;
         const es = grassEating.get(gk);
         if (!es) {
-          grassEating.set(gk, { owner: i, doneTick: t + waitTicks + 1 });
+          const level = getContributionLevel(initialCount, quartiles);
+          const stayTicks = getWaitTicksForLevel(level);
+          grassEating.set(gk, { owner: i, doneTick: t + stayTicks + 1 });
           mealsEaten[i]++;
           st.eatingGrassKey = gk;
-          st.eatUntil = t + waitTicks;
+          st.eatUntil = t + stayTicks;
           st.goalGrassKey = null;
           st.plan = [];
         }
@@ -751,7 +755,18 @@ export function simulateGrid(params: {
       const arrivalTime =
         spawnTick[si] * SHEEP_CELL_TIME + dropStayS + t * SHEEP_CELL_TIME;
       const level = getContributionLevel(initialCount, quartiles);
-      pushArrival(k, { arrivalTime, level, sheepIndex: si });
+      let directionRad: number | undefined;
+      if (prev) {
+        const dc = c - prev[0];
+        const dr = r - prev[1];
+        directionRad = Math.atan2(dr, dc);
+      } else if (t < timeline.length - 1) {
+        const next = timeline[t + 1];
+        const dc = next[0] - c;
+        const dr = next[1] - r;
+        directionRad = Math.atan2(dr, dc);
+      }
+      pushArrival(k, { arrivalTime, level, sheepIndex: si, directionRad });
     }
   }
 

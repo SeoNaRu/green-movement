@@ -6,12 +6,14 @@ import {
   COLORS,
   GRASS_FADE_DURATION,
   GRASS_FADE_START_DELAY,
+  GRASS_STEP_TIMES_S,
   SHEEP_CELL_TIME,
   SHEEP_CONTENT,
   SHEEP_VIEWBOX_CX,
   SHEEP_VIEWBOX_CY,
   SHEEP_VIEWBOX_W,
   SHEEP_WIDTH_PX,
+  SHEEP_BODY_SHIFT_PX,
   UFO_CELL_TIME,
   UFO_MOVE_MIN_S,
   UFO_MOVE_MAX_S,
@@ -65,32 +67,41 @@ export function buildGrassLayer(params: {
       if (arrivals) {
         const startLevel = Math.max(1, arrivals.level);
         const fill = getColor(startLevel);
-        const fadeStart =
-          timeOffset + arrivals.arrivalTime + GRASS_FADE_START_DELAY;
-        const p1 = (fadeStart / maxTotalTime) * 100;
-        const p2 = ((fadeStart + GRASS_FADE_DURATION) / maxTotalTime) * 100;
+        const eatingStart = timeOffset + arrivals.arrivalTime;
         const kfName = `grass-loop-${cellIndex}`;
+        const steps = Math.min(startLevel, GRASS_STEP_TIMES_S.length);
+        const entries: string[] = [`0% { fill: ${fill}; }`];
+        for (let i = 0; i < steps; i++) {
+          const t = eatingStart + GRASS_STEP_TIMES_S[i];
+          const pct = Math.min(99.98, (t / maxTotalTime) * 100);
+          const currentColor = getColor(startLevel - i);
+          const nextColor = getColor(startLevel - i - 1);
+          entries.push(`${pct.toFixed(4)}% { fill: ${currentColor}; }`);
+          entries.push(`${(pct + 0.01).toFixed(4)}% { fill: ${nextColor}; }`);
+        }
         if (paintColor != null && paintTime != null) {
-          const pct = Math.min(
+          const paintPct = Math.min(
             99.99,
-            Math.max(p2, (paintTime / maxTotalTime) * 100),
+            Math.max(
+              ((eatingStart + (GRASS_STEP_TIMES_S[steps - 1] ?? 0)) /
+                maxTotalTime) *
+                100 +
+                0.02,
+              (paintTime / maxTotalTime) * 100,
+            ),
           );
           grassLoopKeyframes.push(`
   @keyframes ${kfName} {
-    0% { fill: ${fill}; }
-    ${p1}% { fill: ${fill}; }
-    ${p2}% { fill: ${COLORS.LEVEL_0}; }
-    ${pct.toFixed(4)}% { fill: ${COLORS.LEVEL_0}; }
-    ${(pct + 0.01).toFixed(4)}% { fill: ${paintColor}; }
+    ${entries.join("\n    ")}
+    ${paintPct.toFixed(4)}% { fill: ${COLORS.LEVEL_0}; }
+    ${(paintPct + 0.01).toFixed(4)}% { fill: ${paintColor}; }
     100% { fill: ${paintColor}; }
   }`);
         } else {
+          entries.push(`100% { fill: ${COLORS.LEVEL_0}; }`);
           grassLoopKeyframes.push(`
   @keyframes ${kfName} {
-    0% { fill: ${fill}; }
-    ${p1}% { fill: ${fill}; }
-    ${p2}% { fill: ${COLORS.LEVEL_0}; }
-    100% { fill: ${COLORS.LEVEL_0}; }
+    ${entries.join("\n    ")}
   }`);
         }
         const anim = `animation: ${kfName} ${maxTotalTime}s linear 0s 1 both`;
@@ -859,6 +870,14 @@ export function buildSheepLayer(params: {
   } = params;
 
   const sheepScale = SHEEP_WIDTH_PX / SHEEP_VIEWBOX_W / 2.5;
+  /** 양을 셀 중심에서 몸쪽으로 밀어서, 입이 파티클(잔디 중심) 쪽에 오게 함 */
+  const bodyShift = (angleDeg: number) => {
+    const rad = (angleDeg * Math.PI) / 180;
+    return {
+      dx: -SHEEP_BODY_SHIFT_PX * Math.sin(rad),
+      dy: SHEEP_BODY_SHIFT_PX * Math.cos(rad),
+    };
+  };
 
   const sheepAnimations = assignedIndices.map((si: number) => {
     const timeline = positionsHistory[si];
@@ -949,7 +968,10 @@ export function buildSheepLayer(params: {
       dropFrame.x,
       dropFrame.y,
     );
-    const dropStartY = dropPx.y - dropDescentPx;
+    const dropOff = bodyShift(dropFrame.angle);
+    const dropX = dropPx.x + dropOff.dx;
+    const dropY = dropPx.y + dropOff.dy;
+    const dropStartY = dropY - dropDescentPx;
     const offscreen = `transform: translate(-9999px, -9999px) rotate(180deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0;`;
     const pctSpawn = maxTotalTime > 0 ? (timeOffset * 100) / maxTotalTime : 0;
     keyframeEntries.push({
@@ -959,12 +981,12 @@ export function buildSheepLayer(params: {
     if (pctSpawn > 0) {
       keyframeEntries.push({
         pct: Math.min(100, pctSpawn),
-        css: `${Math.min(100, pctSpawn).toFixed(4)}% { transform: translate(${dropPx.x}px, ${dropStartY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; }`,
+        css: `${Math.min(100, pctSpawn).toFixed(4)}% { transform: translate(${dropX}px, ${dropStartY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; }`,
       });
     } else {
       keyframeEntries.push({
         pct: 0,
-        css: `0% { transform: translate(${dropPx.x}px, ${dropStartY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; }`,
+        css: `0% { transform: translate(${dropX}px, ${dropStartY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; }`,
       });
     }
     const readyTime = timeOffset + (lightRampS + sheepFadeS);
@@ -974,11 +996,11 @@ export function buildSheepLayer(params: {
       maxTotalTime > 0 ? (moveStartTime * 100) / maxTotalTime : 0;
     keyframeEntries.push({
       pct: Math.min(100, pctReady),
-      css: `${Math.min(100, pctReady).toFixed(4)}% { transform: translate(${dropPx.x}px, ${dropPx.y}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 1; }`,
+      css: `${Math.min(100, pctReady).toFixed(4)}% { transform: translate(${dropX}px, ${dropY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 1; }`,
     });
     keyframeEntries.push({
       pct: Math.min(100, pctMoveStart),
-      css: `${Math.min(100, pctMoveStart).toFixed(4)}% { transform: translate(${dropPx.x}px, ${dropPx.y}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 1; }`,
+      css: `${Math.min(100, pctMoveStart).toFixed(4)}% { transform: translate(${dropX}px, ${dropY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 1; }`,
     });
     let firstMoveIdxHistory = -1;
     for (let ti = 1; ti < timeline.length; ti++) {
@@ -999,13 +1021,14 @@ export function buildSheepLayer(params: {
         const f = frames[fi];
         if (f.t < firstMoveT) continue;
         const { x, y } = getCellCenterPx(gridLeftX, gridTopY, f.x, f.y);
+        const off = bodyShift(f.angle);
         const globalTime = moveStartTime + (f.t - firstMoveT);
         const percent =
           maxTotalTime > 0 ? (globalTime * 100) / maxTotalTime : 0;
         const pct = Math.min(99.9999, percent);
         keyframeEntries.push({
           pct,
-          css: `${pct.toFixed(4)}% { transform: translate(${x}px, ${y}px) rotate(${f.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 1; }`,
+          css: `${pct.toFixed(4)}% { transform: translate(${x + off.dx}px, ${y + off.dy}px) rotate(${f.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 1; }`,
         });
       }
     }
@@ -1046,11 +1069,12 @@ export function buildSheepLayer(params: {
       lastCell[1],
     );
     const lastFrameAngle = lastFrame?.angle ?? 180;
+    const lastOff = bodyShift(lastFrameAngle);
     const hasPickup =
       pickupT != null && Number.isFinite(pickupT) && pickupT > 0;
     keyframeEntries.push({
       pct: 100,
-      css: `100% { transform: translate(${lastPx.x}px, ${lastPx.y}px) rotate(${lastFrameAngle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: ${hasPickup ? 0 : 1}; }`,
+      css: `100% { transform: translate(${lastPx.x + lastOff.dx}px, ${lastPx.y + lastOff.dy}px) rotate(${lastFrameAngle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: ${hasPickup ? 0 : 1}; }`,
     });
 
     const delay = 0;
@@ -1094,7 +1118,8 @@ export function buildSheepLayer(params: {
       .join("\n  ");
   } else {
     const pos = getCellCenterPx(gridLeftX, gridTopY, 0, 0);
-    const transform = `translate(${pos.x}px, ${pos.y}px) rotate(180deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px)`;
+    const off = bodyShift(180);
+    const transform = `translate(${pos.x + off.dx}px, ${pos.y + off.dy}px) rotate(180deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px)`;
     sheepGroups = `<g class="sheep-fallback" transform="${transform}">${SHEEP_CONTENT}</g>`;
   }
 

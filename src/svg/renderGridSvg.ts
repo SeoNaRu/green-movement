@@ -14,6 +14,7 @@ import { planTargets } from "../planning/targetPlanner.js";
 import { simulateGrid } from "../simulation/simulate.js";
 import { buildTimeline } from "../timeline/schedules.js";
 import { buildGrassLayer } from "./layers/grassLayer.js";
+import { buildGrassCrumbsLayer } from "./layers/grassCrumbsLayer.js";
 import { buildUfoLayer } from "./layers/ufoLayer.js";
 import { buildSheepLayer } from "./layers/sheepLayer.js";
 import { buildFlowerLayer, type FlowerSpot } from "./layers/flowerLayer.js";
@@ -105,6 +106,14 @@ export function renderGridSvg(
     timeOffset: timeline.timelineOffset,
     paintColors: Object.keys(paintColors).length > 0 ? paintColors : undefined,
     paintTimes: Object.keys(paintTimes).length > 0 ? paintTimes : undefined,
+  });
+
+  const { crumbKeyframes, crumbGroup } = buildGrassCrumbsLayer({
+    firstArrivals: timeline.firstArrivals,
+    gridLeftX: ctx.gridLeftX,
+    gridTopY: ctx.gridTopY,
+    maxTotalTime: timeline.maxTotalTimeWithEntryExit,
+    timeOffset: timeline.timelineOffset,
   });
 
   const n = timeline.effectiveDropCount;
@@ -292,6 +301,8 @@ export function renderGridSvg(
     rects,
     flowerRects,
     flowerKeyframes,
+    crumbKeyframes,
+    crumbGroup,
     sheepGroups,
     ufoGroupStr,
     ufoRippleKeyframesStr,

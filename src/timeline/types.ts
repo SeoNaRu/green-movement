@@ -2,7 +2,10 @@
 export type TimelineResult = {
   timelineOffset: number;
   maxTotalTimeWithEntryExit: number;
-  firstArrivals: Map<string, { arrivalTime: number; level: number }>;
+  firstArrivals: Map<
+    string,
+    { arrivalTime: number; level: number; directionRad?: number }
+  >;
   ufoArriveAbsSOffset: number[];
   spawnAbsSOffset: number[];
   readyAbsSOffset: number[];

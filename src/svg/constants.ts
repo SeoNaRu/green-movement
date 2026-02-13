@@ -35,6 +35,8 @@ export const SHEEP_CELL_TIME = 0.5;
 export const GRASS_FADE_DURATION = 2;
 // 양이 잔디에 도착한 뒤 페이드가 시작되기까지 대기(초). 도착 전에 잔디가 사라지지 않도록.
 export const GRASS_FADE_START_DELAY = 0.4;
+/** 잔디 단계별 감소 시점(초). 도착 시각 기준. [4→3, 3→2, 2→1, 1→0]. 앞 3개는 파티클 씹는 비트와 동기화 */
+export const GRASS_STEP_TIMES_S = [0.15, 0.75, 1.35, 2.0];
 // 우주선이 양이 완전히 내린 뒤(ready) 추가로 대기하는 시간(초). 양이 보인 뒤에 우주선이 움직이도록.
 export const UFO_STAY_BUFFER_S = 0.08;
 // 스펙: 우주선 밖에서 진입하는 데 걸리는 시간(초).
@@ -55,6 +57,12 @@ export const waitTicks = Math.max(
   1,
   Math.ceil((GRASS_FADE_DURATION * EAT_HOLD_MULT) / SHEEP_CELL_TIME),
 );
+/** 잔디 레벨별 체류 틱 수. [레벨1, 레벨2, 레벨3, 레벨4] — 너무 짧지/길지 않게 (1: 1.5초, 4: 3초) */
+export const WAIT_TICKS_BY_LEVEL = [3, 4, 5, 6];
+export function getWaitTicksForLevel(level: number): number {
+  const idx = Math.max(0, Math.min(level, 4) - 1);
+  return WAIT_TICKS_BY_LEVEL[idx] ?? waitTicks;
+}
 // 각 양이 최대 몇 칸의 잔디를 먹을지 (전체 잔디 전부를 원하면 크게)
 export const MAX_MEALS_PER_SHEEP = 50;
 // 접근칸 예약 TTL: 이 틱 수 지나면 예약 자동 해제 (입구 독점 완화)
@@ -91,10 +99,10 @@ export const SHEEP_CONTENT = `<g transform="translate(0,7.5) scale(1,1.25) trans
 </g>
 <g transform="translate(0,-1.55)">
   <!-- 머리 -->
-  <ellipse cx="8" cy="3.6" rx="3" ry="2.4" fill="#2b2b2b"/>
+  <ellipse cx="8" cy="3.6" rx="3" ry="2.4" fill="#4e4038" />
   <!-- 귀 -->
-  <ellipse cx="4.8" cy="4.4" rx="1.5" ry="1.0" fill="#333333"/>
-  <ellipse cx="11.2" cy="4.4" rx="1.5" ry="1.0" fill="#333333"/>
+  <ellipse cx="4.8" cy="4.4" rx="1.5" ry="1.0" fill="#4e4038"/>
+  <ellipse cx="11.2" cy="4.4" rx="1.5" ry="1.0" fill="#4e4038"/>
   <!-- 코끝 느낌의 밝은 점 (살짝 더 크게) -->
   <circle cx="8" cy="2.0" r="0.35" fill="#444"/>
   <!-- 뿔: 아래 털 쪽으로 조금 더 길게, 아래쪽 간격이 살짝 더 넓어지도록 -->
@@ -108,7 +116,9 @@ export const SHEEP_CONTENT = `<g transform="translate(0,7.5) scale(1,1.25) trans
 export const SHEEP_VIEWBOX_CX = 8;
 export const SHEEP_VIEWBOX_CY = 6.25;
 export const SHEEP_VIEWBOX_W = 15;
-export const SHEEP_WIDTH_PX = 24;
+export const SHEEP_WIDTH_PX = 32;
+/** 양을 셀 중심에서 몸쪽으로 살짝 밀어서, 입(앞)이 파티클(잔디 중심) 쪽에 오게 함 */
+export const SHEEP_BODY_SHIFT_PX = 2;
 
 // UFO (assets/ufo.svg) — viewBox 0 0 512 512, 그리드에서는 양과 같은 크기(24px)로 표시
 // assets/ufo.svg 의 내부 <g> 내용과 동일하게 유지해야 함.

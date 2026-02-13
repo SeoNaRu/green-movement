@@ -10,6 +10,7 @@ green-movement/
 ├── docs/                 # 설계·스펙·가이드
 │   ├── FILE_STRUCTURE.md      # 이 문서
 │   ├── REFACTOR_PIPELINE.md   # 파이프라인·레이어 정리
+│   ├── SVG_FLOW.md            # 우주선·양·꽃·파동 흐름 정리
 │   ├── SVG_RENDER_STRUCTURE.md
 │   └── ...
 ├── src/

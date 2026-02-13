@@ -215,80 +215,17 @@ export function buildTimeline(
   const sweepArriveAbsSOffset = sweepArriveAbsS.map((t) => t + timelineOffset);
   const paintSweepStartAbsSOffset = paintSweepStartAbsS + timelineOffset;
 
-  if (process.env?.DEBUG_TIMING === "1") {
-    const sample = Math.min(5, sheepCount);
-    for (let i = 0; i < sample; i++) {
-      const timeline = positionsHistory[i] ?? [];
-      const target = sheepTargetsWithEmpty[i];
-      const spawnPos = funnelPositionsEarly[i];
-      if (target && spawnPos) {
-        console.log(
-          `[spawn] sheep=${i} spawnCell=${spawnPos[0]},${spawnPos[1]} targetGrass=${target.grass.x},${target.grass.y} neighbor=${target.emptyNeighbor.x},${target.emptyNeighbor.y}`,
-        );
-      }
-      console.log(
-        `[timing] sheep=${i} spawn=${(visualSpawnAbsS[i] ?? 0).toFixed(2)} ready=${readyAbsS[i].toFixed(2)} moveStart=${(visualMoveStartAbsS[i] ?? 0).toFixed(2)} len=${timeline.length}`,
-      );
-    }
-    console.log(
-      `[timing] maxTotalTime=${maxTotalTime.toFixed(2)} MOVE_START_S=${timing.moveStartS.toFixed(2)}`,
-    );
-  }
-  if (process.env?.DEBUG_DROP === "1") {
-    console.log("\n--- [DEBUG_DROP] 드롭 위치·타이밍 검증 ---");
-    for (let i = 0; i < sheepCount; i++) {
-      const t = sheepTargetsWithEmpty[i];
-      const path = paths[i] ?? [];
-      const firstPos = positionsHistory[i]?.[0];
-      const dropKey = firstPos ? `${firstPos[0]},${firstPos[1]}` : "none";
-      const countAtDrop =
-        dropKey !== "none" ? (initialCountByKey.get(dropKey) ?? -1) : -1;
-      const isGrass = countAtDrop > 0;
-      console.log(
-        `[drop] sheep=${i} path[0]=${path[0] ? `${path[0][0]},${path[0][1]}` : "none"} ` +
-          `emptyNeighbor=${t ? `${t.emptyNeighbor.x},${t.emptyNeighbor.y}` : "n/a"} ` +
-          `simFirstPos=${dropKey} count=${countAtDrop} ${isGrass ? "⚠️잔디(버그)" : "✓빈칸"}`,
-      );
-      console.log(
-        `[ufo] sheep=${i} spawn=${(visualSpawnAbsS[i] ?? 0).toFixed(2)}s ready=${readyAbsS[i].toFixed(2)}s ` +
-          `moveStart=${(visualMoveStartAbsS[i] ?? 0).toFixed(2)}s firstGrass=${sheepFirstGrassArrivalS[i] === Infinity ? "∞" : sheepFirstGrassArrivalS[i].toFixed(2)}s ufoLeave=${ufoLeaveAbsS[i].toFixed(2)}s`,
-      );
-    }
-    console.log("---\n");
-  }
-  if (process.env?.DEBUG_SPEC === "1") {
-    const i = 0;
-    console.log(
-      "\n--- [DEBUG_SPEC] UFO_SHEEP_SPEC 타임라인 (sheep 0 기준) ---",
-    );
-    console.log(
-      `진입 끝(우주선 정지): ${timelineOffset.toFixed(2)}s | ` +
-        `불빛 켜짐 완료: ${(spawnAbsSOffset[i] + 0.12).toFixed(2)}s | ` +
-        `양 내림 완료(보임): ${readyAbsSOffset[i].toFixed(2)}s`,
-    );
-    console.log(
-      `양 움직임 시작: ${moveStartAbsSOffset[i].toFixed(2)}s | ` +
-        `불빛 꺼짐 완료: ${(moveStartAbsSOffset[i] + LIGHT_FADE_OUT_S).toFixed(2)}s | ` +
-        `양 첫 잔디 도착: ${sheepFirstGrassArrivalS[i] === Infinity ? "∞" : (sheepFirstGrassArrivalS[i] + timelineOffset).toFixed(2)}s`,
-    );
-    console.log(
-      `UFO 다음 위치 출발: ${ufoLeaveAbsSOffset[i].toFixed(2)}s (불빛끔 & 양 첫잔디 도착 중 늦은 시점)`,
-    );
-    console.log(
-      `전체 길이: ${maxTotalTimeWithEntryExit.toFixed(2)}s (진입 ${timing.ufoEntryS}s + 본편 + 퇴장 ${timing.ufoExitS}s)`,
-    );
-    console.log("---\n");
-  }
-
   const firstArrivals = new Map<
     string,
-    { arrivalTime: number; level: number }
+    { arrivalTime: number; level: number; directionRad?: number }
   >();
   for (const [k, v] of targetCellArrivals) {
     if (v.length > 0) {
+      const first = v[0];
       firstArrivals.set(k, {
-        arrivalTime: v[0].arrivalTime,
-        level: v[0].level,
+        arrivalTime: first.arrivalTime,
+        level: first.level,
+        directionRad: first.directionRad,
       });
     }
   }

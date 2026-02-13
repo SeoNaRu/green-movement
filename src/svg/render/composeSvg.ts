@@ -12,6 +12,8 @@ export function composeSvg(params: {
   rects: string;
   flowerRects: string;
   flowerKeyframes: string;
+  crumbKeyframes: string;
+  crumbGroup: string;
   sheepGroups: string;
   ufoGroupStr: string;
   ufoRippleKeyframesStr: string;
@@ -35,6 +37,8 @@ export function composeSvg(params: {
     rects,
     flowerRects,
     flowerKeyframes,
+    crumbKeyframes,
+    crumbGroup,
     sheepGroups,
     ufoGroupStr,
     ufoRippleKeyframesStr,
@@ -53,6 +57,7 @@ export function composeSvg(params: {
     <style>
   ${grassFadeKeyframes}
   ${flowerKeyframes}
+  ${crumbKeyframes}
   ${animationStyles}
   ${ufoKeyframesStr}
   ${ufoLightKeyframesStr}
@@ -63,6 +68,7 @@ export function composeSvg(params: {
   ${fenceRects}
   ${rects}
   <g id="flower-layer">${flowerRects}</g>
+  ${crumbGroup}
   ${sheepGroups}
   ${ufoRippleGroupStr}
   ${ufoGroupStr}
