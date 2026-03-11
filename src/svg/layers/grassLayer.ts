@@ -1,1 +1,1 @@
-export { buildGrassLayer } from "../anim/keyframes.js";
+export { buildGrassLayer } from "../anim/keyframes/index.js";

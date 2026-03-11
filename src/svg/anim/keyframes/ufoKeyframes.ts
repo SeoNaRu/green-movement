@@ -1,132 +1,12 @@
-import type { GridCell } from "../../grid/mapGrid.js";
 import {
   CELL_SIZE,
   GAP,
-  BORDER_RADIUS,
-  COLORS,
-  GRASS_FADE_DURATION,
-  GRASS_FADE_START_DELAY,
-  GRASS_STEP_TIMES_S,
-  SHEEP_CELL_TIME,
-  SHEEP_CONTENT,
-  SHEEP_VIEWBOX_CX,
-  SHEEP_VIEWBOX_CY,
-  SHEEP_VIEWBOX_W,
-  SHEEP_WIDTH_PX,
-  SHEEP_BODY_SHIFT_PX,
-  UFO_CELL_TIME,
-  UFO_MOVE_MIN_S,
-  UFO_MOVE_MAX_S,
   UFO_TILT_DEG,
   UFO_VIEWBOX,
   UFO_WIDTH_PX,
   UFO_CONTENT,
-  UFO_BEAM_DELAY_S,
-} from "../constants.js";
-import { getCellCenterPx } from "../gridLayout.js";
-import { getContributionLevel, getColor } from "../contribution.js";
-
-export function buildGrassLayer(params: {
-  grid: GridCell[];
-  gridLeftX: number;
-  gridTopY: number;
-  initialCountByKey: Map<string, number>;
-  quartiles: number[];
-  targetCellArrivals: Map<string, { arrivalTime: number; level: number }>;
-  maxTotalTime: number;
-  timeOffset?: number;
-  paintColors?: Record<string, string>;
-  paintTimes?: Record<string, number>;
-}): { rects: string; grassFadeKeyframes: string } {
-  const {
-    grid,
-    gridLeftX,
-    gridTopY,
-    initialCountByKey,
-    quartiles,
-    targetCellArrivals,
-    maxTotalTime,
-    timeOffset = 0,
-    paintColors = {},
-    paintTimes = {},
-  } = params;
-
-  const grassLoopKeyframes: string[] = [];
-  const rects = grid
-    .map((cell, cellIndex) => {
-      const px = gridLeftX + cell.x * (CELL_SIZE + GAP);
-      const py = gridTopY + cell.y * (CELL_SIZE + GAP);
-      const key = `${cell.x},${cell.y}`;
-      const initialCount = initialCountByKey.get(key) ?? cell.count;
-      const level = getContributionLevel(initialCount, quartiles);
-      const initialColor = getColor(level);
-      const paintColor = paintColors[key];
-      const paintTime = paintTimes[key];
-      const arrivals = targetCellArrivals.get(key);
-
-      if (arrivals) {
-        const startLevel = Math.max(1, arrivals.level);
-        const fill = getColor(startLevel);
-        const eatingStart = timeOffset + arrivals.arrivalTime;
-        const kfName = `grass-loop-${cellIndex}`;
-        const steps = Math.min(startLevel, GRASS_STEP_TIMES_S.length);
-        const entries: string[] = [`0% { fill: ${fill}; }`];
-        for (let i = 0; i < steps; i++) {
-          const t = eatingStart + GRASS_STEP_TIMES_S[i];
-          const pct = Math.min(99.98, (t / maxTotalTime) * 100);
-          const currentColor = getColor(startLevel - i);
-          const nextColor = getColor(startLevel - i - 1);
-          entries.push(`${pct.toFixed(4)}% { fill: ${currentColor}; }`);
-          entries.push(`${(pct + 0.01).toFixed(4)}% { fill: ${nextColor}; }`);
-        }
-        if (paintColor != null && paintTime != null) {
-          const paintPct = Math.min(
-            99.99,
-            Math.max(
-              ((eatingStart + (GRASS_STEP_TIMES_S[steps - 1] ?? 0)) /
-                maxTotalTime) *
-                100 +
-                0.02,
-              (paintTime / maxTotalTime) * 100,
-            ),
-          );
-          grassLoopKeyframes.push(`
-  @keyframes ${kfName} {
-    ${entries.join("\n    ")}
-    ${paintPct.toFixed(4)}% { fill: ${COLORS.LEVEL_0}; }
-    ${(paintPct + 0.01).toFixed(4)}% { fill: ${paintColor}; }
-    100% { fill: ${paintColor}; }
-  }`);
-        } else {
-          entries.push(`100% { fill: ${COLORS.LEVEL_0}; }`);
-          grassLoopKeyframes.push(`
-  @keyframes ${kfName} {
-    ${entries.join("\n    ")}
-  }`);
-        }
-        const anim = `animation: ${kfName} ${maxTotalTime}s linear 0s 1 both`;
-        return `<rect x="${px}" y="${py}" width="${CELL_SIZE}" height="${CELL_SIZE}" fill="${fill}" rx="${BORDER_RADIUS}" style="${anim}"/>`;
-      }
-
-      if (paintColor != null && paintTime != null) {
-        const pct = Math.min(99.99, (paintTime / maxTotalTime) * 100);
-        const kfName = `grass-paint-${cellIndex}`;
-        grassLoopKeyframes.push(`
-  @keyframes ${kfName} {
-    0% { fill: ${initialColor}; }
-    ${pct.toFixed(4)}% { fill: ${initialColor}; }
-    ${(pct + 0.01).toFixed(4)}% { fill: ${paintColor}; }
-    100% { fill: ${paintColor}; }
-  }`);
-        const anim = `animation: ${kfName} ${maxTotalTime}s linear 0s 1 both`;
-        return `<rect x="${px}" y="${py}" width="${CELL_SIZE}" height="${CELL_SIZE}" fill="${initialColor}" rx="${BORDER_RADIUS}" style="${anim}"/>`;
-      }
-      return `<rect x="${px}" y="${py}" width="${CELL_SIZE}" height="${CELL_SIZE}" fill="${initialColor}" rx="${BORDER_RADIUS}"/>`;
-    })
-    .join("\n  ");
-
-  return { rects, grassFadeKeyframes: grassLoopKeyframes.join("") };
-}
+} from "../../constants.js";
+import { getCellCenterPx } from "../../gridLayout.js";
 
 /** UFO 리플: ring 1=2x2중앙, ring n(n>=2)= (2n)x(2n) 테두리. 그리드 밖은 add에서 걸러짐. */
 function getRippleRingCells(
@@ -249,10 +129,8 @@ export function buildUfoLayer(params: {
     let ry = 0;
 
     if (Math.abs(dx) >= Math.abs(dy)) {
-      // 좌우 이동 → 좌/우로 기울기 (Y축 회전)
       ry = dx > 0 ? -UFO_BANK_DEG : UFO_BANK_DEG;
     } else {
-      // 상하 이동 → 앞/뒤로 기울기 (X축 회전)
       rx = dy > 0 ? UFO_BANK_DEG : -UFO_BANK_DEG;
     }
 
@@ -340,7 +218,6 @@ export function buildUfoLayer(params: {
       ufoRotKeyframePcts.push(
         `${pctArrive1.toFixed(4)}% { transform: rotate(${angle1}deg); }`,
       );
-      // bank: 출발 직전 0 → 이동 중간 bankTf1 → 도착 직전/직후 0
       const bankReset = `perspective(${PERSPECTIVE_PX}px) rotateX(0deg) rotateY(0deg)`;
       ufoBankKeyframePcts.push(
         `${pctStayEnd0.toFixed(4)}% { transform: ${bankReset}; }`,
@@ -423,7 +300,6 @@ export function buildUfoLayer(params: {
         ufoRotKeyframePcts.push(
           `${pctArriveNext.toFixed(4)}% { transform: rotate(${angleNext}deg); }`,
         );
-        // bank: 출발 직전 0 → 이동 중간 bankTf → 도착 직전/직후 0
         const bankReset = `perspective(${PERSPECTIVE_PX}px) rotateX(0deg) rotateY(0deg)`;
         ufoBankKeyframePcts.push(
           `${pctStayEndI.toFixed(4)}% { transform: ${bankReset}; }`,
@@ -473,7 +349,6 @@ export function buildUfoLayer(params: {
     ufoRotKeyframePcts.push(
       `${pctLastStay.toFixed(4)}% { transform: rotate(${lastSegAngle}deg); }`,
     );
-    // ---- pickup 이동: 마지막 드롭 위치에서 각 pickupCells로 이동 ----
     if (
       pickupCellsArr.length > 0 &&
       pickupArriveArr.length === pickupCellsArr.length
@@ -495,18 +370,15 @@ export function buildUfoLayer(params: {
         const ty = posPx.y - UFO_WIDTH_PX / 2;
         const pctArrive = maxTotalTime > 0 ? (arriveT * 100) / maxTotalTime : 0;
 
-        // “도착” 위치 고정
         ufoMoveKeyframePcts.push(
           `${pctArrive.toFixed(4)}% { transform: translate(${tx}px, ${ty}px); }`,
         );
 
-        // 회수 방향 각도(이전 위치 -> 현재 위치)
         const angle = dirAngle(prevPx, posPx);
         ufoRotKeyframePcts.push(
           `${pctArrive.toFixed(4)}% { transform: rotate(${angle}deg); }`,
         );
 
-        // 회수 중 잠깐 머무는 구간 (빛/회수)
         const holdEndT = arriveT + pickupWait + pickupLight;
         const pctHoldEnd =
           maxTotalTime > 0 ? (holdEndT * 100) / maxTotalTime : 0;
@@ -517,7 +389,6 @@ export function buildUfoLayer(params: {
           `${pctHoldEnd.toFixed(4)}% { transform: rotate(${angle}deg); }`,
         );
 
-        // pickup 이동에도 bank 적용: 도착 시점 0 → 이동/홀드 중 bank → 홀드 끝에 0
         const bankTfPickup = bankForDelta(prevPx, posPx);
         const bankReset = `perspective(${PERSPECTIVE_PX}px) rotateX(0deg) rotateY(0deg)`;
         ufoBankKeyframePcts.push(
@@ -535,7 +406,6 @@ export function buildUfoLayer(params: {
       }
     }
 
-    // ---- 페인트 스윕: 왼쪽→오른쪽 쭉 지나간 뒤 퇴장 ----
     let exitFromTx = lastTx;
     let exitFromTy = lastTy;
     let exitFromAngle = lastSegAngle;
@@ -632,7 +502,6 @@ export function buildUfoLayer(params: {
     firstPos[1],
   );
   const entryY = firstPosPx.y - UFO_WIDTH_PX / 2 - 60;
-  // bank가 있다면 글로벌 0% / 100% 안전 프레임 추가
   if (ufoBankKeyframePcts.length > 0) {
     const bankReset = `perspective(${PERSPECTIVE_PX}px) rotateX(0deg) rotateY(0deg)`;
     ufoBankKeyframePcts.unshift(`0% { transform: ${bankReset}; }`);
@@ -671,7 +540,6 @@ export function buildUfoLayer(params: {
     lightKeyframeEntries.push({ pct: pctOff, opacity: 0 });
   }
 
-  // ---- pickup light: 회수 때도 빛을 켠다 (UFO 위치와 동기화) ----
   if (
     pickupCellsArr.length > 0 &&
     pickupArriveArr.length === pickupCellsArr.length
@@ -716,7 +584,6 @@ export function buildUfoLayer(params: {
       </g>`
     : "";
 
-  // ---- 퍼져나가는 파동(리플): 드롭 + 회수 + 중앙(페인트). ring 1→2→3, 중앙만 ring 4=그리드 끝 ----
   const RIPPLE_STEP_S = 0.06;
   const RIPPLE_OPACITY_PEAK = 0.14;
   const RIPPLE_OPACITY_EDGE = 0.06;
@@ -790,20 +657,20 @@ export function buildUfoLayer(params: {
           entries.push({ pct: pOut, opacity: 0 });
         }
         entries.sort((a, b) => a.pct - b.pct);
-        const deduped: { pct: number; opacity: number }[] = [];
+        const dedupedRipple: { pct: number; opacity: number }[] = [];
         for (const e of entries) {
           if (
-            deduped.length > 0 &&
-            deduped[deduped.length - 1].pct >= e.pct - 0.0001
+            dedupedRipple.length > 0 &&
+            dedupedRipple[dedupedRipple.length - 1].pct >= e.pct - 0.0001
           )
-            deduped[deduped.length - 1] = e;
-          else deduped.push(e);
+            dedupedRipple[dedupedRipple.length - 1] = e;
+          else dedupedRipple.push(e);
         }
         const name = `ufo-ripple-${idx}-${ring}`;
         rippleKeyframes.push(`
   @keyframes ${name} {
     0% { opacity: 0; }
-    ${deduped.map((e) => `${e.pct.toFixed(4)}% { opacity: ${e.opacity}; }`).join("\n    ")}
+    ${dedupedRipple.map((e) => `${e.pct.toFixed(4)}% { opacity: ${e.opacity}; }`).join("\n    ")}
     100% { opacity: 0; }
   }`);
         const cells = getRippleRingCells(cx, cy, ring, maxX, maxY);
@@ -830,298 +697,4 @@ export function buildUfoLayer(params: {
     ufoRippleKeyframesStr,
     ufoRippleGroupStr,
   };
-}
-
-export function buildSheepLayer(params: {
-  positionsHistory: [number, number][][];
-  assignedIndices: number[];
-  spawnAbsS: number[];
-  moveStartAbsS: number[];
-  maxTotalTime: number;
-  gridLeftX: number;
-  gridTopY: number;
-  dropStayS: number;
-  lightRampS: number;
-  sheepFadeS: number;
-  dropDescentPx: number;
-  moveStartS: number;
-  pickupArriveAbsS?: (number | null)[];
-  pickupFadeS?: number;
-  pickupWaitS?: number;
-  pickupLightS?: number;
-}): { animationStyles: string; sheepGroups: string } {
-  const {
-    positionsHistory,
-    assignedIndices,
-    spawnAbsS,
-    moveStartAbsS,
-    maxTotalTime,
-    gridLeftX,
-    gridTopY,
-    dropStayS,
-    lightRampS,
-    sheepFadeS,
-    dropDescentPx,
-    moveStartS,
-    pickupArriveAbsS,
-    pickupFadeS = 0.25,
-    pickupWaitS,
-    pickupLightS,
-  } = params;
-
-  const sheepScale = SHEEP_WIDTH_PX / SHEEP_VIEWBOX_W / 2.5;
-  /** 양을 셀 중심에서 몸쪽으로 밀어서, 입이 파티클(잔디 중심) 쪽에 오게 함 */
-  const bodyShift = (angleDeg: number) => {
-    const rad = (angleDeg * Math.PI) / 180;
-    return {
-      dx: -SHEEP_BODY_SHIFT_PX * Math.sin(rad),
-      dy: SHEEP_BODY_SHIFT_PX * Math.cos(rad),
-    };
-  };
-
-  const sheepAnimations = assignedIndices.map((si: number) => {
-    const timeline = positionsHistory[si];
-    if (!timeline || timeline.length === 0) {
-      return { id: `sheep-${si}`, keyframes: "", animationCSS: "" };
-    }
-    const totalPoints = timeline.length;
-    const totalMoves = Math.max(totalPoints - 1, 0);
-
-    const frames: {
-      t: number;
-      x: number;
-      y: number;
-      angle: number;
-    }[] = [];
-    let lastAngle = 180;
-    let time = 0;
-
-    const angleOf = (dx: number, dy: number, fallback: number) => {
-      if (dx > 0) return 90;
-      if (dx < 0) return 270;
-      if (dy > 0) return 180;
-      if (dy < 0) return 0;
-      return fallback;
-    };
-
-    {
-      const cur = timeline[0];
-      frames.push({ t: 0, x: cur[0], y: cur[1], angle: lastAngle });
-    }
-
-    for (let idx = 0; idx < totalMoves; idx++) {
-      const cur = timeline[idx];
-      const next = timeline[idx + 1];
-      if (!next) break;
-
-      const dx = next[0] - cur[0];
-      const dy = next[1] - cur[1];
-
-      const nextAngle = angleOf(dx, dy, lastAngle);
-      const dirChanged = nextAngle !== lastAngle;
-      const tickEnd = time + SHEEP_CELL_TIME;
-
-      if (dx === 0 && dy === 0) {
-        frames.push({
-          t: tickEnd,
-          x: cur[0],
-          y: cur[1],
-          angle: lastAngle,
-        });
-        time = tickEnd;
-        continue;
-      }
-
-      if (dirChanged) {
-        const rotateTime = time + SHEEP_CELL_TIME * 0.18;
-        frames.push({
-          t: rotateTime,
-          x: cur[0],
-          y: cur[1],
-          angle: nextAngle,
-        });
-        frames.push({
-          t: tickEnd,
-          x: next[0],
-          y: next[1],
-          angle: nextAngle,
-        });
-      } else {
-        frames.push({
-          t: tickEnd,
-          x: next[0],
-          y: next[1],
-          angle: nextAngle,
-        });
-      }
-
-      lastAngle = nextAngle;
-      time = tickEnd;
-    }
-
-    const timeOffset = spawnAbsS[si] ?? 0;
-    const keyframeEntries: { pct: number; css: string }[] = [];
-    const dropFrame = frames[0];
-    const dropPx = getCellCenterPx(
-      gridLeftX,
-      gridTopY,
-      dropFrame.x,
-      dropFrame.y,
-    );
-    const dropOff = bodyShift(dropFrame.angle);
-    const dropX = dropPx.x + dropOff.dx;
-    const dropY = dropPx.y + dropOff.dy;
-    const dropStartY = dropY - dropDescentPx;
-    const offscreen = `transform: translate(-9999px, -9999px) rotate(180deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0;`;
-    const pctSpawn = maxTotalTime > 0 ? (timeOffset * 100) / maxTotalTime : 0;
-    keyframeEntries.push({
-      pct: 0,
-      css: `0% { ${offscreen} }`,
-    });
-    if (pctSpawn > 0) {
-      keyframeEntries.push({
-        pct: Math.min(100, pctSpawn),
-        css: `${Math.min(100, pctSpawn).toFixed(4)}% { transform: translate(${dropX}px, ${dropStartY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; }`,
-      });
-    } else {
-      keyframeEntries.push({
-        pct: 0,
-        css: `0% { transform: translate(${dropX}px, ${dropStartY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; }`,
-      });
-    }
-    const readyTime = timeOffset + (lightRampS + sheepFadeS);
-    const moveStartTime = Math.max(moveStartAbsS[si] ?? 0, readyTime);
-    const pctReady = maxTotalTime > 0 ? (readyTime * 100) / maxTotalTime : 0;
-    const pctMoveStart =
-      maxTotalTime > 0 ? (moveStartTime * 100) / maxTotalTime : 0;
-    keyframeEntries.push({
-      pct: Math.min(100, pctReady),
-      css: `${Math.min(100, pctReady).toFixed(4)}% { transform: translate(${dropX}px, ${dropY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 1; }`,
-    });
-    keyframeEntries.push({
-      pct: Math.min(100, pctMoveStart),
-      css: `${Math.min(100, pctMoveStart).toFixed(4)}% { transform: translate(${dropX}px, ${dropY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 1; }`,
-    });
-    let firstMoveIdxHistory = -1;
-    for (let ti = 1; ti < timeline.length; ti++) {
-      if (
-        timeline[ti][0] !== timeline[0][0] ||
-        timeline[ti][1] !== timeline[0][1]
-      ) {
-        firstMoveIdxHistory = ti;
-        break;
-      }
-    }
-    const firstMoveT =
-      firstMoveIdxHistory >= 0
-        ? firstMoveIdxHistory * SHEEP_CELL_TIME
-        : (frames[1]?.t ?? SHEEP_CELL_TIME);
-    if (firstMoveIdxHistory >= 0) {
-      for (let fi = 1; fi < frames.length; fi++) {
-        const f = frames[fi];
-        if (f.t < firstMoveT) continue;
-        const { x, y } = getCellCenterPx(gridLeftX, gridTopY, f.x, f.y);
-        const off = bodyShift(f.angle);
-        const globalTime = moveStartTime + (f.t - firstMoveT);
-        const percent =
-          maxTotalTime > 0 ? (globalTime * 100) / maxTotalTime : 0;
-        const pct = Math.min(99.9999, percent);
-        keyframeEntries.push({
-          pct,
-          css: `${pct.toFixed(4)}% { transform: translate(${x + off.dx}px, ${y + off.dy}px) rotate(${f.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 1; }`,
-        });
-      }
-    }
-
-    // --- pickup: UFO가 회수하러 "해당 양 위에 도착"한 뒤, 빛이 내려오고 나서 양이 사라진다 ---
-    const pickupT = pickupArriveAbsS?.[si] ?? null;
-    const pickupFade = pickupFadeS ?? 0.25;
-    const pickupWait = pickupWaitS ?? 0.35;
-    const pickupLight = pickupLightS ?? 0.22;
-
-    if (pickupT != null && Number.isFinite(pickupT) && pickupT > 0) {
-      // 빛이 내려온 "끝" 시점 이후에 fade 시작
-      const fadeStartT = pickupT + pickupWait + pickupLight * 0.6;
-
-      const p1 = maxTotalTime > 0 ? (fadeStartT * 100) / maxTotalTime : 0;
-      const p2 =
-        maxTotalTime > 0 ? ((fadeStartT + pickupFade) * 100) / maxTotalTime : 0;
-
-      const a = Math.min(99.9998, Math.max(0, p1));
-      const b = Math.min(99.9999, Math.max(a, p2));
-
-      keyframeEntries.push({
-        pct: a,
-        css: `${a.toFixed(4)}% { opacity: 1; }`,
-      });
-      keyframeEntries.push({
-        pct: b,
-        css: `${b.toFixed(4)}% { opacity: 0; }`,
-      });
-    }
-
-    const lastCell = timeline[timeline.length - 1];
-    const lastFrame = frames[frames.length - 1];
-    const lastPx = getCellCenterPx(
-      gridLeftX,
-      gridTopY,
-      lastCell[0],
-      lastCell[1],
-    );
-    const lastFrameAngle = lastFrame?.angle ?? 180;
-    const lastOff = bodyShift(lastFrameAngle);
-    const hasPickup =
-      pickupT != null && Number.isFinite(pickupT) && pickupT > 0;
-    keyframeEntries.push({
-      pct: 100,
-      css: `100% { transform: translate(${lastPx.x + lastOff.dx}px, ${lastPx.y + lastOff.dy}px) rotate(${lastFrameAngle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: ${hasPickup ? 0 : 1}; }`,
-    });
-
-    const delay = 0;
-    const initialTransform = `transform: translate(-9999px, -9999px) rotate(180deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; `;
-
-    const sorted = keyframeEntries.slice().sort((a, b) => a.pct - b.pct);
-    const deduped: string[] = [];
-    let lastPct: number | null = null;
-    for (const kf of sorted) {
-      if (lastPct !== null && Math.abs(kf.pct - lastPct) < 1e-6) {
-        deduped[deduped.length - 1] = kf.css;
-      } else {
-        deduped.push(kf.css);
-        lastPct = kf.pct;
-      }
-    }
-
-    return {
-      id: `sheep-${si}`,
-      keyframes: `@keyframes sheep-${si}-move {\n    ${deduped.join(
-        "\n    ",
-      )}\n  }`,
-      animationCSS: `${initialTransform}animation: sheep-${si}-move ${maxTotalTime}s linear ${delay}s 1 both;`,
-    };
-  });
-
-  const validSheepAnimations = sheepAnimations.filter(
-    (a: { keyframes: string }) => a.keyframes.length > 0,
-  );
-  const animationStyles = validSheepAnimations
-    .map((a: { keyframes: string }) => a.keyframes)
-    .join("\n  ");
-
-  let sheepGroups: string;
-  if (validSheepAnimations.length > 0) {
-    sheepGroups = validSheepAnimations
-      .map(
-        (a: { id: string; animationCSS: string }) =>
-          `<g class="${a.id}" style="${a.animationCSS}">${SHEEP_CONTENT}</g>`,
-      )
-      .join("\n  ");
-  } else {
-    const pos = getCellCenterPx(gridLeftX, gridTopY, 0, 0);
-    const off = bodyShift(180);
-    const transform = `translate(${pos.x + off.dx}px, ${pos.y + off.dy}px) rotate(180deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px)`;
-    sheepGroups = `<g class="sheep-fallback" transform="${transform}">${SHEEP_CONTENT}</g>`;
-  }
-
-  return { animationStyles, sheepGroups };
 }

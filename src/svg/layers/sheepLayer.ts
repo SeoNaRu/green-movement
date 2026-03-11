@@ -1,1 +1,1 @@
-export { buildSheepLayer } from "../anim/keyframes.js";
+export { buildSheepLayer } from "../anim/keyframes/index.js";
