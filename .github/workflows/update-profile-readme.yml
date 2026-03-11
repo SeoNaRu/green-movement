@@ -4,7 +4,7 @@ name: Update profile README with grass SVG
 on:
   schedule:
     # KST 01:00 = UTC 16:00 (전날)
-    - cron: "0 16 * * *"
+    - cron: "0 13 * * *"
   workflow_dispatch:
 
 jobs:
