@@ -7,16 +7,42 @@ export const CELL_SIZE = 10;
 export const GAP = 2;
 
 /** README/프로필에 넣을 때 SVG 가로를 이 픽셀에 맞춤. 0이면 스케일 안 함(내부 크기 그대로). */
-export const README_TARGET_WIDTH = 1400;
+export const README_TARGET_WIDTH = 700;
 export const BORDER_RADIUS = 2;
-export const BACKGROUND_COLOR = "#0d1117"; // GitHub dark background
+export const BACKGROUND_COLOR = "var(--gm-background)";
+
+/** GitHub 기본 기여 그래프의 light/dark 팔레트. 외부 SVG는 시스템 테마를 따른다. */
+export const GITHUB_THEME_CSS = `
+  :root {
+    color-scheme: light dark;
+    --gm-background: #ffffff;
+    --gm-level-0: #ebedf0;
+    --gm-level-1: #9be9a8;
+    --gm-level-2: #40c463;
+    --gm-level-3: #30a14e;
+    --gm-level-4: #216e39;
+    --gm-fence: #8c6a43;
+    --gm-beam-core: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --gm-background: #0d1117;
+      --gm-level-0: #161b22;
+      --gm-level-1: #0e4429;
+      --gm-level-2: #006d32;
+      --gm-level-3: #26a641;
+      --gm-level-4: #39d353;
+      --gm-fence: #76563b;
+      --gm-beam-core: #f0fff4;
+    }
+  }`;
 
 // Pasture fence: 잔디 그리드와 동일하게 1타일 = 10px 셀 + 2px 간격 (12px).
 // 펜스 드로잉은 10px로 스케일.
 export const FENCE_TILE = CELL_SIZE + GAP; // 12 — 타일 배치 간격(셀+간격)
 export const FENCE_MARGIN = FENCE_TILE;
 export const FENCE_SCALE = CELL_SIZE / 14; // 10/14 — 14x14 에셋을 10px(셀)로 스케일, 타일마다 2px 간격
-export const FENCE_STROKE = "#8B4513";
+export const FENCE_STROKE = "var(--gm-fence)";
 
 // Inlined path from assets/fance/*.svg (viewBox 0 0 14 14).
 export const FENCE_H_PATH = "M 1.5 7 H 12.5";
@@ -26,49 +52,43 @@ export const FENCE_CORNER_PATH = "M 12.5 7 A 5.5 5.5 0 0 0 7 12.5";
 export const FENCE_GROUP_STYLE =
   'fill="none" stroke="' +
   FENCE_STROKE +
-  '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"';
+  '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"';
 
 // 양 이동: 1틱 = 1칸 이동 = 이 시간(초). 애니메이션에서 셀당 구간 길이.
-export const SHEEP_CELL_TIME = 0.5;
-// 양이 잔디에 도착한 뒤 잔디 색이 레벨 4→0으로 줄어드는 시간(초).
-export const GRASS_FADE_DURATION = 2;
+export const SHEEP_CELL_TIME = 0.24;
+// 양이 한 번 물고 다시 출발하기 전에 잔디 색이 레벨 4→0으로 줄어드는 시간(초).
+export const GRASS_FADE_DURATION = 0.23;
 // 양이 잔디에 도착한 뒤 페이드가 시작되기까지 대기(초). 도착 전에 잔디가 사라지지 않도록.
-export const GRASS_FADE_START_DELAY = 0.4;
+/** 잔디 단계별 감소 시점(초). [4→3, 3→2, 2→1, 1→0] */
+export const GRASS_STEP_TIMES_S = [0.12, 0.16, 0.2, GRASS_FADE_DURATION];
 // 우주선이 양이 완전히 내린 뒤(ready) 추가로 대기하는 시간(초). 양이 보인 뒤에 우주선이 움직이도록.
-export const UFO_STAY_BUFFER_S = 0.08;
 // 스펙: 우주선 밖에서 진입하는 데 걸리는 시간(초).
-export const UFO_ENTRY_S = 1.5;
+export const UFO_ENTRY_S = 0.64;
 // 스펙: 잔디 다 먹은 뒤 우주선이 양 태우고 밖으로 나가는 시간(초).
-export const UFO_EXIT_S = 2;
+export const UFO_EXIT_S = 1;
 // 스펙: 양이 움직이기 시작할 때 불빛이 점점 꺼지는 데 걸리는 시간(초).
-export const LIGHT_FADE_OUT_S = 0.5;
+export const LIGHT_FADE_OUT_S = 0.28;
 // UFO 이동: 1칸당 시간(초), 이동만 빠르게
-export const UFO_CELL_TIME = 0.14; // 0.09 -> 0.14
-export const UFO_MOVE_MIN_S = 0.75; // 0.30 -> 0.75  (핵심)
-export const UFO_MOVE_MAX_S = 1.8; // 0.80 -> 1.80
-// UFO 이동 중 방향 기울기(deg). 기본 아래(▼) 기준.
-export const UFO_TILT_DEG = 14; // 기존 8 → 12~16 권장
-export const EAT_HOLD_MULT = 1.4; // 1.0 = 동일, 1.6 = 60% 더 머묾, 2.0 = 두 배
-// 시간 관계: waitTicks ≈ GRASS_FADE_DURATION / SHEEP_CELL_TIME (잔디 페이드 동안 양이 멈춰 있게)
-export const waitTicks = Math.max(
-  1,
-  Math.ceil((GRASS_FADE_DURATION * EAT_HOLD_MULT) / SHEEP_CELL_TIME),
-);
+export const UFO_CELL_TIME = 0.04;
+export const UFO_MOVE_MIN_S = 0.22;
+export const UFO_MOVE_MAX_S = 0.4;
+// 중간 공중 재배치: 접근 0.30 + 탑승 0.45 + 운반 1.20 + 착지 0.45 = 2.40초.
+export const UFO_RELOCATION_TOTAL_S = 2.4;
+export const UFO_RELOCATION_APPROACH_S = 0.3;
+export const UFO_RELOCATION_BOARD_S = 0.45;
+export const UFO_RELOCATION_FLIGHT_S = 1.2;
+// 한 번의 짧은 물기만 멈추고, 잔디의 단계별 감소는 양이 다시 달리는 동안 이어진다.
+export const SHEEP_GRAZE_HOLD_TICKS = 1;
 // 각 양이 최대 몇 칸의 잔디를 먹을지 (전체 잔디 전부를 원하면 크게)
 export const MAX_MEALS_PER_SHEEP = 50;
+export const MAX_SHEEP = 6;
 // 접근칸 예약 TTL: 이 틱 수 지나면 예약 자동 해제 (입구 독점 완화)
-export const APPROACH_TTL = 20;
-// 거리 기반 뺏기: 예약 후 이 틱 수 지나면, 더 가까운 양이 뺏을 수 있음
-export const APPROACH_STEAL_AFTER = 12;
-export const APPROACH_STEAL_MARGIN = 4;
-// 입구(깔때기) 셀 예약 TTL: 이 틱 수까지만 예약해 뒤쪽 양이 경로를 찾을 수 있게 함
-export const FUNNEL_RESERVATION_TICKS = 2;
 // 경로 계획 시 앞으로 예약하는 최대 틱 수 (이 값만 예약해 뒤쪽 양이 경로를 찾을 수 있게)
 export const RESERVE_AHEAD_LIMIT = 6;
 // 잔디 예약 TTL: 이 틱 수 지나면 또는 stuck이 크면 예약 해제 (너무 짧으면 왔다갔다 반복)
 export const GRASS_RES_TTL = 80;
 // UFO가 타일 도착 후 빔 켜기까지 지연
-export const UFO_BEAM_DELAY_S = 0.2;
+export const UFO_BEAM_DELAY_S = 0.1;
 
 // Sheep (assets/sheep.svg) — viewBox 0.5 0 15 12.5, 중심 (8, 6.25)
 // assets/sheep.svg 의 <g id="sheep"> 내용과 동일하게 유지해야 함.
@@ -86,35 +106,35 @@ export const SHEEP_CONTENT = `<g transform="translate(0,7.5) scale(1,1.25) trans
        C13.3 7.9 12.9 9.1 11.7 9.3
        C11.0 10.4 9.6 10.9 8.0 10.5
        Z"
-    fill="#f0f0f0" stroke="#d0d0d0" stroke-width="0.5"/>
-
+    fill="#f7f0df" stroke="#c9bfae" stroke-width="0.5"/>
 </g>
-<g transform="translate(0,-1.55)">
+<g class="sheep-head" transform="translate(0,-1.55)">
   <!-- 머리 -->
-  <ellipse cx="8" cy="3.6" rx="3" ry="2.4" fill="#2b2b2b"/>
+  <ellipse cx="8" cy="3.6" rx="3" ry="2.4" fill="#5c514a" stroke="#b9aa98" stroke-width="0.45" />
   <!-- 귀 -->
-  <ellipse cx="4.8" cy="4.4" rx="1.5" ry="1.0" fill="#333333"/>
-  <ellipse cx="11.2" cy="4.4" rx="1.5" ry="1.0" fill="#333333"/>
+  <ellipse cx="4.8" cy="4.4" rx="1.5" ry="1.0" fill="#5c514a"/>
+  <ellipse cx="11.2" cy="4.4" rx="1.5" ry="1.0" fill="#5c514a"/>
   <!-- 코끝 느낌의 밝은 점 (살짝 더 크게) -->
-  <circle cx="8" cy="2.0" r="0.35" fill="#444"/>
+  <circle cx="8" cy="2.0" r="0.35" fill="#d9c7a9"/>
   <!-- 뿔: 아래 털 쪽으로 조금 더 길게, 아래쪽 간격이 살짝 더 넓어지도록 -->
   <path d="M6.7 3.9 C6.0 4.7 6.0 5.7 6.5 6.0"
-        stroke="#e0c090" stroke-width="1.4"
+        stroke="#c8a96b" stroke-width="1.4"
         stroke-linecap="round" fill="none"/>
   <path d="M9.3 3.9 C10.0 4.7 10.0 5.7 9.5 6.0"
-        stroke="#e0c090" stroke-width="1.4"
+        stroke="#c8a96b" stroke-width="1.4"
         stroke-linecap="round" fill="none"/>
 </g>`;
 export const SHEEP_VIEWBOX_CX = 8;
 export const SHEEP_VIEWBOX_CY = 6.25;
 export const SHEEP_VIEWBOX_W = 15;
-export const SHEEP_WIDTH_PX = 24;
+export const SHEEP_WIDTH_PX = 32;
+/** 양의 입이 이동 방향 쪽에 오도록 셀 중심에서 몸을 미는 거리 */
+export const SHEEP_BODY_SHIFT_PX = 2;
 
 // UFO (assets/ufo.svg) — viewBox 0 0 512 512, 그리드에서는 양과 같은 크기(24px)로 표시
 // assets/ufo.svg 의 내부 <g> 내용과 동일하게 유지해야 함.
 export const UFO_VIEWBOX = "0 0 512 512";
 export const UFO_WIDTH_PX = SHEEP_WIDTH_PX;
-export const UFO_Y_OFFSET = -20;
 export const UFO_CONTENT = `<g>
   <circle cx="256" cy="256" r="200" fill="#dfe3ea" stroke="#6c7482" stroke-width="10"/>
   <g fill="#f2f4f8" stroke="#6c7482" stroke-width="6">
@@ -152,23 +172,13 @@ export const UFO_CONTENT = `<g>
 </g>`;
 
 // 길(이동 가능한 타일).
-export const TILE_PATH = "#161b22";
+export const TILE_PATH = "var(--gm-level-0)";
 
 // GitHub contribution colors (dark theme) - EXACT official colors
 export const COLORS = {
   LEVEL_0: TILE_PATH, // 0 contributions = 빈 칸 = 길
-  LEVEL_1: "#0e4429", // low
-  LEVEL_2: "#006d32", // medium-low
-  LEVEL_3: "#26a641", // medium-high
-  LEVEL_4: "#39d353", // high
+  LEVEL_1: "var(--gm-level-1)", // low
+  LEVEL_2: "var(--gm-level-2)", // medium-low
+  LEVEL_3: "var(--gm-level-3)", // medium-high
+  LEVEL_4: "var(--gm-level-4)", // high
 } as const;
-
-// 양이 밟은 빈 칸에 피어나는 꽃 (1x1px, 양별 색상)
-export const FLOWER_SIZE = 1;
-/** 양 번호별 꽃 색: 0 데이지, 1 코스모스, 2 라벤더, 3 물망초 → 반복 */
-export const SHEEP_FLOWER_COLORS = [
-  "#FFFFFF", // 0: 순백 데이지
-  "#F472B6", // 1: 분홍 코스모스
-  "#D8B4FE", // 2: 라벤더
-  "#A5F3FC", // 3: 시원한 물망초
-] as const;

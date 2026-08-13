@@ -12,11 +12,11 @@ export type PlanResult = {
   sheepCount: number;
   sheepTargetsWithEmpty: (TargetWithGate | undefined)[];
   funnelPositionsEarly: [number, number][];
-  paths: [number, number][][];
   emptyCellSet: Set<string>;
   remainingGrassKeys: Set<string>;
   sheepStates: SheepState[];
   spawnTick: number[];
+  relayStartTick: number[];
   targetBfsLen: Map<string, number>;
   minFunnelRow: number;
 };

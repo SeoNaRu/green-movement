@@ -4,14 +4,13 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
-    "generate": "npm run build && npm run start"
+    "check": "npm run build && tsc --noEmit --noUnusedLocals --noUnusedParameters && node scripts/check-svg.mjs",
+    "start": "node --env-file=.env dist/index.js",
+    "generate": "npm run build && npm run start",
+    "visual:fixture": "npm run build && node scripts/check-svg.mjs --write"
   },
   "engines": {
-    "node": ">=18"
-  },
-  "dependencies": {
-    "dotenv": "^16.3.1"
+    "node": ">=20.6"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

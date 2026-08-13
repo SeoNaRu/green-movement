@@ -75,23 +75,12 @@ export function buildFencePieces(layout: FenceLayout): string {
     return `<g transform="${t}" ${FENCE_GROUP_STYLE}><path d="${FENCE_CORNER_PATH}"/></g>`;
   };
 
-  const GATE_TILES = 4;
-  const totalWidth = fenceRightX + FENCE_TILE;
-  const gateCenterX = totalWidth / 2;
-  const gateStartX =
-    Math.floor((gateCenterX - (GATE_TILES * FENCE_TILE) / 2) / FENCE_TILE) *
-    FENCE_TILE;
-  const gateEndX = gateStartX + (GATE_TILES - 1) * FENCE_TILE;
-
   const pieces: string[] = [];
   pieces.push(gCorner(0, 0, "none"));
   for (let x = FENCE_TILE; x <= fenceRightX - FENCE_TILE; x += FENCE_TILE) {
-    // if (x >= gateStartX && x <= gateEndX) continue;
     pieces.push(g(x, 0, FENCE_H_PATH));
   }
   pieces.push(gCorner(fenceRightX, 0, "x"));
-  // pieces.push(gCorner(gateStartX, 0, "xy"));
-  // pieces.push(gCorner(gateEndX, 0, "y"));
   for (let y = FENCE_TILE; y <= fenceBottomY - FENCE_TILE; y += FENCE_TILE) {
     pieces.push(g(0, y, FENCE_V_PATH));
   }

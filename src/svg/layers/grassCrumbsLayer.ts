@@ -1,20 +1,19 @@
-import { getCellCenterPx } from "../gridLayout.js";
+import { getCellCenterPx } from "../layout/gridLayout.js";
 import { getColor } from "../contribution.js";
 import { GRASS_STEP_TIMES_S } from "../constants.js";
 
-/** 먹는 동안 2~3번 씹는 비트(초). 이 시점에 파티클이 몰려서 “씹는” 느낌 */
-/** 잔디 단계(4→3→2→1)와 맞추기 위해 GRASS_STEP_TIMES_S 앞 3구간에서 파티클 터짐 */
-const CHEW_BEATS_S = GRASS_STEP_TIMES_S.slice(0, 3);
+/** 첫 물기 한 번에만 반응을 모아 작은 README에서도 시작점이 읽히게 함. */
+const BITE_IMPACT_S = GRASS_STEP_TIMES_S[0];
 /** 셀당 파티클 개수 */
 const CRUMB_COUNT_MIN = 2;
-const CRUMB_COUNT_MAX = 10;
+const CRUMB_COUNT_MAX = 3;
 /** 파티클 하나가 중심 → 최종 위치까지 가는 시간 */
-const CRUMB_DURATION_S = 0.55;
+const CRUMB_DURATION_S = 0.32;
 /** 네모 부스러기 한 변(px). 잎은 별도 w/h */
-const CRUMB_SIZE = 1.2;
+const CRUMB_SIZE = 1.1;
 /** 퍼지는 거리(px) */
-const SPREAD_PX_MIN = 2;
-const SPREAD_PX_MAX = 10;
+const SPREAD_PX_MIN = 3;
+const SPREAD_PX_MAX = 8;
 
 /** 퍼짐 콘: 입 방향 기준 이 각도 안에서만 튀어서 “먹는 방향”이 보이게 */
 const CONE_RAD = Math.PI / 3;
@@ -40,18 +39,15 @@ export function buildGrassCrumbsLayer(params: {
   >;
   gridLeftX: number;
   gridTopY: number;
-  maxTotalTime: number;
   timeOffset?: number;
 }): { crumbKeyframes: string; crumbGroup: string } {
   const {
     firstArrivals,
     gridLeftX,
     gridTopY,
-    maxTotalTime,
     timeOffset = 0,
   } = params;
 
-  const keyframesOut: string[] = [];
   const groupParts: string[] = [];
   let burstIndex = 0;
 
@@ -59,7 +55,8 @@ export function buildGrassCrumbsLayer(params: {
     const [col, row] = key.split(",").map(Number);
     const { x: cx, y: cy } = getCellCenterPx(gridLeftX, gridTopY, col, row);
     const eatingStartTime = timeOffset + arrivalTime;
-    const grassColor = getColor(Math.max(1, level));
+    const grassColor =
+      level >= 4 ? "#7ee787" : getColor(Math.min(4, level + 1));
     /* 양이 이 칸에 들어온 방향 = 파티클 퍼짐 방향 + 시작 위치 오프셋 방향 */
     const mouthAngle =
       directionRad !== undefined ? directionRad : DEFAULT_MOUTH_ANGLE;
@@ -88,59 +85,22 @@ export function buildGrassCrumbsLayer(params: {
       const dx = Math.cos(angle) * dist;
       const dy = Math.sin(angle) * dist;
 
-      /* 씹는 비트: 고정 비트 시점 + 약간 랜덤 → 2~3번 씹는 느낌 */
-      const beatIdx = Math.min(
-        CHEW_BEATS_S.length - 1,
-        Math.floor(
-          seededRandom(burstIndex * 23.4 + i * 29.5) * CHEW_BEATS_S.length,
-        ),
-      );
-      const beat = CHEW_BEATS_S[beatIdx];
-      const jitter = (seededRandom(burstIndex * 41 + i * 53) - 0.5) * 0.12;
-      const delayS = Math.max(0, beat + jitter);
+      const jitter = (seededRandom(burstIndex * 41 + i * 53) - 0.5) * 0.04;
+      const delayS = Math.max(0, BITE_IMPACT_S + jitter);
       const particleStartTime = eatingStartTime + delayS;
 
-      const kfName = `crumb-${burstIndex}-${i}`;
-
-      /* 네모(80%) + 잎 조각(20%). 회전은 키프레임에 포함해 애니 중 유지 */
+      /* 네모(80%) + 잎 조각(20%). 개별 좌표만 CSS 변수로 넘기고 모션은 공유한다. */
       const isLeaf = seededRandom(burstIndex * 333 + i * 77) < 0.2;
-      const w = isLeaf ? 3.2 : CRUMB_SIZE * 2;
+      const w = isLeaf ? 3 : CRUMB_SIZE * 2;
       const h = isLeaf ? 1.2 : CRUMB_SIZE * 2;
       const rot = (seededRandom(burstIndex * 999 + i * 555) * 90 - 45).toFixed(
         1,
       );
       const x = (-w / 2).toFixed(2);
       const y = (-h / 2).toFixed(2);
-      const rotTf = `rotate(${rot}deg)`;
-
-      keyframesOut.push(`
-  @keyframes ${kfName} {
-    0% {
-      visibility: visible;
-      opacity: 0.35;
-      transform: ${rotTf} translate(0px, 0px) scale(0.9);
-    }
-    30% {
-      opacity: 1;
-      transform: ${rotTf} translate(${(dx * 0.4).toFixed(2)}px, ${(dy * 0.4).toFixed(2)}px) scale(1);
-    }
-    70% {
-      opacity: 1;
-      transform: ${rotTf} translate(${(dx * 0.85).toFixed(2)}px, ${(dy * 0.85).toFixed(2)}px) scale(1);
-    }
-    88% {
-      opacity: 0.4;
-      transform: ${rotTf} translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) scale(0.95);
-    }
-    100% {
-      visibility: hidden;
-      opacity: 0;
-      transform: ${rotTf} translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) scale(0.9);
-    }
-  }`);
 
       particles.push(
-        `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="0.6" ry="0.6" fill="${grassColor}" style="transform-box: fill-box; transform-origin: center; animation: ${kfName} ${CRUMB_DURATION_S}s linear ${particleStartTime}s 1 forwards; pointer-events: none;" aria-hidden="true"/>`,
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="0.6" ry="0.6" fill="${grassColor}" style="--crumb-x:${dx.toFixed(2)}px; --crumb-y:${dy.toFixed(2)}px; --crumb-mid-x:${(dx * 0.55).toFixed(2)}px; --crumb-mid-y:${(dy * 0.55).toFixed(2)}px; --crumb-rot:${rot}deg; opacity:0; visibility:hidden; transform-box:fill-box; transform-origin:center; animation:grass-crumb ${CRUMB_DURATION_S}s cubic-bezier(.2,.75,.25,1) ${particleStartTime}s 1 forwards; pointer-events:none;" aria-hidden="true"/>`,
       );
     }
 
@@ -151,7 +111,15 @@ export function buildGrassCrumbsLayer(params: {
   }
 
   return {
-    crumbKeyframes: keyframesOut.join(""),
+    crumbKeyframes:
+      groupParts.length > 0
+        ? `
+  @keyframes grass-crumb {
+    0% { visibility: visible; opacity: 0; transform: rotate(var(--crumb-rot)) translate(0, 0) scale(0.72); }
+    45% { visibility: visible; opacity: 0.85; transform: rotate(var(--crumb-rot)) translate(var(--crumb-mid-x), var(--crumb-mid-y)) scale(1); }
+    100% { visibility: hidden; opacity: 0; transform: rotate(var(--crumb-rot)) translate(var(--crumb-x), var(--crumb-y)) scale(0.82); }
+  }`
+        : "",
     crumbGroup:
       groupParts.length > 0
         ? `<g id="grass-crumbs" aria-hidden="true">${groupParts.join("")}</g>`

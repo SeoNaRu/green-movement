@@ -4,7 +4,7 @@ export type TimelineResult = {
   maxTotalTimeWithEntryExit: number;
   firstArrivals: Map<
     string,
-    { arrivalTime: number; level: number; directionRad?: number }
+    { arrivalTime: number; level: number; sheepIndex: number; directionRad?: number }
   >;
   ufoArriveAbsSOffset: number[];
   spawnAbsSOffset: number[];
@@ -14,16 +14,24 @@ export type TimelineResult = {
   /** UFO가 실제로 방문하는 드롭 개수 (잔디 소모 후 회수 시작 시점에 맞춤) */
   effectiveDropCount: number;
   pickupCells: [number, number][];
-  pickupArriveBySheep: (number | null)[];
   pickupArriveAbsSOffsetForUfo: number[];
   pickupArriveAbsSOffset: (number | null)[];
+  relocation: {
+    sheepIndex: number;
+    historyIndex: number;
+    from: [number, number];
+    to: [number, number];
+    pickupArriveAbsS: number;
+    flightStartAbsS: number;
+    dropArriveAbsS: number;
+    releaseAbsS: number;
+    operationDuration: number;
+  } | null;
   sweepPositions: [number, number][];
   sweepArriveAbsSOffset: number[];
   paintSweepStartAbsSOffset: number;
   paintSweepDuration: number;
-  paintWaveSpeedS: number;
-  paintCenterCol: number;
-  paintCenterRow: number;
-  activeSheepIndices: number[];
+  ufoExitStartAbsSOffset: number;
+  ufoExitEndAbsSOffset: number;
   assignedIndices: number[];
 };

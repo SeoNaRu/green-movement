@@ -6,47 +6,62 @@ import {
   SHEEP_VIEWBOX_W,
   SHEEP_WIDTH_PX,
   SHEEP_BODY_SHIFT_PX,
+  GRASS_STEP_TIMES_S,
 } from "../../constants.js";
-import { getCellCenterPx } from "../../gridLayout.js";
+import { getCellCenterPx } from "../../layout/gridLayout.js";
+
+const BITE_ANTICIPATION_S = 0.06;
+const BITE_IMPACT_S = GRASS_STEP_TIMES_S[0];
+const BITE_RELEASE_S = GRASS_STEP_TIMES_S[GRASS_STEP_TIMES_S.length - 1];
 
 export function buildSheepLayer(params: {
   positionsHistory: [number, number][][];
   assignedIndices: number[];
   spawnAbsS: number[];
   moveStartAbsS: number[];
+  biteAbsSBySheep: number[][];
   maxTotalTime: number;
   gridLeftX: number;
   gridTopY: number;
-  dropStayS: number;
   lightRampS: number;
   sheepFadeS: number;
   dropDescentPx: number;
-  moveStartS: number;
   pickupArriveAbsS?: (number | null)[];
   pickupFadeS?: number;
   pickupWaitS?: number;
   pickupLightS?: number;
+  relocation?: {
+    sheepIndex: number;
+    historyIndex: number;
+    from: [number, number];
+    to: [number, number];
+    pickupArriveAbsS: number;
+    flightStartAbsS: number;
+    dropArriveAbsS: number;
+    releaseAbsS: number;
+    operationDuration: number;
+  } | null;
 }): { animationStyles: string; sheepGroups: string } {
   const {
     positionsHistory,
     assignedIndices,
     spawnAbsS,
     moveStartAbsS,
+    biteAbsSBySheep,
     maxTotalTime,
     gridLeftX,
     gridTopY,
-    dropStayS,
     lightRampS,
     sheepFadeS,
     dropDescentPx,
-    moveStartS,
     pickupArriveAbsS,
     pickupFadeS = 0.25,
     pickupWaitS,
     pickupLightS,
+    relocation,
   } = params;
 
-  const sheepScale = SHEEP_WIDTH_PX / SHEEP_VIEWBOX_W / 2.5;
+  const sheepScale = (SHEEP_WIDTH_PX / SHEEP_VIEWBOX_W / 2.05) * 0.8;
   const bodyShift = (angleDeg: number) => {
     const rad = (angleDeg * Math.PI) / 180;
     return {
@@ -58,7 +73,12 @@ export function buildSheepLayer(params: {
   const sheepAnimations = assignedIndices.map((si: number) => {
     const timeline = positionsHistory[si];
     if (!timeline || timeline.length === 0) {
-      return { id: `sheep-${si}`, keyframes: "", animationCSS: "" };
+      return {
+        id: `sheep-${si}`,
+        keyframes: "",
+        animationCSS: "",
+        poseCSS: "",
+      };
     }
     const totalPoints = timeline.length;
     const totalMoves = Math.max(totalPoints - 1, 0);
@@ -73,11 +93,14 @@ export function buildSheepLayer(params: {
     let time = 0;
 
     const angleOf = (dx: number, dy: number, fallback: number) => {
-      if (dx > 0) return 90;
-      if (dx < 0) return 270;
-      if (dy > 0) return 180;
-      if (dy < 0) return 0;
-      return fallback;
+      let angle = fallback;
+      if (dx > 0) angle = 90;
+      else if (dx < 0) angle = 270;
+      else if (dy > 0) angle = 180;
+      else if (dy < 0) angle = 0;
+      while (angle - fallback > 180) angle -= 360;
+      while (angle - fallback < -180) angle += 360;
+      return angle;
     };
 
     {
@@ -94,7 +117,6 @@ export function buildSheepLayer(params: {
       const dy = next[1] - cur[1];
 
       const nextAngle = angleOf(dx, dy, lastAngle);
-      const dirChanged = nextAngle !== lastAngle;
       const tickEnd = time + SHEEP_CELL_TIME;
 
       if (dx === 0 && dy === 0) {
@@ -108,28 +130,13 @@ export function buildSheepLayer(params: {
         continue;
       }
 
-      if (dirChanged) {
-        const rotateTime = time + SHEEP_CELL_TIME * 0.18;
-        frames.push({
-          t: rotateTime,
-          x: cur[0],
-          y: cur[1],
-          angle: nextAngle,
-        });
-        frames.push({
-          t: tickEnd,
-          x: next[0],
-          y: next[1],
-          angle: nextAngle,
-        });
-      } else {
-        frames.push({
-          t: tickEnd,
-          x: next[0],
-          y: next[1],
-          angle: nextAngle,
-        });
-      }
+      // 루트는 셀 경계에서 멈추지 않는다. 방향은 실제 이동과 함께 최단 각도로 바뀐다.
+      frames.push({
+        t: tickEnd,
+        x: next[0],
+        y: next[1],
+        angle: nextAngle,
+      });
 
       lastAngle = nextAngle;
       time = tickEnd;
@@ -137,6 +144,46 @@ export function buildSheepLayer(params: {
 
     const timeOffset = spawnAbsS[si] ?? 0;
     const keyframeEntries: { pct: number; css: string }[] = [];
+    const poseEntries: { pct: number; css: string }[] = [];
+    const headEntries: { pct: number; css: string }[] = [];
+    const growthEntries: { pct: number; css: string }[] = [];
+    const energyEntries: { pct: number; css: string }[] = [];
+    const bites = [...(biteAbsSBySheep[si] ?? [])].sort((a, b) => a - b);
+    const addProgress = (atS: number, progress: number) => {
+      const pct = Math.min(
+        99.9999,
+        Math.max(0, maxTotalTime > 0 ? (atS * 100) / maxTotalTime : 0),
+      );
+      const eased = Math.sqrt(Math.min(1, Math.max(0, progress)));
+      growthEntries.push({
+        pct,
+        css: `${pct.toFixed(4)}% { transform: scale(${(1 + eased * 0.15).toFixed(3)}); }`,
+      });
+      energyEntries.push({
+        pct,
+        css: `${pct.toFixed(4)}% { opacity: ${(eased * 0.48).toFixed(3)}; }`,
+      });
+    };
+    const addPose = (atS: number, transform: string) => {
+      const pct = Math.min(
+        99.9999,
+        Math.max(0, maxTotalTime > 0 ? (atS * 100) / maxTotalTime : 0),
+      );
+      poseEntries.push({
+        pct,
+        css: `${pct.toFixed(4)}% { transform: ${transform}; }`,
+      });
+    };
+    const addHead = (atS: number, y: number) => {
+      const pct = Math.min(
+        99.9999,
+        Math.max(0, maxTotalTime > 0 ? (atS * 100) / maxTotalTime : 0),
+      );
+      headEntries.push({
+        pct,
+        css: `${pct.toFixed(4)}% { transform: translate(0px, ${(-1.55 + y).toFixed(2)}px); }`,
+      });
+    };
     const dropFrame = frames[0];
     const dropPx = getCellCenterPx(
       gridLeftX,
@@ -157,12 +204,12 @@ export function buildSheepLayer(params: {
     if (pctSpawn > 0) {
       keyframeEntries.push({
         pct: Math.min(100, pctSpawn),
-        css: `${Math.min(100, pctSpawn).toFixed(4)}% { transform: translate(${dropX}px, ${dropStartY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; }`,
+        css: `${Math.min(100, pctSpawn).toFixed(4)}% { transform: translate(${dropX}px, ${dropStartY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; animation-timing-function: cubic-bezier(.2, .75, .25, 1); }`,
       });
     } else {
       keyframeEntries.push({
         pct: 0,
-        css: `0% { transform: translate(${dropX}px, ${dropStartY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; }`,
+        css: `0% { transform: translate(${dropX}px, ${dropStartY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; animation-timing-function: cubic-bezier(.2, .75, .25, 1); }`,
       });
     }
     const readyTime = timeOffset + (lightRampS + sheepFadeS);
@@ -170,6 +217,15 @@ export function buildSheepLayer(params: {
     const pctReady = maxTotalTime > 0 ? (readyTime * 100) / maxTotalTime : 0;
     const pctMoveStart =
       maxTotalTime > 0 ? (moveStartTime * 100) / maxTotalTime : 0;
+    const landingSpan = Math.max(0.01, readyTime - timeOffset);
+    addPose(timeOffset, "translateY(-1.5px) scale(.9, 1.08)");
+    addPose(
+      timeOffset + landingSpan * 0.72,
+      "translateY(-.4px) scale(.97, 1.03)",
+    );
+    addPose(readyTime, "translateY(.8px) scale(1.08, .9)");
+    addPose(readyTime + 0.09, "translateY(-.4px) scale(.98, 1.03)");
+    addPose(readyTime + 0.18, "translateY(0) scale(1, 1)");
     keyframeEntries.push({
       pct: Math.min(100, pctReady),
       css: `${Math.min(100, pctReady).toFixed(4)}% { transform: translate(${dropX}px, ${dropY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 1; }`,
@@ -198,14 +254,85 @@ export function buildSheepLayer(params: {
         if (f.t < firstMoveT) continue;
         const { x, y } = getCellCenterPx(gridLeftX, gridTopY, f.x, f.y);
         const off = bodyShift(f.angle);
-        const globalTime = moveStartTime + (f.t - firstMoveT);
+        const relocationDelay =
+          relocation?.sheepIndex === si && fi >= relocation.historyIndex
+            ? relocation.operationDuration
+            : 0;
+        const globalTime =
+          moveStartTime +
+          (f.t - firstMoveT) +
+          SHEEP_CELL_TIME +
+          relocationDelay;
         const percent =
           maxTotalTime > 0 ? (globalTime * 100) / maxTotalTime : 0;
         const pct = Math.min(99.9999, percent);
         keyframeEntries.push({
           pct,
-          css: `${pct.toFixed(4)}% { transform: translate(${x + off.dx}px, ${y + off.dy}px) rotate(${f.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 1; }`,
+          css: `${pct.toFixed(4)}% { transform: translate(${x + off.dx}px, ${y + off.dy}px) rotate(${f.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 1; animation-timing-function: linear; }`,
         });
+      }
+
+      for (let ti = firstMoveIdxHistory; ti < timeline.length; ti++) {
+        const prev = timeline[ti - 1];
+        const current = timeline[ti];
+        if (!prev || !current) continue;
+        const segmentStart =
+          moveStartTime +
+          (ti - firstMoveIdxHistory) * SHEEP_CELL_TIME +
+          (relocation?.sheepIndex === si && ti >= relocation.historyIndex
+            ? relocation.operationDuration
+            : 0);
+        const moved = prev[0] !== current[0] || prev[1] !== current[1];
+        if (moved) {
+          if (ti === firstMoveIdxHistory) {
+            addPose(
+              segmentStart - 0.1,
+              "translateY(0) scale(1, 1)",
+            );
+            addPose(
+              segmentStart - 0.04,
+              "translateY(.45px) scale(.92, 1.06)",
+            );
+            addPose(
+              segmentStart + 0.08,
+              "translateY(-.8px) scale(1.08, .94)",
+            );
+            addPose(segmentStart + 0.22, "translateY(0) scale(1, 1)");
+          } else {
+            addPose(segmentStart, "translateY(0) scale(1, 1)");
+            addPose(
+              segmentStart + SHEEP_CELL_TIME * 0.46,
+              "translateY(-.7px) scale(1.015, .985)",
+            );
+            addPose(
+              segmentStart + SHEEP_CELL_TIME,
+              "translateY(0) scale(1, 1)",
+            );
+          }
+        }
+      }
+
+      for (const [biteIndex, biteStart] of bites.entries()) {
+        addPose(
+          biteStart - BITE_ANTICIPATION_S,
+          "translateY(-.2px) scale(.96, 1.04)",
+        );
+        addPose(biteStart, "translateY(.25px) scale(.94, 1.06)");
+        addPose(
+          biteStart + BITE_IMPACT_S,
+          "translateY(.65px) scale(1.08, .9)",
+        );
+        addPose(biteStart + 0.2, "translateY(-.45px) scale(.96, 1.04)");
+        addPose(biteStart + BITE_RELEASE_S, "translateY(0) scale(1, 1)");
+        addHead(biteStart - BITE_ANTICIPATION_S, 0);
+        addHead(biteStart, 0.35);
+        addHead(biteStart + BITE_IMPACT_S, -1.35);
+        addHead(biteStart + 0.18, -0.35);
+        addHead(biteStart + BITE_RELEASE_S, 0);
+        addProgress(
+          biteStart + BITE_RELEASE_S,
+          (biteIndex + 1) / Math.max(1, bites.length),
+        );
       }
     }
 
@@ -213,6 +340,42 @@ export function buildSheepLayer(params: {
     const pickupFade = pickupFadeS ?? 0.25;
     const pickupWait = pickupWaitS ?? 0.35;
     const pickupLight = pickupLightS ?? 0.22;
+
+    if (relocation?.sheepIndex === si) {
+      const source = getCellCenterPx(
+        gridLeftX,
+        gridTopY,
+        relocation.from[0],
+        relocation.from[1],
+      );
+      const target = getCellCenterPx(
+        gridLeftX,
+        gridTopY,
+        relocation.to[0],
+        relocation.to[1],
+      );
+      const relocationOff = bodyShift(lastAngle);
+      const sourceTransform = `translate(${source.x + relocationOff.dx}px, ${source.y + relocationOff.dy}px) rotate(${lastAngle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px)`;
+      const targetTransform = `translate(${target.x + relocationOff.dx}px, ${target.y + relocationOff.dy}px) rotate(${lastAngle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px)`;
+      for (const [atS, transform, opacity] of [
+        [relocation.pickupArriveAbsS, sourceTransform, 1],
+        [relocation.flightStartAbsS, sourceTransform, 0],
+        [relocation.dropArriveAbsS - 0.001, sourceTransform, 0],
+        [relocation.dropArriveAbsS, targetTransform, 0],
+        [relocation.releaseAbsS, targetTransform, 1],
+      ] as const) {
+        const pct = Math.min(99.9999, (atS * 100) / maxTotalTime);
+        keyframeEntries.push({
+          pct,
+          css: `${pct.toFixed(4)}% { transform: ${transform}; opacity: ${opacity}; }`,
+        });
+      }
+      addPose(relocation.pickupArriveAbsS, "translateY(0) scale(1, 1)");
+      addPose(relocation.flightStartAbsS, "translateY(-5px) scale(.88, 1.08)");
+      addPose(relocation.dropArriveAbsS, "translateY(-2px) scale(.92, 1.05)");
+      addPose(relocation.releaseAbsS, "translateY(.8px) scale(1.08, .9)");
+      addPose(relocation.releaseAbsS + 0.14, "translateY(0) scale(1, 1)");
+    }
 
     if (pickupT != null && Number.isFinite(pickupT) && pickupT > 0) {
       const fadeStartT = pickupT + pickupWait + pickupLight * 0.6;
@@ -232,6 +395,11 @@ export function buildSheepLayer(params: {
         pct: b,
         css: `${b.toFixed(4)}% { opacity: 0; }`,
       });
+      addPose(fadeStartT, "translateY(0) scale(1, 1)");
+      addPose(
+        fadeStartT + pickupFade,
+        "translateY(-6px) scale(.86, 1.1)",
+      );
     }
 
     const lastCell = timeline[timeline.length - 1];
@@ -266,12 +434,63 @@ export function buildSheepLayer(params: {
       }
     }
 
+    poseEntries.push({
+      pct: 100,
+      css: `100% { transform: ${hasPickup ? "translateY(-6px) scale(.86, 1.1)" : "translateY(0) scale(1, 1)"}; }`,
+    });
+    headEntries.push({
+      pct: 0,
+      css: "0% { transform: translate(0px, -1.55px); }",
+    });
+    headEntries.push({
+      pct: 100,
+      css: "100% { transform: translate(0px, -1.55px); }",
+    });
+    addProgress(timeOffset, 0);
+    const sortedPose = poseEntries.slice().sort((a, b) => a.pct - b.pct);
+    const dedupedPose: string[] = [];
+    let lastPosePct: number | null = null;
+    for (const kf of sortedPose) {
+      if (lastPosePct !== null && Math.abs(kf.pct - lastPosePct) < 1e-6) {
+        dedupedPose[dedupedPose.length - 1] = kf.css;
+      } else {
+        dedupedPose.push(kf.css);
+        lastPosePct = kf.pct;
+      }
+    }
+    const sortedHead = headEntries.slice().sort((a, b) => a.pct - b.pct);
+    const dedupedHead: string[] = [];
+    let lastHeadPct: number | null = null;
+    for (const kf of sortedHead) {
+      if (lastHeadPct !== null && Math.abs(kf.pct - lastHeadPct) < 1e-6) {
+        dedupedHead[dedupedHead.length - 1] = kf.css;
+      } else {
+        dedupedHead.push(kf.css);
+        lastHeadPct = kf.pct;
+      }
+    }
+    const dedupeTimedCss = (entries: { pct: number; css: string }[]) => {
+      const sorted = entries.slice().sort((a, b) => a.pct - b.pct);
+      const out: string[] = [];
+      let previous: number | null = null;
+      for (const entry of sorted) {
+        if (previous !== null && Math.abs(entry.pct - previous) < 1e-6)
+          out[out.length - 1] = entry.css;
+        else {
+          out.push(entry.css);
+          previous = entry.pct;
+        }
+      }
+      return out;
+    };
+    const dedupedGrowth = dedupeTimedCss(growthEntries);
+    const dedupedEnergy = dedupeTimedCss(energyEntries);
+
     return {
       id: `sheep-${si}`,
-      keyframes: `@keyframes sheep-${si}-move {\n    ${deduped.join(
-        "\n    ",
-      )}\n  }`,
+      keyframes: `@keyframes sheep-${si}-move {\n    ${deduped.join("\n    ")}\n  }\n  @keyframes sheep-${si}-pose {\n    ${dedupedPose.join("\n    ")}\n  }\n  @keyframes sheep-${si}-head {\n    ${dedupedHead.join("\n    ")}\n  }\n  @keyframes sheep-${si}-growth {\n    ${dedupedGrowth.join("\n    ")}\n    100% { transform: scale(${bites.length > 0 ? 1.15 : 1}); }\n  }\n  @keyframes sheep-${si}-energy {\n    ${dedupedEnergy.join("\n    ")}\n    100% { opacity: ${bites.length > 0 ? 0.48 : 0}; }\n  }\n  .sheep-${si} .sheep-head { transform-box: fill-box; transform-origin: center; animation: sheep-${si}-head ${maxTotalTime}s cubic-bezier(.2,.8,.2,1) 0s 1 both; }\n  .sheep-${si} .sheep-growth { transform-box: fill-box; transform-origin: center; animation: sheep-${si}-growth ${maxTotalTime}s cubic-bezier(.2,.8,.2,1) 0s 1 both; }\n  .sheep-${si} .sheep-energy { animation: sheep-${si}-energy ${maxTotalTime}s linear 0s 1 both; }`,
       animationCSS: `${initialTransform}animation: sheep-${si}-move ${maxTotalTime}s linear ${delay}s 1 both;`,
+      poseCSS: `transform-box:fill-box; transform-origin:center; animation:sheep-${si}-pose ${maxTotalTime}s linear 0s 1 both;`,
     };
   });
 
@@ -286,8 +505,8 @@ export function buildSheepLayer(params: {
   if (validSheepAnimations.length > 0) {
     sheepGroups = validSheepAnimations
       .map(
-        (a: { id: string; animationCSS: string }) =>
-          `<g class="${a.id}" style="${a.animationCSS}">${SHEEP_CONTENT}</g>`,
+        (a: { id: string; animationCSS: string; poseCSS: string }) =>
+          `<g class="${a.id}" style="${a.animationCSS}"><g class="sheep-growth"><g class="sheep-actor" style="${a.poseCSS}">${SHEEP_CONTENT}<path class="sheep-energy" d="M4.8 6.2Q6.1 5.1 7.1 6.2M7.3 8.5Q8.4 7.2 9.5 8.1M9.2 5.3Q10.3 4.7 11.1 5.8" fill="none" stroke="var(--gm-level-3)" stroke-width=".75" stroke-linecap="round" opacity="0"/></g></g></g>`,
       )
       .join("\n  ");
   } else {

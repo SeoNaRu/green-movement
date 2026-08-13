@@ -16,24 +16,24 @@
            C13.3 7.9 12.9 9.1 11.7 9.3
            C11.0 10.4 9.6 10.9 8.0 10.5
            Z"
-        fill="#f0f0f0" stroke="#d0d0d0" stroke-width="1"/>
+        fill="#f7f0df" stroke="#c9bfae" stroke-width="1"/>
     </g>
 
     <!-- 머리(검정) + 귀 + 뿔 전체를 몸 기준으로 더 위로 올림 -->
-    <g transform="translate(0,-1.55)">
+    <g class="sheep-head" transform="translate(0,-1.55)">
       <!-- 머리 -->
-      <ellipse cx="8" cy="3.6" rx="3" ry="2.4" fill="#111"/>
+      <ellipse cx="8" cy="3.6" rx="3" ry="2.4" fill="#5c514a" stroke="#b9aa98" stroke-width="0.45"/>
       <!-- 귀 -->
-      <ellipse cx="4.8" cy="4.4" rx="1.5" ry="1.0" fill="#111"/>
-      <ellipse cx="11.2" cy="4.4" rx="1.5" ry="1.0" fill="#111"/>
+      <ellipse cx="4.8" cy="4.4" rx="1.5" ry="1.0" fill="#5c514a"/>
+      <ellipse cx="11.2" cy="4.4" rx="1.5" ry="1.0" fill="#5c514a"/>
       <!-- 코끝 느낌의 밝은 점 (살짝 더 크게) -->
-      <circle cx="8" cy="2.0" r="0.35" fill="#444"/>
+      <circle cx="8" cy="2.0" r="0.35" fill="#d9c7a9"/>
       <!-- 뿔: 아래 털 쪽으로 조금 더 길게, 아래쪽 간격이 살짝 더 넓어지도록 -->
       <path d="M6.7 3.9 C6.0 4.7 6.0 5.7 6.5 6.0"
-            stroke="#e0c090" stroke-width="1.4"
+            stroke="#c8a96b" stroke-width="1.4"
             stroke-linecap="round" fill="none"/>
       <path d="M9.3 3.9 C10.0 4.7 10.0 5.7 9.5 6.0"
-            stroke="#e0c090" stroke-width="1.4"
+            stroke="#c8a96b" stroke-width="1.4"
             stroke-linecap="round" fill="none"/>
     </g>
 

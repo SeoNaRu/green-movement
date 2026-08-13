@@ -88,24 +88,6 @@ export function reserveEdge(
   return true;
 }
 
-export function clearReservationsInRange(
-  res: ReservationTable,
-  self: number,
-  tFrom: number,
-  tTo: number,
-): void {
-  for (let t = tFrom; t <= tTo; t++) {
-    const cm = res.cell.get(t);
-    if (cm) {
-      for (const [k, v] of cm) if (v === self) cm.delete(k);
-    }
-    const em = res.edge.get(t);
-    if (em) {
-      for (const [k, v] of em) if (v === self) em.delete(k);
-    }
-  }
-}
-
 /**
  * planWindowed 내부에서 edge 예약 미리보기용. 충돌 검사만.
  */

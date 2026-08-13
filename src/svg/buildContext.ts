@@ -1,6 +1,12 @@
 import type { GridCell } from "../grid/mapGrid.js";
-import { CELL_SIZE, GAP, FENCE_TILE, FENCE_MARGIN } from "./constants.js";
-import { buildFencePieces } from "./gridLayout.js";
+import {
+  CELL_SIZE,
+  GAP,
+  FENCE_TILE,
+  FENCE_MARGIN,
+  MAX_SHEEP,
+} from "./constants.js";
+import { buildFencePieces } from "./layout/gridLayout.js";
 import { emptyBfsFromSeeds } from "./pathUtils.js";
 import { calculateQuartiles } from "./contribution.js";
 
@@ -52,13 +58,7 @@ export function buildContext(grid: GridCell[]): GridContext {
     (c) => (initialCountByKey.get(`${c.x},${c.y}`) ?? 0) > 0,
   );
 
-  const sheepCountCap = (() => {
-    const grassCount = grassCells.length;
-    if (grassCount <= 0) return 0;
-    const base = Math.floor(grassCount / 3);
-    const minSheepIfAnyGrass = Math.min(5, grassCount);
-    return Math.min(40, Math.max(base, minSheepIfAnyGrass));
-  })();
+  const sheepCountCap = grassCells.length > 0 ? MAX_SHEEP : 0;
 
   const inBounds = (col: number, row: number) =>
     col >= 0 && col <= maxX && row >= 0 && row <= maxY;

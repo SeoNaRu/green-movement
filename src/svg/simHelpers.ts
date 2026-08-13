@@ -3,19 +3,11 @@ import {
   type ReservationTable,
   cellKey,
   isCellFree,
-  reserveCell,
-  reserveEdge,
   reserveEdgePreview,
 } from "./reservationTable.js";
 import {
-  emptyBfsFromSeeds,
-  isAdjacent4,
-  findPrevDifferentIdx,
   ensureOnly4Direction,
-  addCornerPause,
-  tracePath,
   pathBetweenCells,
-  pathBetweenGrassCells,
 } from "./pathUtils.js";
 
 export type PlannedWindow = {
@@ -207,36 +199,6 @@ export function findPullOverTarget(
   return best ? best.pos : null;
 }
 
-/**
- * 현재 칸이 잔디(count>0)인지
- */
-export function isOnGrass(
-  pos: [number, number],
-  byKey: Map<string, GridCell>,
-): boolean {
-  const cell = byKey.get(`${pos[0]},${pos[1]}`);
-  return !!cell && cell.count > 0;
-}
-
-/**
- * route에서 idx 위치가 같은 칸이 연속으로 waitTicks+1 이상인지 (도착칸 포함 + 대기)
- */
-export function hasWaitedEnough(
-  route: [number, number][],
-  idx: number,
-  waitTicks: number,
-): boolean {
-  const [c, r] = route[idx] ?? route[route.length - 1];
-  let same = 0;
-  for (let j = idx; j >= 0; j--) {
-    const p = route[j];
-    if (!p || p[0] !== c || p[1] !== r) break;
-    same++;
-    if (same >= waitTicks + 1) return true;
-  }
-  return false;
-}
-
 export type GrassCandidate = {
   grass: GridCell;
   emptyNeighbor: [number, number];
@@ -358,38 +320,6 @@ export function pickBestGrassCandidate(
 }
 
 /**
- * 단일 최근접 잔디 (기존 호환용). 후보가 있으면 첫 번째 반환.
- */
-export function findNearestReachableGrassFrom(
-  from: [number, number],
-  availableGrassKeys: Set<string>,
-  emptyCellSet: Set<string>,
-  maxX: number,
-  maxY: number,
-  byKey: Map<string, GridCell>,
-  occupiedNowMap: Map<string, number> = new Map(),
-  reservedApproach: Map<string, { owner: number }> = new Map(),
-  funnelCellSet: Set<string> = new Set(),
-  minFunnelRow: number = 0,
-): { grass: GridCell; emptyNeighbor: [number, number]; dist: number } | null {
-  const candidates = findNearestReachableGrassCandidates(
-    -1,
-    from,
-    availableGrassKeys,
-    emptyCellSet,
-    funnelCellSet,
-    minFunnelRow,
-    maxX,
-    maxY,
-    byKey,
-    occupiedNowMap,
-    reservedApproach,
-    1,
-  );
-  return candidates.length > 0 ? candidates[0] : null;
-}
-
-/**
  * from → emptyNeighbor(길) → targetGrass 경로 생성 (pathBetweenCells + 마지막 1칸)
  */
 export function buildPathFromToGrass(
@@ -418,8 +348,6 @@ export function buildPathFromToGrass(
   );
 
   p1 = ensureOnly4Direction(p1);
-  p1 = addCornerPause(p1);
-
   if (p1.length === 0) return [];
 
   const p2: [number, number][] = [[targetGrass.x, targetGrass.y]];

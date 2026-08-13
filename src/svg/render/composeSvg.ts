@@ -1,3 +1,5 @@
+import { GITHUB_THEME_CSS } from "../constants.js";
+
 export function composeSvg(params: {
   totalWidth: number;
   totalHeight: number;
@@ -10,8 +12,6 @@ export function composeSvg(params: {
   backgroundColor: string;
   fenceRects: string;
   rects: string;
-  flowerRects: string;
-  flowerKeyframes: string;
   crumbKeyframes: string;
   crumbGroup: string;
   sheepGroups: string;
@@ -19,7 +19,6 @@ export function composeSvg(params: {
   ufoRippleKeyframesStr: string;
   ufoRippleGroupStr: string;
   debugLayer: string;
-  dotRects: string;
   grassFadeKeyframes: string;
   animationStyles: string;
   ufoKeyframesStr: string;
@@ -35,8 +34,6 @@ export function composeSvg(params: {
     backgroundColor,
     fenceRects,
     rects,
-    flowerRects,
-    flowerKeyframes,
     crumbKeyframes,
     crumbGroup,
     sheepGroups,
@@ -44,7 +41,6 @@ export function composeSvg(params: {
     ufoRippleKeyframesStr,
     ufoRippleGroupStr,
     debugLayer,
-    dotRects,
     grassFadeKeyframes,
     animationStyles,
     ufoKeyframesStr,
@@ -55,24 +51,25 @@ export function composeSvg(params: {
 <svg xmlns="http://www.w3.org/2000/svg" width="${displayWidth}" height="${displayHeight}" viewBox="0 ${viewBoxMinY} ${totalWidth} ${viewBoxHeight}">
   <defs>
     <style>
+  ${GITHUB_THEME_CSS}
   ${grassFadeKeyframes}
-  ${flowerKeyframes}
   ${crumbKeyframes}
   ${animationStyles}
   ${ufoKeyframesStr}
   ${ufoLightKeyframesStr}
   ${ufoRippleKeyframesStr}
+  @media (prefers-reduced-motion: reduce) {
+    .ufo-streak, .ufo-ripple, .signature-reveal, #grass-crumbs { display: none; }
+  }
     </style>
   </defs>
   <rect x="0" y="${viewBoxMinY}" width="${totalWidth}" height="${viewBoxHeight}" fill="${backgroundColor}"/>
   ${fenceRects}
   ${rects}
-  <g id="flower-layer">${flowerRects}</g>
   ${crumbGroup}
   ${sheepGroups}
   ${ufoRippleGroupStr}
   ${ufoGroupStr}
   ${debugLayer}
-  ${dotRects}
 </svg>`;
 }

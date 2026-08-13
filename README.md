@@ -61,7 +61,7 @@ Fork(또는 Template)한 **green-movement** 저장소에서:
 
 | 이름              | 값                   |
 | ----------------- | -------------------- |
-| `GITHUB_USERNAME` | 대상 GitHub 사용자명 |
+| `GITHUB_USERNAME` | 대상 GitHub 사용자명. 마지막 잔디 서명에도 사용됩니다(영문·숫자·하이픈, 최대 26자; 14자부터 두 줄 압축). |
 
 ---
 
@@ -101,7 +101,7 @@ Fork한 **green-movement** 저장소에서:
 
 ## 💻 로컬에서 한 번만 SVG 만들기
 
-Node.js 18 이상이 필요해요.
+Node.js 20.6 이상이 필요해요.
 
 1. 프로젝트 루트에 `.env` 파일을 만들고:
 
@@ -123,7 +123,7 @@ npm run generate
 
 ## 📁 생성되는 SVG 크기
 
-기본적으로 SVG 가로는 **896px**로 맞춰집니다.  
+기본적으로 SVG 가로는 실제 프로필 표시 크기인 **700px**로 맞춰집니다.
 다른 크기를 쓰고 싶다면 `src/config/constants.ts`의 `README_TARGET_WIDTH`를 수정하거나, 코드에서 `renderGridSvg(grid, { targetWidth: 700 })`처럼 옵션으로 넘기면 됩니다.
 
 ---

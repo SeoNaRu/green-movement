@@ -2,7 +2,7 @@ import type { GridCell } from "../../grid/mapGrid.js";
 import type { SheepState } from "../../domain/sheep.js";
 import {
   SHEEP_CELL_TIME,
-  getWaitTicksForLevel,
+  SHEEP_GRAZE_HOLD_TICKS,
   MAX_MEALS_PER_SHEEP,
   GRASS_RES_TTL,
   RESERVE_AHEAD_LIMIT,
@@ -45,6 +45,12 @@ export type SimulationResult = {
   positionsHistory: [number, number][][];
   targetCellArrivals: Map<string, Arrival[]>;
   maxTotalTime: number;
+  relocation: {
+    sheepIndex: number;
+    historyIndex: number;
+    from: [number, number];
+    to: [number, number];
+  } | null;
 };
 
 export function simulateGrid(params: {
@@ -57,12 +63,18 @@ export function simulateGrid(params: {
   sheepStates: SheepState[];
   sheepCount: number;
   spawnTick: number[];
+  relayStartTick: number[];
   maxSteps: number;
   dropStayS: number;
   minFunnelRow: number;
   maxX: number;
   maxY: number;
   targetBfsLen: Map<string, number>;
+  relocation?: {
+    sheepIndex: number;
+    earliestTick: number;
+    preferredTarget: [number, number];
+  };
 }): SimulationResult {
   const {
     grid,
@@ -74,12 +86,14 @@ export function simulateGrid(params: {
     sheepStates,
     sheepCount,
     spawnTick,
+    relayStartTick,
     maxSteps,
     dropStayS,
     minFunnelRow,
     maxX,
     maxY,
     targetBfsLen,
+    relocation,
   } = params;
 
   const resTable: ReservationTable = createReservationTable();
@@ -95,6 +109,25 @@ export function simulateGrid(params: {
   const reservedGrass = new Map<string, number>();
   const reservedBySheep: (string | null)[] = new Array(sheepCount).fill(null);
   const reservedAtTick: number[] = new Array(sheepCount).fill(-1);
+  const relayBandForCol = (col: number) =>
+    Math.min(2, Math.floor((col * 3) / (maxX + 1)));
+  const relayBandForSheep = (sheepIndex: number) =>
+    Math.min(2, Math.floor((sheepIndex * 3) / sheepCount));
+  const hasRelayBandGrass = (source: Set<string>, sheepIndex: number) => {
+    const band = relayBandForSheep(sheepIndex);
+    return [...source].some(
+      (key) => relayBandForCol(Number(key.split(",")[0])) === band,
+    );
+  };
+  const relayKeys = (source: Set<string>, sheepIndex: number) => {
+    const band = relayBandForSheep(sheepIndex);
+    const preferred = new Set(
+      [...source].filter(
+        (key) => relayBandForCol(Number(key.split(",")[0])) === band,
+      ),
+    );
+    return preferred.size > 0 ? preferred : source;
+  };
 
   const recomputeReachableEmptyFromSeeds = (): Set<string> => {
     const seeds: [number, number][] = [];
@@ -186,6 +219,7 @@ export function simulateGrid(params: {
     { length: sheepCount },
     () => [],
   );
+  let relocationResult: SimulationResult["relocation"] = null;
 
   const SIMULATION_TIME_LIMIT_MS = 45000;
   const simStartTime = Date.now();
@@ -266,6 +300,7 @@ export function simulateGrid(params: {
 
     for (let i = 0; i < sheepStates.length; i++) {
       const st = sheepStates[i];
+      if (t < relayStartTick[i]) continue;
       if (st.eatingGrassKey) continue;
       if (t < st.eatUntil) continue;
       if (mealsEaten[i] >= MAX_MEALS_PER_SHEEP) continue;
@@ -281,6 +316,11 @@ export function simulateGrid(params: {
         const gr = st.pos[1] + dr;
         if (!inBoundsTick(gc, gr)) continue;
         const gk = cellKey(gc, gr);
+        if (
+          relayBandForCol(gc) !== relayBandForSheep(i) &&
+          hasRelayBandGrass(remainingGrassKeys, i)
+        )
+          continue;
         const cell = byKey.get(gk);
         const initial = initialCountByKey.get(gk) ?? 0;
         if (!cell || initial <= 0 || cell.count <= 0) continue;
@@ -309,11 +349,59 @@ export function simulateGrid(params: {
       }
     }
 
+    if (
+      relocationResult == null &&
+      relocation != null &&
+      t >= relocation.earliestTick &&
+      t >= spawnTick[relocation.sheepIndex]
+    ) {
+      const sheepIndex = relocation.sheepIndex;
+      const st = sheepStates[sheepIndex];
+      if (!st.eatingGrassKey && t >= st.eatUntil) {
+        const occupied = new Set(
+          sheepStates
+            .filter((_, index) => index !== sheepIndex && t >= spawnTick[index])
+            .map(({ pos }) => cellKey(pos[0], pos[1])),
+        );
+        const candidates = [...emptyCellSet]
+          .map((key) => key.split(",").map(Number) as [number, number])
+          .filter(([x, y]) => {
+            const cell = byKey.get(cellKey(x, y));
+            return cell?.count === 0 && !occupied.has(cellKey(x, y));
+          })
+          .sort(
+            (a, b) =>
+              Math.abs(a[0] - relocation.preferredTarget[0]) +
+                Math.abs(a[1] - relocation.preferredTarget[1]) -
+                (Math.abs(b[0] - relocation.preferredTarget[0]) +
+                  Math.abs(b[1] - relocation.preferredTarget[1])) ||
+              a[0] - b[0] ||
+              a[1] - b[1],
+          );
+        const target = candidates[0];
+        if (target) {
+          const from: [number, number] = [st.pos[0], st.pos[1]];
+          releaseGrassReservation(sheepIndex);
+          st.pos = target;
+          st.plan = [];
+          st.goalGrassKey = null;
+          st.stuck = 0;
+          relocationResult = {
+            sheepIndex,
+            historyIndex: positionsHistory[sheepIndex].length,
+            from,
+            to: [target[0], target[1]],
+          };
+        }
+      }
+    }
+
     const availableKeysEarly = new Set(remainingGrassKeys);
     for (const k of reservedGrass.keys()) availableKeysEarly.delete(k);
 
     for (let i = 0; i < sheepStates.length; i++) {
       if (t < spawnTick[i]) continue;
+      if (t < relayStartTick[i]) continue;
       const st = sheepStates[i];
       if (st.eatingGrassKey) continue;
       if (t < st.eatUntil) continue;
@@ -367,9 +455,12 @@ export function simulateGrid(params: {
 
       let availableForThisSheep: Set<string>;
       if (globalIdle) {
-        availableForThisSheep = new Set(remainingGrassKeys);
+        availableForThisSheep = relayKeys(
+          new Set(remainingGrassKeys),
+          i,
+        );
       } else {
-        availableForThisSheep = availableKeysEarly;
+        availableForThisSheep = relayKeys(availableKeysEarly, i);
       }
 
       const candidates = findNearestReachableGrassCandidates(
@@ -387,12 +478,35 @@ export function simulateGrid(params: {
         8,
         grassEating,
       );
-      const best = pickBestGrassCandidate(
+      let best = pickBestGrassCandidate(
         candidates,
         initialCountByKey,
         reservedGrass,
         i,
       );
+      if (!best && availableForThisSheep !== availableKeysEarly) {
+        const fallbackCandidates = findNearestReachableGrassCandidates(
+          i,
+          st.pos,
+          availableKeysEarly,
+          emptyCellSet,
+          new Set<string>(),
+          minFunnelRow,
+          maxX,
+          maxY,
+          byKey,
+          new Map(),
+          reservedApproach,
+          8,
+          grassEating,
+        );
+        best = pickBestGrassCandidate(
+          fallbackCandidates,
+          initialCountByKey,
+          reservedGrass,
+          i,
+        );
+      }
       if (best) {
         assignGrassToSheep(
           i,
@@ -407,6 +521,7 @@ export function simulateGrid(params: {
       (i) => {
         const st = sheepStates[i];
         if (t < spawnTick[i]) return false;
+        if (t < relayStartTick[i]) return false;
         if (st.eatingGrassKey) return false;
         if (t < st.eatUntil) return false;
         if (mealsEaten[i] >= MAX_MEALS_PER_SHEEP) return false;
@@ -644,6 +759,12 @@ export function simulateGrid(params: {
       if (t < spawnTick[i]) continue;
       const st = sheepStates[i];
 
+      if (t < relayStartTick[i]) {
+        reserveCell(resTable, t + 1, st.pos[0], st.pos[1], i);
+        positionsHistory[i].push(st.pos);
+        continue;
+      }
+
       if (t < st.eatUntil) {
         reserveCell(resTable, t + 1, st.pos[0], st.pos[1], i);
         positionsHistory[i].push(st.pos);
@@ -707,8 +828,7 @@ export function simulateGrid(params: {
         const gk = k;
         const es = grassEating.get(gk);
         if (!es) {
-          const level = getContributionLevel(initialCount, quartiles);
-          const stayTicks = getWaitTicksForLevel(level);
+          const stayTicks = SHEEP_GRAZE_HOLD_TICKS;
           grassEating.set(gk, { owner: i, doneTick: t + stayTicks + 1 });
           mealsEaten[i]++;
           st.eatingGrassKey = gk;
@@ -786,5 +906,10 @@ export function simulateGrid(params: {
           }),
         );
 
-  return { positionsHistory, targetCellArrivals, maxTotalTime };
+  return {
+    positionsHistory,
+    targetCellArrivals,
+    maxTotalTime,
+    relocation: relocationResult,
+  };
 }

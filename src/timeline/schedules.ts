@@ -1,94 +1,74 @@
 import type { GridContext } from "../svg/buildContext.js";
 import type { PlanResult } from "../planning/types.js";
-import type { SimulationResult } from "../simulation/simulate.js";
+import type { SimulationResult } from "../svg/sim/simulate.js";
 import type { TimelineResult } from "./types.js";
 import {
   SHEEP_CELL_TIME,
   UFO_ENTRY_S,
-  UFO_EXIT_S,
-  LIGHT_FADE_OUT_S,
   UFO_CELL_TIME,
   UFO_MOVE_MIN_S,
   UFO_MOVE_MAX_S,
+  UFO_RELOCATION_APPROACH_S,
+  UFO_RELOCATION_BOARD_S,
+  UFO_RELOCATION_FLIGHT_S,
+  UFO_RELOCATION_TOTAL_S,
 } from "../svg/constants.js";
 
-const LIGHT_RAMP_S = 0.08;
-const SHEEP_FADE_S = 0.25;
-const DROP_STAY_S = 0.25;
+const LIGHT_RAMP_S = 0.04;
+const SHEEP_FADE_S = 0.14;
+const DROP_STAY_S = 0.14;
 const MOVE_START_S = Math.max(DROP_STAY_S, LIGHT_RAMP_S + SHEEP_FADE_S);
-const MAX_VISUAL_EXTRA_S = 0.25;
-const DROP_WAIT_S = 0.15;
-const PICKUP_WAIT_S = 0.35;
-const PICKUP_LIGHT_S = 0.22;
-const PICKUP_FADE_S = 0.25;
-
-/** 타이밍 정책: 필요 시 교체 가능 (기본값 사용) */
-export interface TimingPolicy {
-  sheepCellTime: number;
-  ufoEntryS: number;
-  ufoExitS: number;
-  lightRampS: number;
-  sheepFadeS: number;
-  dropStayS: number;
-  moveStartS: number;
-}
-
-const defaultTiming: TimingPolicy = {
-  sheepCellTime: SHEEP_CELL_TIME,
-  ufoEntryS: UFO_ENTRY_S,
-  ufoExitS: UFO_EXIT_S,
-  lightRampS: LIGHT_RAMP_S,
-  sheepFadeS: SHEEP_FADE_S,
-  dropStayS: DROP_STAY_S,
-  moveStartS: MOVE_START_S,
-};
+const DROP_WAIT_S = 0.06;
+const UFO_RELEASE_S = 0.06;
+const PICKUP_WAIT_S = 0.2;
+const PICKUP_LIGHT_S = 0.14;
+const PICKUP_FADE_S = 0.18;
+const SIGNATURE_FALSE_END_S = 0.28;
+const SIGNATURE_APPROACH_S = 0.3;
+const SIGNATURE_FOCUS_S = 0.18;
+const SIGNATURE_IMPACT_S = 0.12;
+const SIGNATURE_REVEAL_S = 1.08;
+const SIGNATURE_CONFIRM_S = 0.28;
+const SIGNATURE_EXIT_S = 0.36;
+const SIGNATURE_HOLD_S = 1.4;
 
 export function buildTimeline(
   ctx: GridContext,
   plan: PlanResult,
   sim: SimulationResult,
-  policy?: Partial<TimingPolicy>,
 ): TimelineResult {
-  const timing = { ...defaultTiming, ...policy };
   const {
     sheepCount,
     funnelPositionsEarly,
     spawnTick,
     sheepTargetsWithEmpty,
-    paths,
   } = plan;
   const { positionsHistory, targetCellArrivals, maxTotalTime } = sim;
-  const { initialCountByKey } = ctx;
-
+  const firstMoveIndex = positionsHistory.map((timeline) => {
+    if (!timeline?.length) return -1;
+    const [sx, sy] = timeline[0];
+    return timeline.findIndex(
+      ([x, y], index) => index > 0 && (x !== sx || y !== sy),
+    );
+  });
   const moveStartAbsS = Array.from({ length: sheepCount }, (_, i) => {
     const timeline = positionsHistory[i];
     if (!timeline || timeline.length === 0) {
-      return spawnTick[i] * timing.sheepCellTime + timing.moveStartS;
+      return spawnTick[i] * SHEEP_CELL_TIME + MOVE_START_S;
     }
-    const [sx, sy] = timeline[0];
-    let firstMoveIdx = -1;
-    for (let t = 1; t < timeline.length; t++) {
-      const [x, y] = timeline[t];
-      if (x !== sx || y !== sy) {
-        firstMoveIdx = t;
-        break;
-      }
-    }
+    const firstMoveIdx = firstMoveIndex[i];
     const simExtra =
       firstMoveIdx < 0
-        ? (timeline.length - 1) * timing.sheepCellTime
-        : (firstMoveIdx - 1) * timing.sheepCellTime;
-    const extra = Math.min(MAX_VISUAL_EXTRA_S, Math.max(0, simExtra));
-    return spawnTick[i] * timing.sheepCellTime + timing.moveStartS + extra;
+        ? (timeline.length - 1) * SHEEP_CELL_TIME
+        : (firstMoveIdx - 1) * SHEEP_CELL_TIME;
+    const extra = Math.max(0, simExtra);
+    return spawnTick[i] * SHEEP_CELL_TIME + MOVE_START_S + extra;
   });
 
-  const simSpawnAbsS = spawnTick.map((t) => t * timing.sheepCellTime);
+  const simSpawnAbsS = spawnTick.map((t) => t * SHEEP_CELL_TIME);
   const visualSpawnAbsS: number[] = new Array(sheepCount).fill(0);
   const readyAbsS: number[] = new Array(sheepCount).fill(0);
   const visualMoveStartAbsS: number[] = new Array(sheepCount).fill(0);
-  const sheepFirstGrassArrivalS: number[] = new Array(sheepCount).fill(
-    Infinity,
-  );
   const ufoArriveAbsS: number[] = new Array(sheepCount).fill(0);
   const ufoLeaveAbsS: number[] = new Array(sheepCount).fill(0);
 
@@ -106,14 +86,6 @@ export function buildTimeline(
     const last = tl[tl.length - 1];
     return [last[0], last[1]];
   });
-  const sheepEndAbsSActive = activeSheepIndices.map((i) => {
-    const tl = positionsHistory[i]!;
-    return (
-      spawnTick[i] * timing.sheepCellTime +
-      (tl.length - 1) * timing.sheepCellTime
-    );
-  });
-
   for (let i = 0; i < sheepCount; i++) {
     const prevLeave = i === 0 ? 0 : ufoLeaveAbsS[i - 1];
     let arrive = prevLeave;
@@ -127,31 +99,59 @@ export function buildTimeline(
       );
       arrive = prevLeave + travelS;
     }
+    const earliestArrival = Math.max(
+      0,
+      (simSpawnAbsS[i] ?? 0) - DROP_WAIT_S,
+    );
+    arrive = Math.max(arrive, earliestArrival);
     ufoArriveAbsS[i] = arrive;
     const baseSpawn = arrive + DROP_WAIT_S;
     visualSpawnAbsS[i] = Math.max(simSpawnAbsS[i] ?? 0, baseSpawn);
-    readyAbsS[i] = visualSpawnAbsS[i] + (timing.lightRampS + timing.sheepFadeS);
+    readyAbsS[i] = visualSpawnAbsS[i] + (LIGHT_RAMP_S + SHEEP_FADE_S);
     const simOffset = (moveStartAbsS[i] ?? 0) - (simSpawnAbsS[i] ?? 0);
     visualMoveStartAbsS[i] = Math.max(
       readyAbsS[i],
       visualSpawnAbsS[i] + Math.max(0, simOffset),
     );
-    const timeline = positionsHistory[i];
-    if (timeline?.length) {
-      for (let idx = 0; idx < timeline.length; idx++) {
-        const [c, r] = timeline[idx];
-        const key = `${c},${r}`;
-        if ((initialCountByKey.get(key) ?? 0) > 0) {
-          sheepFirstGrassArrivalS[i] =
-            (visualSpawnAbsS[i] ?? 0) + idx * timing.sheepCellTime;
-          break;
-        }
-      }
-    }
-    ufoLeaveAbsS[i] = (visualMoveStartAbsS[i] ?? 0) + LIGHT_FADE_OUT_S;
+    ufoLeaveAbsS[i] = (readyAbsS[i] ?? 0) + UFO_RELEASE_S;
   }
 
-  // 잔디를 다 먹고 모든 양이 멈춘 시점(시뮬 기준)부터 회수 시작. UFO leave는 포함하지 않음.
+  const relocationBiteSettle = 0.23;
+  const relocationFlightStart = UFO_RELOCATION_BOARD_S;
+  const relocationDropArrive = relocationFlightStart + UFO_RELOCATION_FLIGHT_S;
+  const relocationRelease = UFO_RELOCATION_TOTAL_S - UFO_RELOCATION_APPROACH_S;
+  const relocationDuration = relocationBiteSettle + relocationRelease;
+  const relocationStartAbsS = sim.relocation
+    ? (() => {
+        const { sheepIndex, historyIndex } = sim.relocation;
+        const simFirstMoveArrival =
+          (spawnTick[sheepIndex] ?? 0) * SHEEP_CELL_TIME +
+          DROP_STAY_S +
+          Math.max(0, firstMoveIndex[sheepIndex] ?? 0) * SHEEP_CELL_TIME;
+        const visualFirstMoveArrival =
+          (visualMoveStartAbsS[sheepIndex] ?? 0) + SHEEP_CELL_TIME;
+        return (
+          (spawnTick[sheepIndex] ?? 0) * SHEEP_CELL_TIME +
+          DROP_STAY_S +
+          historyIndex * SHEEP_CELL_TIME +
+          visualFirstMoveArrival -
+          simFirstMoveArrival
+        );
+      })()
+    : null;
+
+  const sheepEndAbsSActive = activeSheepIndices.map((i) => {
+    const timeline = positionsHistory[i]!;
+    const firstMove = firstMoveIndex[i];
+    if (firstMove < 0) return readyAbsS[i];
+    return (
+      visualMoveStartAbsS[i] +
+      (timeline.length - firstMove) * SHEEP_CELL_TIME +
+      (sim.relocation?.sheepIndex === i ? relocationDuration : 0)
+    );
+  });
+
+  // 실제 화면에서 마지막 양이 멈춘 뒤에만 회수를 시작한다.
   const allSheepDoneAbsS =
     sheepEndAbsSActive.length > 0 ? Math.max(0, ...sheepEndAbsSActive) : 0;
   // 그 시점 이후로는 UFO가 드롭 위치로 가지 않도록, 방문할 드롭 개수 제한
@@ -185,24 +185,25 @@ export function buildTimeline(
   }
   const pickupEndAbsS = tCursor;
 
-  // ---- 페인트 파동: 회수 후 그리드 중앙으로 이동 → 파동 쏘면 거리순으로 칠해짐 → 퇴장 ----
-  const { maxX, maxY } = ctx;
-  const paintCenterCol = Math.floor(maxX / 2);
-  const paintCenterRow = Math.floor(maxY / 2);
-  const PAINT_WAVE_SPEED_S = 0.1;
-  const maxDist =
-    Math.max(paintCenterCol, maxX - paintCenterCol) +
-    Math.max(paintCenterRow, maxY - paintCenterRow);
-  const paintSweepStartAbsS = pickupEndAbsS;
-  const paintSweepDuration = maxDist * PAINT_WAVE_SPEED_S;
-  const sweepPositions: [number, number][] = [[paintCenterCol, paintCenterRow]];
-  const sweepArriveAbsS: number[] = [paintSweepStartAbsS];
+  // ---- Crop Signature: 빈 목장 → 중앙 집결 → 원형 각인 → 퇴장 → 이름 hold ----
+  const { centerCol, maxY } = ctx;
+  const signatureArriveAbsS =
+    pickupEndAbsS + SIGNATURE_FALSE_END_S + SIGNATURE_APPROACH_S;
+  const paintSweepStartAbsS =
+    signatureArriveAbsS + SIGNATURE_FOCUS_S + SIGNATURE_IMPACT_S;
+  const paintSweepDuration = SIGNATURE_REVEAL_S;
+  const ufoExitStartAbsS =
+    paintSweepStartAbsS + paintSweepDuration + SIGNATURE_CONFIRM_S;
+  const ufoExitEndAbsS = ufoExitStartAbsS + SIGNATURE_EXIT_S;
+  const sweepPositions: [number, number][] = [[centerCol, Math.floor(maxY / 2)]];
+  const sweepArriveAbsS: number[] = [signatureArriveAbsS];
 
-  const timelineOffset = timing.ufoEntryS;
+  const timelineOffset = UFO_ENTRY_S;
   const maxTotalTimeWithEntryExit =
-    Math.max(timelineOffset + maxTotalTime, pickupEndAbsS) +
-    paintSweepDuration +
-    timing.ufoExitS;
+    Math.max(
+      timelineOffset + maxTotalTime,
+      timelineOffset + ufoExitEndAbsS + SIGNATURE_HOLD_S,
+    );
   const ufoArriveAbsSOffset = ufoArriveAbsS.map(
     (t: number) => t + timelineOffset,
   );
@@ -214,17 +215,41 @@ export function buildTimeline(
   const ufoLeaveAbsSOffset = ufoLeaveAbsS.map((u) => u + timelineOffset);
   const sweepArriveAbsSOffset = sweepArriveAbsS.map((t) => t + timelineOffset);
   const paintSweepStartAbsSOffset = paintSweepStartAbsS + timelineOffset;
+  const ufoExitStartAbsSOffset = ufoExitStartAbsS + timelineOffset;
+  const ufoExitEndAbsSOffset = ufoExitEndAbsS + timelineOffset;
 
   const firstArrivals = new Map<
     string,
-    { arrivalTime: number; level: number; directionRad?: number }
+    {
+      arrivalTime: number;
+      level: number;
+      sheepIndex: number;
+      directionRad?: number;
+    }
   >();
   for (const [k, v] of targetCellArrivals) {
     if (v.length > 0) {
       const first = v[0];
+      const sheepIndex = first.sheepIndex;
+      const firstMoveIdx = firstMoveIndex[sheepIndex] ?? -1;
+      const simFirstMoveArrival =
+        (spawnTick[sheepIndex] ?? 0) * SHEEP_CELL_TIME +
+        DROP_STAY_S +
+        Math.max(0, firstMoveIdx) * SHEEP_CELL_TIME;
+      const visualFirstMoveArrival =
+        (visualMoveStartAbsS[sheepIndex] ?? 0) + SHEEP_CELL_TIME;
+      const arrivalTime =
+        first.arrivalTime + visualFirstMoveArrival - simFirstMoveArrival;
+      const relocationDelay =
+        sim.relocation?.sheepIndex === sheepIndex &&
+        relocationStartAbsS != null &&
+        arrivalTime >= relocationStartAbsS
+          ? relocationDuration
+          : 0;
       firstArrivals.set(k, {
-        arrivalTime: first.arrivalTime,
+        arrivalTime: arrivalTime + relocationDelay,
         level: first.level,
+        sheepIndex,
         directionRad: first.directionRad,
       });
     }
@@ -237,6 +262,24 @@ export function buildTimeline(
   const pickupArriveAbsSOffset: (number | null)[] = pickupArriveBySheep.map(
     (t) => (t == null ? null : t + timelineOffset),
   );
+  const relocation = sim.relocation
+    ? (() => {
+        const { sheepIndex, historyIndex, from, to } = sim.relocation;
+        const pickupArriveAbsS =
+          (relocationStartAbsS ?? 0) + relocationBiteSettle + timelineOffset;
+        return {
+          sheepIndex,
+          historyIndex,
+          from,
+          to,
+          pickupArriveAbsS,
+          flightStartAbsS: pickupArriveAbsS + relocationFlightStart,
+          dropArriveAbsS: pickupArriveAbsS + relocationDropArrive,
+          releaseAbsS: pickupArriveAbsS + relocationRelease,
+          operationDuration: relocationDuration,
+        };
+      })()
+    : null;
   const assignedIndices = Array.from(
     { length: sheepCount },
     (_, i) => i,
@@ -257,17 +300,15 @@ export function buildTimeline(
     ufoLeaveAbsSOffset,
     effectiveDropCount,
     pickupCells,
-    pickupArriveBySheep,
     pickupArriveAbsSOffsetForUfo,
     pickupArriveAbsSOffset,
+    relocation,
     sweepPositions,
     sweepArriveAbsSOffset,
     paintSweepStartAbsSOffset,
     paintSweepDuration,
-    paintWaveSpeedS: PAINT_WAVE_SPEED_S,
-    paintCenterCol,
-    paintCenterRow,
-    activeSheepIndices,
+    ufoExitStartAbsSOffset,
+    ufoExitEndAbsSOffset,
     assignedIndices,
   };
 }
