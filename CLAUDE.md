@@ -63,7 +63,7 @@ writeFileSync             → assets/live.svg
 
 - `GridCell.x` = 주(week) 인덱스 (열), `GridCell.y` = 요일 (0=일요일, 6=토요일)
 - 셀 키는 항상 `"x,y"` (열,행) 형태의 문자열. `byKey.get("col,row")`
-- 마지막 아이디 페인트 셀은 `src/svg/signature.ts`의 픽셀 글꼴에서 생성하며 내부 셀 키와 같은 `"col,row"` 순서를 사용합니다. 10자까지 5×7, 11–13자는 압축 3×5를 사용합니다.
+- 마지막 아이디 페인트 셀은 `src/svg/signature.ts`의 픽셀 글꼴에서 생성하며 내부 셀 키와 같은 `"col,row"` 순서를 사용합니다. 1–10자는 5×7, 11–13자는 3×5, 14–26자는 중앙 정렬된 두 줄 3×3을 사용합니다.
 
 ### 양 수 결정 로직 (`svg/buildContext.ts`)
 

@@ -1,9 +1,9 @@
-# 새벽 1시(KST)에 잔디 SVG 생성 후 프로필 README 저장소에 푸시
+# 오후 10시(KST)에 잔디 SVG 생성 후 프로필 README 저장소에 푸시
 name: Update profile README with grass SVG
 
 on:
   schedule:
-    # KST 01:00 = UTC 16:00 (전날)
+    # KST 22:00 = UTC 13:00
     - cron: "0 13 * * *"
   workflow_dispatch:
 
@@ -39,7 +39,7 @@ jobs:
           PROFILE_REPO="${PROFILE_USER}/${PROFILE_USER}"
           echo "Target profile repo: ${PROFILE_REPO}"
           if [ -z "${{ secrets.PROFILE_README_TOKEN }}" ]; then
-            echo "::error::PROFILE_README_TOKEN 시크릿이 없습니다. Settings → Secrets and variables → Actions에서 PAT를 PROFILE_README_TOKEN 이름으로 추가하세요. (docs/PROFILE_README_SETUP.md 참고)"
+            echo "::error::PROFILE_README_TOKEN 시크릿이 없습니다. Settings → Secrets and variables → Actions에서 PAT를 PROFILE_README_TOKEN 이름으로 추가하세요. (README.md 참고)"
             exit 1
           fi
           mkdir -p ../profile-repo

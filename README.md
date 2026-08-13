@@ -1,19 +1,34 @@
 # 🌱 Green Movement
 
-GitHub 잔디(Contribution Graph)를 **움직이는 목장**으로 바꿔 주는 프로젝트예요.  
-당신의 1년치 기여도가 SVG 애니메이션으로 그려지고, UFO가 양을 내려놓고, 양이 잔디를 먹고, 꽃이 피는 걸 프로필 README에서 볼 수 있습니다.
+GitHub Contribution Graph를 **움직이는 미니어처 목장**으로 바꿔 주는 SVG 생성기입니다.
+UFO가 양을 배치하고, 양이 실제 기여 셀을 먹으며, 마지막에 자신의 GitHub 아이디를 잔디로 남깁니다.
 
 <p align="center">
   <img src="assets/live.svg" alt="green movement preview" width="700" />
 </p>
 
+<p align="center"><sub>검증용 샘플 미리보기·실제 생성 시 자신의 기여 데이터와 GitHub 아이디가 사용됩니다.</sub></p>
+
 ---
 
-## 이 프로젝트로 할 수 있는 것
+## 어떻게 움직이나요?
 
-- **GitHub 프로필 README**에 “나의 잔디 → 목장 애니메이션” SVG를 올릴 수 있어요.
-- Fork(또는 Template)한 뒤 **GitHub Actions**로 매일 자동 갱신할 수 있어요.
-- 로컬에서 한 번만 생성해서 수동으로 올려도 됩니다.
+1. UFO가 첫 배치 지점으로 바로 진입해 선발 양 4마리를 내려줍니다.
+2. 양은 도착한 잔디를 실제 물기 동작과 동기화해 먹습니다.
+3. UFO가 2.40초 동안 양 한 마리를 다른 작업 구역으로 공중 재배치합니다.
+4. 재배치가 끝난 뒤 양 2마리가 증원되어 총 6마리가 목장을 비웁니다.
+5. 섭취한 잔디는 양의 몸과 양털 에너지로 쌓이고, 회수 후 중앙 파동으로 GitHub 아이디를 남깁니다.
+
+## 주요 특징
+
+- 잔디 밀도와 무관하게 최대 6마리를 유지하는 고정된 장면 구성
+- 양 도착 전에 잔디가 사라지지 않는 인과적 섭취 타이밍
+- GitHub 라이트·다크 테마 자동 대응
+- 영문, 숫자, 하이픈 GitHub 아이디 지원
+  - 1–10자: 5×7 서명
+  - 11–13자: 3×5 압축 서명
+  - 14–26자: 중앙 정렬된 두 줄 3×3 서명
+- GitHub Actions를 통한 매일 자동 갱신 및 로컬 생성 지원
 
 ---
 
@@ -40,10 +55,12 @@ GitHub 프로필에 보이는 README는 **`사용자명/사용자명`** 공개 �
 
 프로필 저장소에 이 프로젝트가 생성한 SVG를 자동으로 푸시하려면 Personal Access Token이 필요해요.
 
-1. GitHub **Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)**
-2. **Generate new token (classic)**
-3. Scopes에서 **repo** 체크
-4. 생성 후 나오는 토큰을 **한 번만** 보이니까 반드시 복사해 두세요.
+1. GitHub **Settings** → **Developer settings** → **Personal access tokens** → **Fine-grained tokens**
+2. 대상 저장소로 자신의 프로필 저장소(`사용자명/사용자명`)만 선택
+3. Repository permissions의 **Contents**를 **Read and write**로 설정
+4. 생성된 토큰을 복사합니다.
+
+GitHub 공식 안내: [프로필 README 설정](https://docs.github.com/en/account-and-profile/how-tos/profile-customization/managing-your-profile-readme), [Fine-grained PAT 관리](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
 
 ---
 
@@ -81,13 +98,12 @@ Fork(또는 Template)한 **green-movement** 저장소에서:
 
 ### 6. 첫 SVG 만들기
 
-**방법 A (권장)**  
-Fork한 **green-movement** 저장소에서:  
+**방법 A (권장)**
+Fork한 **green-movement** 저장소에서:
 **Actions** → **Update profile README with grass SVG** → **Run workflow**
 
-**방법 B**  
-프로필 저장소에 `assets` 폴더를 만들고, 그 안에 빈 파일 `live.svg`를 만들어서 한 번 커밋해 두기.  
-그 다음 위 워크플로를 실행하면 그 파일이 실제 SVG로 덮어 써집니다.
+**방법 B**
+로컬에서 SVG를 생성한 뒤 프로필 저장소의 `assets/live.svg`로 수동 업로드합니다.
 
 ---
 
@@ -121,6 +137,19 @@ npm run generate
 
 ---
 
+## ✅ 로컬 검증
+
+실제 GitHub 토큰 없이 고정 fixture로 빌드, TypeScript, 애니메이션 인과관계, 긴 아이디 레이아웃을 검사할 수 있습니다.
+
+```bash
+npm run check
+npm run visual:fixture
+```
+
+`npm run visual:fixture`는 검수용 `dist/visual-fixture.svg`를 생성합니다.
+
+---
+
 ## 📁 생성되는 SVG 크기
 
 기본적으로 SVG 가로는 실제 프로필 표시 크기인 **700px**로 맞춰집니다.
@@ -128,6 +157,17 @@ npm run generate
 
 ---
 
+## 📚 프로젝트 문서
+
+| 문서 | 내용 |
+| --- | --- |
+| [프로젝트 계약](docs/nulnul/project.md) | 목표, 제약, 검증 기준, 능력 구성 |
+| [연출 연구와 샷 계약](docs/nulnul/directing-study-v12.md) | 모션 원칙, 비트별 타이밍, 기각 규칙 |
+| [시각 벤치마크](docs/nulnul/visual-benchmark.md) | 700px 라이트·다크 테마 평가 기준 |
+| [진화 체크포인트](docs/nulnul/evolution.json) | 피드백, 후보, 검증 근거, 롤백 규칙 |
+
+---
+
 ## 📄 라이선스
 
-이 프로젝트는 원저작자 표기와 함께 자유롭게 사용·수정할 수 있습니다.
+현재 별도의 `LICENSE` 파일이 없습니다. 재사용·배포 범위는 저장소 소유자에게 확인해 주세요.
