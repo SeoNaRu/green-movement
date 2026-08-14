@@ -54,10 +54,13 @@ jobs:
           mkdir -p ../profile-repo/assets
           cp assets/live.svg assets/live-light.svg assets/live-dark.svg ../profile-repo/assets/
           README_PATH="../profile-repo/README.md"
-          LIGHT_IMAGE="![grass](https://raw.githubusercontent.com/${PROFILE_REPO}/main/assets/live-light.svg#gh-light-mode-only)"
-          DARK_IMAGE="![grass](https://raw.githubusercontent.com/${PROFILE_REPO}/main/assets/live-dark.svg#gh-dark-mode-only)"
+          LIGHT_IMAGE="![grass](https://raw.githubusercontent.com/${PROFILE_REPO}/main/assets/live-light.svg?v=${GITHUB_RUN_ID}#gh-light-mode-only)"
+          DARK_IMAGE="![grass](https://raw.githubusercontent.com/${PROFILE_REPO}/main/assets/live-dark.svg?v=${GITHUB_RUN_ID}#gh-dark-mode-only)"
           if grep -Eq '^!\[grass\]\(.*assets/live\.svg\)$' "${README_PATH}"; then
             sed -i -E "s|^!\[grass\]\(.*assets/live\.svg\)$|${LIGHT_IMAGE}\\n${DARK_IMAGE}|" "${README_PATH}"
+          else
+            sed -i -E "s|^!\[grass\]\(.*assets/live-light\.svg[^)]*\)$|${LIGHT_IMAGE}|" "${README_PATH}"
+            sed -i -E "s|^!\[grass\]\(.*assets/live-dark\.svg[^)]*\)$|${DARK_IMAGE}|" "${README_PATH}"
           fi
           cd ../profile-repo
           git config user.name "github-actions[bot]"

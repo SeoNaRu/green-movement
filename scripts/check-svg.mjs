@@ -130,6 +130,10 @@ for (const required of [
   "assets/live-dark.svg",
   "#gh-light-mode-only",
   "#gh-dark-mode-only",
+  "?v=${GITHUB_RUN_ID}#gh-light-mode-only",
+  "?v=${GITHUB_RUN_ID}#gh-dark-mode-only",
+  "assets/live-light\\.svg[^)]*",
+  "assets/live-dark\\.svg[^)]*",
   "branches: [main]",
   "git add README.md assets/live.svg assets/live-light.svg assets/live-dark.svg",
 ]) {
