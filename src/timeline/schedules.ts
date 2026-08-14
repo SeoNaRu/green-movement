@@ -29,9 +29,7 @@ const SIGNATURE_CONFIRM_S = 0.28;
 const SIGNATURE_EXIT_S = 0.36;
 const SIGNATURE_HOLD_S = 1.4;
 const TURNOVER_PICKUP_S = 0.16;
-const TURNOVER_FLIGHT_MIN_S = 0.18;
-const TURNOVER_FLIGHT_MAX_S = 0.24;
-const TURNOVER_FLIGHT_CELL_S = 0.06;
+const TURNOVER_EXCHANGE_S = 0.18;
 const TURNOVER_DROP_S = LIGHT_RAMP_S + SHEEP_FADE_S;
 
 export function buildTimeline(
@@ -91,10 +89,7 @@ export function buildTimeline(
       const distCells =
         Math.abs(funnelPositionsEarly[i][0] - funnelPositionsEarly[i - 1][0]) +
         Math.abs(funnelPositionsEarly[i][1] - funnelPositionsEarly[i - 1][1]);
-      const travelS = Math.min(
-        UFO_MOVE_MAX_S,
-        Math.max(UFO_MOVE_MIN_S, distCells * UFO_CELL_TIME),
-      );
+      const travelS = Math.max(UFO_MOVE_MIN_S, distCells * UFO_CELL_TIME);
       arrive = prevLeave + travelS;
     }
     const earliestArrival = Math.max(
@@ -168,18 +163,7 @@ export function buildTimeline(
       serviceCursor + travelSCells(serviceCell, turnover.pickupCell),
     );
     const outgoingHidden = arrive + TURNOVER_PICKUP_S;
-    const pickupToDropCells =
-      Math.abs(turnover.dropCell[0] - turnover.pickupCell[0]) +
-      Math.abs(turnover.dropCell[1] - turnover.pickupCell[1]);
-    const dropArrive =
-      outgoingHidden +
-      Math.min(
-        TURNOVER_FLIGHT_MAX_S,
-        Math.max(
-          TURNOVER_FLIGHT_MIN_S,
-          pickupToDropCells * TURNOVER_FLIGHT_CELL_S,
-        ),
-      );
+    const dropArrive = outgoingHidden + TURNOVER_EXCHANGE_S;
     const incomingSpawn = dropArrive;
     const incomingReady = incomingSpawn + TURNOVER_DROP_S;
     const leave = incomingReady;

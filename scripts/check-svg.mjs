@@ -11,7 +11,9 @@ import {
   SHEEP_WIDTH_PX,
   MAX_SHEEP,
   MOTION_TIME_SCALE,
+  UFO_CELL_TIME,
   UFO_ENTRY_S,
+  UFO_MOVE_MIN_S,
   UFO_WIDTH_PX,
 } from "../dist/svg/constants.js";
 import { planTargets } from "../dist/planning/targetPlanner.js";
@@ -243,7 +245,7 @@ const deploymentTimes = Array.from({ length: sheepCount }, (_, i) => {
   return (visiblePct / 100) * runtime;
 });
 const deploymentSeconds = deploymentTimes.at(-1);
-if (deploymentTimes.some((time) => !Number.isFinite(time) || time > 6)) {
+if (deploymentTimes.some((time) => !Number.isFinite(time) || time > 6.5)) {
   throw new Error(`expected the full field flock to deploy immediately: ${deploymentTimes}`);
 }
 if (!svg.includes("@keyframes sheep-0-growth") || !svg.includes("class=\"sheep-energy\"")) {
@@ -404,6 +406,31 @@ const timingSimulation = simulateGrid({
 });
 const flock = buildFlockPlan(timingPlan, timingSimulation);
 const timing = buildTimeline(timingContext, timingPlan, timingSimulation, flock);
+const deploymentFlightProblems = Array.from(
+  { length: Math.max(0, sheepCount - 1) },
+  (_, index) => {
+    const from = timing.ufoStopCells[index];
+    const to = timing.ufoStopCells[index + 1];
+    const cells = Math.abs(to[0] - from[0]) + Math.abs(to[1] - from[1]);
+    const actual =
+      timing.ufoArriveAbsSOffset[index + 1] -
+      timing.ufoLeaveAbsSOffset[index];
+    const expected = Math.max(UFO_MOVE_MIN_S, cells * UFO_CELL_TIME);
+    return Math.abs(actual - expected) > 0.001
+      ? { index, from, to, actual, expected }
+      : null;
+  },
+).filter(Boolean);
+if (deploymentFlightProblems.length) {
+  throw new Error(
+    `long deployment flights are still compressed: ${JSON.stringify(deploymentFlightProblems)}`,
+  );
+}
+const ufoVisibility =
+  svg.match(/@keyframes ufo-visibility \{([\s\S]*?)\n  \}/)?.[1] ?? "";
+if ((ufoVisibility.match(/opacity: 0/g) ?? []).length !== timing.turnovers.length * 2) {
+  throw new Error("turnover does not visibly cut from pickup to a new delivery");
+}
 if (Math.abs(runtime - timing.maxTotalTimeWithEntryExit * MOTION_TIME_SCALE) > 0.001) {
   throw new Error(`visual runtime does not apply the 1.3x motion scale: ${runtime}`);
 }

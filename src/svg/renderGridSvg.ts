@@ -110,6 +110,7 @@ export function renderGridSvg(
     ufoRippleGroupStr,
   } = buildUfoLayer({
     funnelPositionsEarly: timeline.ufoStopCells,
+    deploymentStopCount: plan.sheepCount,
     spawnAbsS: timeline.spawnAbsSOffset,
     arriveAbsS: timeline.ufoArriveAbsSOffset,
     beamDelayS: UFO_BEAM_DELAY_S,

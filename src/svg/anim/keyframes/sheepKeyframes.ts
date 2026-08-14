@@ -391,7 +391,6 @@ export function buildSheepLayer(params: {
         return `translate(${point.x + off.dx}px, ${point.y + off.dy}px) rotate(${angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px)`;
       };
       const sourceTransform = transformAt(turnover.pickupCell, turnoverAngle);
-      const firstStep = turnover.dropPath[1] ?? turnover.dropCell;
       const bridgeAngleOf = (dx: number, dy: number, fallback: number) => {
         if (dx === 0 && dy === 0) return fallback;
         let angle = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
@@ -399,11 +398,7 @@ export function buildSheepLayer(params: {
         while (angle - fallback < -180) angle += 360;
         return Number(angle.toFixed(2));
       };
-      let bridgeAngle = bridgeAngleOf(
-        firstStep[0] - turnover.dropCell[0],
-        firstStep[1] - turnover.dropCell[1],
-        turnoverAngle,
-      );
+      let bridgeAngle = 180;
       const dropTransform = transformAt(turnover.dropCell, bridgeAngle);
       for (const [atS, transform, opacity] of [
         [turnover.pickupArriveAbsS, sourceTransform, 1],

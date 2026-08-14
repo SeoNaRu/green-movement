@@ -428,6 +428,30 @@
       "scope": "project",
       "status": "converted",
       "rejected_proposals": []
+    },
+    {
+      "id": "feedback-deployment-exchange-continuity-20260815",
+      "target_agent": "worker",
+      "source": "user",
+      "observed": "The third and fourth opening deliveries crossed much larger field spans in the same capped flight time as shorter deliveries, so they looked as if they rushed in from outside. During turnover, the UFO then flew one uninterrupted pickup-to-drop path while the same field-slot sheep group vanished and reappeared, so the nominally new sheep still read as the collected sheep being moved.",
+      "expected": "Pace opening flights by route distance, visibly end the outgoing collection before beginning a remote delivery, and give the incoming hungry sheep a fresh landing stance and roster identity without adding another asset or effect layer.",
+      "evidence": "The public 700px sequence measured 0.52 playback seconds for both a 10-cell and an 18-cell opening leg. Source tracing found the 0.40-second maximum in the shared deployment scheduler and one sheep-{slot} group spanning outgoingHiddenAbsS through incomingReadyAbsS while the UFO drew a continuous transform between pickup and drop.",
+      "reproduction": "Inspect the public 700px opening around sheep 3 and 4, then inspect exact representative pickup, lift, hidden, re-entry, landing, and first bridge frames; compare initial Manhattan distance per flight with its playback duration and count turnover visibility cuts.",
+      "scope": "project",
+      "status": "converted",
+      "rejected_proposals": []
+    },
+    {
+      "id": "feedback-motion-semantic-diagnosis-20260815",
+      "target_agent": "coach",
+      "source": "user",
+      "observed": "Several successive turnover fixes improved empty time, endpoint distance, footprint clearance, and bridge speed, but the user still had to identify that the continuous carrier path communicated the wrong identity story.",
+      "expected": "For an identity or continuity complaint, inspect the actor lifecycle and adjacent rendered frames before optimizing another coordinate metric; test what story the uninterrupted trajectory communicates.",
+      "evidence": "V21, v25, and v26 passed their numeric turnover checks, yet the v26 source still reused one field-slot actor and moved the UFO directly from the outgoing pickup to the incoming drop. The first diagnosis that traced both facts produced the bounded service-cut correction.",
+      "reproduction": "For the next actor-identity motion report, require a source lifecycle trace plus pickup-to-next-action frame sequence before proposing a spatial or timing change.",
+      "scope": "project",
+      "status": "converted",
+      "rejected_proposals": []
     }
   ],
   "proposals": [
@@ -1464,6 +1488,84 @@
       ],
       "permission_delta": [],
       "rollback": "Restore the v25 Manhattan drop selection and logical-window bridge timing, remove the selected numerical states and meter pulse, and retain the accepted v25 panel layout."
+    },
+    {
+      "id": "proposal-distance-paced-service-cut-v27",
+      "feedback_ids": [
+        "feedback-deployment-exchange-continuity-20260815"
+      ],
+      "target_agent": "worker",
+      "author_agent": "coach",
+      "change_target": "opening delivery scheduling, turnover UFO continuity, incoming landing heading, deterministic checks, README behavior description, and durable motion guardrails",
+      "change_level": "task",
+      "status": "proposed",
+      "from_version": 26,
+      "to_version": 27,
+      "cause": "Opening travel used a fixed maximum duration that compressed long routes, while turnover separated endpoints but preserved one uninterrupted carrier trajectory and inherited outgoing orientation at the new landing.",
+      "candidate_change": "Let opening inter-drop duration follow Manhattan distance at the established UFO cell pace, replace each direct turnover transport with a short vertical lift and fade followed by remote vertical re-entry inside the existing service window, and reset every incoming sheep to a neutral front-facing landing before its exact-speed cleared bridge.",
+      "discovery_evidence": "Exact public frames and generated keyframes measured the second-to-third opening leg at 18 cells in the same 0.52 playback seconds as shorter capped legs. The accepted source reused one sheep slot and continuously interpolated the UFO between pickup and drop. The candidate gives representative opening legs 0.572–0.676 playback seconds, inserts 22 hidden service cuts of 0.234 seconds, and removes the visible carrier path without adding an asset or effect layer.",
+      "reproduction": "Run npm run visual:fixture and npm run check; inspect 700px forced-theme opening flights through sheep 4 and exact pickup, lift, hidden, re-entry, neutral landing, bridge, reduced-motion, finale, terminal, and 10/28/62-roster frames.",
+      "primary_metric": "No long opening leg is capped below its distance-derived duration, and every one of 22 turnovers visibly ends collection before a remote hungry sheep begins deployment while all accepted causal, spatial, bridge, panel, finale, size, and runtime guardrails pass.",
+      "prediction": "Breaking the carrier trajectory and resetting the landing stance will communicate a real flock exchange more clearly than increasing pickup/drop distance again, while distance pacing removes the opening rush without slowing short legs.",
+      "expected_delta": {
+        "distance_paced_opening_legs": 5,
+        "turnover_service_cuts": 22,
+        "hidden_exchange_playback_seconds": 0.234,
+        "incoming_neutral_landings": 22,
+        "new_assets": 0,
+        "runtime_max_seconds": 50
+      },
+      "falsification_condition": "Reject if sheep 3 or 4 still appears to rush in, any UFO remains visibly continuous from pickup to replacement drop, a cut looks like an unexplained actor jump, the incoming sheep inherits the outgoing stance, any accepted causal or layout check regresses, runtime exceeds 50 seconds, or npm run check fails.",
+      "regression_check": "npm run check plus fresh exact-time 700px opening, service-cut, landing, bridge, finale, terminal, reduced-motion, and roster-density frames in both themes.",
+      "transfer_check": "Not applicable; this is a project-scoped motion correction.",
+      "guardrails": [
+        "One original UFO and the existing sheep art only",
+        "No new dependency, glyph, filter, blur, scan, marker, or effect layer",
+        "All 201 grass arrivals remain bite- and owner-synchronized",
+        "All 22 replacement bridges keep exact 0.312-second playback edges and cleared adjacent paths",
+        "Pickup/drop centres remain at least 42 rendered pixels apart",
+        "Preserve accepted themes, panel lifecycle, 10/28/62 rosters, early pickup, terminal state, and 53 finale phases",
+        "Runtime at or below 50 seconds and fixture growth below the frozen 15 percent budget",
+        "No permission expansion"
+      ],
+      "permission_delta": [],
+      "rollback": "Restore the v26 capped opening flights, direct visible turnover transport, and inherited incoming heading while keeping the accepted v26 energy, bridge, panel, and finale behavior."
+    },
+    {
+      "id": "proposal-semantic-motion-diagnosis-v2",
+      "feedback_ids": [
+        "feedback-motion-semantic-diagnosis-20260815"
+      ],
+      "target_agent": "coach",
+      "author_agent": "coach",
+      "change_target": "project motion diagnosis and Gate evidence order",
+      "change_level": "meta",
+      "status": "proposed",
+      "from_version": 1,
+      "to_version": 2,
+      "cause": "The diagnosis treated identity as endpoint separation and timing while leaving the uninterrupted actor and carrier continuity unexamined.",
+      "candidate_change": "For future identity or handoff complaints, trace the rendered actor lifecycle and the carrier path first, then inspect adjacent 700px frames for the story they communicate before choosing a numeric spatial or timing metric. Require both semantic continuity evidence and the existing mechanical checks at Gate.",
+      "discovery_evidence": "Three accepted numeric corrections did not remove the repeated user perception, while one bounded actor-lifecycle and adjacent-frame trace exposed both the reused slot and uninterrupted carrier path without external research or a new capability.",
+      "reproduction": "Audit this v27 diagnosis order and its independent Gate: actor lifecycle and adjacent frames must precede the distance/timing assertion, and the accepted product checks must still run afterward.",
+      "primary_metric": "The next project-local identity complaint is diagnosed with lifecycle plus adjacent-frame evidence before another coordinate-only fix is proposed.",
+      "prediction": "Checking communicated identity before optimizing coordinates will reduce repeated user corrections without increasing the agent roster, permission scope, or research cost.",
+      "expected_delta": {
+        "required_actor_lifecycle_traces": 1,
+        "required_adjacent_frame_sequences": 1,
+        "new_agents": 0,
+        "new_capabilities": 0
+      },
+      "falsification_condition": "Reject if the semantic check is subjective without source/frame evidence, duplicates the existing visual Gate without changing diagnosis order, or causes mechanical spatial and timing regressions to be skipped.",
+      "regression_check": "Validate evolution state and confirm the independent v27 Gate includes both lifecycle continuity and all existing deterministic guardrails.",
+      "transfer_check": "Not applicable; keep this diagnosis rule project-scoped until another project independently reproduces the same gap.",
+      "guardrails": [
+        "Project-specific preserved motion study remains the authority",
+        "Mechanical checks remain mandatory after semantic diagnosis",
+        "No new agent, capability, external research, or permission expansion",
+        "Independent Gate remains separate from the proposal author"
+      ],
+      "permission_delta": [],
+      "rollback": "Return to the v1 Coach diagnosis order while retaining all accepted product behavior and recorded feedback."
     },
     {
       "id": "proposal-project-motion-routing-v3",
