@@ -64,7 +64,7 @@ export function composeSvg(params: {
   ${ufoRippleKeyframesStr}
   ${panelStyles}
   @media (prefers-reduced-motion: reduce) {
-    .ufo-streak, .ufo-ripple, .signature-reveal, #grass-crumbs { display: none; }
+    .ufo-streak, .ufo-ripple, .signature-reveal, #grass-crumbs, .flock-meter-pulse { display: none; }
   }
     </style>
   </defs>

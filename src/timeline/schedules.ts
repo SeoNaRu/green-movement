@@ -32,9 +32,7 @@ const TURNOVER_PICKUP_S = 0.16;
 const TURNOVER_FLIGHT_MIN_S = 0.18;
 const TURNOVER_FLIGHT_MAX_S = 0.24;
 const TURNOVER_FLIGHT_CELL_S = 0.06;
-const TURNOVER_DROP_WAIT_S = 0.02;
 const TURNOVER_DROP_S = LIGHT_RAMP_S + SHEEP_FADE_S;
-const TURNOVER_RELEASE_S = 0.04;
 
 export function buildTimeline(
   ctx: GridContext,
@@ -148,6 +146,8 @@ export function buildTimeline(
     dropCell: [number, number];
     dropPath: [number, number][];
     bridgeDuration: number;
+    bridgeDelay: number;
+    bridgeHold: number;
     pickupArriveAbsS: number;
     outgoingHiddenAbsS: number;
     dropArriveAbsS: number;
@@ -180,10 +180,10 @@ export function buildTimeline(
           pickupToDropCells * TURNOVER_FLIGHT_CELL_S,
         ),
       );
-    const incomingSpawn = dropArrive + TURNOVER_DROP_WAIT_S;
+    const incomingSpawn = dropArrive;
     const incomingReady = incomingSpawn + TURNOVER_DROP_S;
-    const leave = incomingReady + TURNOVER_RELEASE_S;
-    const addedDelay = Math.max(0, incomingReady - requested);
+    const leave = incomingReady;
+    const addedDelay = Math.max(0, incomingReady - requested) + turnover.bridgeDelay;
     slotDelays[turnover.slotIndex] += addedDelay;
     scheduledTurnovers.push({
       ...turnover,

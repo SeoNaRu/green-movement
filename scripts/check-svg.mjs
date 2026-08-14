@@ -1,6 +1,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { buildContext } from "../dist/svg/buildContext.js";
 import {
+  CELL_SIZE,
+  GAP,
   GRASS_STEP_TIMES_S,
   SHEEP_CELL_TIME,
   SHEEP_FULLNESS_CAPACITY,
@@ -121,11 +123,14 @@ for (const required of [
   'id="flock-meter-compact"',
   'class="flock-meter-track"',
   'class="flock-meter-fill"',
+  'class="flock-meter-pulse"',
   'id="flock-progress-27"',
   'href="#flock-sheep-icon" x="13"',
   'href="#flock-ufo-icon" x="12"',
   '<tspan class="flock-meta-key">Flock</tspan><tspan dx="5" class="flock-meta-value">28</tspan>',
-  "FULLNESS",
+  "ENERGY",
+  ">0/20</text>",
+  ">20/20</text>",
   "GRAZING",
   "PASTURE CLEAR",
   "ALL SHEEP COLLECTED",
@@ -137,6 +142,7 @@ for (const required of [
 if (
   (svg.match(/class="flock-meter-track"/g) ?? []).length !== 28 * 2 ||
   (svg.match(/class="flock-meter-fill"/g) ?? []).length !== 28 * 2 ||
+  (svg.match(/class="flock-meter-pulse"/g) ?? []).length !== 28 ||
   (svg.match(/<clipPath id="flock-progress-/g) ?? []).length !== 28
 ) {
   throw new Error("fullness is not rendered as ten contribution-style cells");
@@ -407,6 +413,9 @@ for (const sheep of timing.flock.sheep) {
   const fill = svg.match(
     new RegExp(`@keyframes flock-fill-${sheep.rosterIndex} \\{([^\\n]*)`),
   )?.[1] ?? "";
+  const pulse = svg.match(
+    new RegExp(`@keyframes flock-meter-pulse-${sheep.rosterIndex} \\{([^\\n]*)`),
+  )?.[1] ?? "";
   for (const bite of sheep.bites) {
     energy += bite.level;
     const expected = Math.min(1, energy / SHEEP_FULLNESS_CAPACITY);
@@ -422,8 +431,19 @@ for (const sheep of timing.flock.sheep) {
     ) {
       throw new Error(`sheep ${sheep.rosterIndex} fullness drifts between bites`);
     }
+    const pulseEndPct = (((atS + 0.14) / timing.maxTotalTimeWithEntryExit) * 100).toFixed(4);
+    if (
+      !pulse.includes(`${bitePct}% { opacity:1; }`) ||
+      !pulse.includes(`${pulseEndPct}% { opacity:0; }`) ||
+      !svg.includes(`>${Math.min(SHEEP_FULLNESS_CAPACITY, energy)}/${SHEEP_FULLNESS_CAPACITY}</text>`)
+    ) {
+      throw new Error(`sheep ${sheep.rosterIndex} bite energy feedback is not synchronized`);
+    }
     priorProgress = bite.progress;
   }
+}
+if (!svg.includes(".flock-meter-pulse { display: none; }")) {
+  throw new Error("reduced motion does not hide the bite meter pulse");
 }
 const turnoverPathProblems = timing.turnovers.flatMap((turnover, index) => {
   const unsafe = turnover.dropPath.slice(0, -1).filter((cell) => {
@@ -444,16 +464,45 @@ const turnoverPathProblems = timing.turnovers.flatMap((turnover, index) => {
 if (turnoverPathProblems.length) {
   throw new Error(`remote replacement paths are not causally walkable: ${JSON.stringify(turnoverPathProblems)}`);
 }
+const turnoverPaceProblems = timing.turnovers.flatMap((turnover, index) => {
+  const expectedDuration = (turnover.dropPath.length - 1) * SHEEP_CELL_TIME;
+  return Math.abs(turnover.bridgeDuration - expectedDuration) > 0.001
+    ? [{ index, duration: turnover.bridgeDuration, expectedDuration, path: turnover.dropPath }]
+    : [];
+});
+if (turnoverPaceProblems.length) {
+  throw new Error(`replacement sheep rush their landing paths: ${JSON.stringify(turnoverPaceProblems)}`);
+}
+const turnoverHoldProblems = timing.turnovers.flatMap((turnover, index) => {
+  if (flock.turnovers[index].bridgeHold <= 0.001) return [];
+  const pose = svg.match(
+    new RegExp(`@keyframes sheep-${turnover.slotIndex}-pose \\{([\\s\\S]*?)\\n  \\}`),
+  )?.[1] ?? "";
+  const bridgeEndPct = Math.min(
+    99.9999,
+    ((turnover.incomingReadyAbsS + turnover.bridgeDuration) * 100) /
+      timing.maxTotalTimeWithEntryExit,
+  ).toFixed(4);
+  const frames = [...pose.matchAll(
+    new RegExp(`${bridgeEndPct}% \\{ transform: ([^;]+); \\}`, "g"),
+  )];
+  return frames.at(-1)?.[1] !== "translateY(0) scale(1, 1)"
+    ? [{ index, bridgeEndPct, finalPose: frames.at(-1)?.[1] }]
+    : [];
+});
+if (turnoverHoldProblems.length) {
+  throw new Error(`replacement sheep freeze mid-step after landing: ${JSON.stringify(turnoverHoldProblems)}`);
+}
 const turnoverDistanceProblems = timing.turnovers.flatMap((turnover, index) => {
-  const distance =
-    Math.abs(turnover.pickupCell[0] - turnover.dropCell[0]) +
-    Math.abs(turnover.pickupCell[1] - turnover.dropCell[1]);
-  return distance < 3
-    ? [{ index, pickup: turnover.pickupCell, drop: turnover.dropCell, path: turnover.dropPath, distance }]
+  const dx = turnover.pickupCell[0] - turnover.dropCell[0];
+  const dy = turnover.pickupCell[1] - turnover.dropCell[1];
+  const distancePx = Math.hypot(dx, dy) * (CELL_SIZE + GAP);
+  return distancePx < UFO_WIDTH_PX + CELL_SIZE
+    ? [{ index, pickup: turnover.pickupCell, drop: turnover.dropCell, path: turnover.dropPath, distancePx }]
     : [];
 });
 if (turnoverDistanceProblems.length) {
-  throw new Error(`remote replacement drops are too close: ${JSON.stringify(turnoverDistanceProblems)}`);
+  throw new Error(`remote replacement drops overlap the pickup footprint: ${JSON.stringify(turnoverDistanceProblems)}`);
 }
 if (
   flock.fieldCount !== 6 ||
@@ -465,9 +514,10 @@ if (
       turnover.pickupArriveAbsS >= turnover.incomingSpawnAbsS ||
       turnover.pickupArriveAbsS >= turnover.outgoingHiddenAbsS ||
       turnover.outgoingHiddenAbsS >= turnover.dropArriveAbsS ||
-      turnover.dropArriveAbsS >= turnover.incomingSpawnAbsS ||
+      turnover.dropArriveAbsS > turnover.incomingSpawnAbsS ||
       turnover.incomingSpawnAbsS >= turnover.incomingReadyAbsS ||
       turnover.addedDelay <= 0 ||
+      turnover.addedDelay + 0.001 < flock.turnovers[index].bridgeDelay ||
       turnover.dropPath[0].join(",") !== turnover.dropCell.join(",") ||
       timing.ufoStopCells[flock.fieldCount + index * 2].join(",") !==
         turnover.pickupCell.join(",") ||

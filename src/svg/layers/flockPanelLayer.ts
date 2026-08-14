@@ -1,6 +1,7 @@
 import type { TimelineResult } from "../../timeline/types.js";
 import {
   MOTION_TIME_SCALE,
+  SHEEP_FULLNESS_CAPACITY,
   SHEEP_CONTENT,
   UFO_CONTENT,
   UFO_VIEWBOX,
@@ -30,7 +31,8 @@ const meter = (
   height: number,
   rosterIndex: number,
   compact = false,
-) => `<use class="flock-meter-track" href="#flock-meter-${compact ? "compact" : "selected"}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height}" style="color:var(--gm-panel-track)"/><g clip-path="url(#flock-progress-${rosterIndex})"><use class="flock-meter-fill" href="#flock-meter-${compact ? "compact" : "selected"}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height}" style="color:var(--gm-level-4)"/></g>`;
+  pulseAnimation = "",
+) => `<use class="flock-meter-track" href="#flock-meter-${compact ? "compact" : "selected"}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height}" style="color:var(--gm-panel-track)"/><g clip-path="url(#flock-progress-${rosterIndex})"><use class="flock-meter-fill" href="#flock-meter-${compact ? "compact" : "selected"}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height}" style="color:var(--gm-level-4)"/>${pulseAnimation ? `<use class="flock-meter-pulse" href="#flock-meter-selected" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height}" style="color:var(--gm-beam-core);opacity:0;animation:${pulseAnimation}"/>` : ""}</g>`;
 
 function visibilityKeyframes(
   name: string,
@@ -220,12 +222,22 @@ export function buildFlockPanelLayer(params: {
   const selectedGroups: string[] = [];
   for (const sheep of flock.sheep) {
     const intervals = selectedIntervals.get(sheep.rosterIndex) ?? [];
+    const pulseName = `flock-meter-pulse-${sheep.rosterIndex}`;
+    const pulseFrames = sheep.bites.flatMap((bite) => {
+      const atS = bite.atS + 0.23;
+      return [
+        `${pctAt(atS - 0.001, maxTotalTime).toFixed(4)}% { opacity:0; }`,
+        `${pctAt(atS, maxTotalTime).toFixed(4)}% { opacity:1; }`,
+        `${pctAt(atS + 0.14, maxTotalTime).toFixed(4)}% { opacity:0; }`,
+      ];
+    });
     selectedStyles.push(
       visibilityKeyframes(
         `flock-selected-${sheep.rosterIndex}`,
         intervals,
         maxTotalTime,
       ),
+      `@keyframes ${pulseName} { 0% { opacity:0; } ${pulseFrames.join(" ")} 100% { opacity:0; } }`,
     );
     for (const [intervalIndex, interval] of intervals.entries()) {
       const name = `flock-status-${sheep.rosterIndex}-${intervalIndex}`;
@@ -236,11 +248,32 @@ export function buildFlockPanelLayer(params: {
         `<text x="50" y="${panelTop + 51}" class="flock-status" style="opacity:0;animation:${name} ${animationDuration}s linear 0s 1 both">${interval.status}</text>`,
       );
     }
+    let energy = 0;
+    let energyStart = sheep.spawnAbsS;
+    const energyGroups: string[] = [];
+    for (const [index, bite] of [...sheep.bites, null].entries()) {
+      const energyEnd = bite == null ? maxTotalTime : bite.atS + 0.23;
+      const energyName = `flock-energy-${sheep.rosterIndex}-${index}`;
+      selectedStyles.push(
+        visibilityKeyframes(
+          energyName,
+          [{ start: energyStart, end: energyEnd }],
+          maxTotalTime,
+        ),
+      );
+      energyGroups.push(
+        `<text x="180" y="${panelTop + 66}" text-anchor="end" class="flock-energy" style="opacity:0;animation:${energyName} ${animationDuration}s linear 0s 1 both">${energy}/${SHEEP_FULLNESS_CAPACITY}</text>`,
+      );
+      if (bite == null) break;
+      energy = Math.min(SHEEP_FULLNESS_CAPACITY, energy + bite.level);
+      energyStart = energyEnd;
+    }
     selectedGroups.push(`<g style="opacity:0;animation:flock-selected-${sheep.rosterIndex} ${animationDuration}s linear 0s 1 both">
       <use href="#flock-sheep-icon" x="13" y="${panelTop + 38}" width="28" height="23"/>
       <text x="50" y="${panelTop + 39}" class="flock-name">SHEEP ${String(sheep.rosterIndex + 1).padStart(2, "0")}</text>
-      <text x="50" y="${panelTop + 66}" class="flock-label">FULLNESS</text>
-      ${meter(96, panelTop + 59, 80, 6, sheep.rosterIndex)}
+      <text x="50" y="${panelTop + 66}" class="flock-label">ENERGY</text>
+      ${meter(83, panelTop + 59, 66, 6, sheep.rosterIndex, false, `${pulseName} ${animationDuration}s linear 0s 1 both`)}
+      ${energyGroups.join("")}
     </g>`);
   }
 
@@ -320,8 +353,9 @@ export function buildFlockPanelLayer(params: {
 
   const panelStyles = `
   .flock-name{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:var(--gm-panel-text)}
-  .flock-meta,.flock-label,.flock-status,.flock-slot-index{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;fill:var(--gm-panel-text)}
+  .flock-meta,.flock-label,.flock-energy,.flock-status,.flock-slot-index{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;fill:var(--gm-panel-text)}
   .flock-meta{font-size:9px}.flock-meta-key{opacity:.64;font-weight:500}.flock-meta-value{font-weight:650}.flock-name{font-size:10px;font-weight:650}.flock-label{font-size:6.5px;letter-spacing:.35px;opacity:.62}.flock-status{font-size:7px;font-weight:650;letter-spacing:.35px;fill:var(--gm-level-3)}
+  .flock-energy{font-size:7px;font-weight:700;fill:var(--gm-level-4)}
   .flock-slot-index{font-weight:650;opacity:.8}
   ${progressStyles.join("\n  ")}
   ${rosterStateStyles.join("\n  ")}

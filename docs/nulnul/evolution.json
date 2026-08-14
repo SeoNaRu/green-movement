@@ -3,11 +3,11 @@
   "personal_evolution_home": null,
   "checkpoint": {
     "goal": "Make the animated contribution pasture feel cohesive, premium, and clearly readable in a GitHub profile README.",
-    "milestone": "The accepted v25 champion turns every full-sheep exchange into an actual pickup, remote flight, and safe replacement journey; expresses bite-only energy through a ten-cell pixel pasture panel; and gives the complete light/dark scene a shared 1.3x pace while preserving the terminal roster and username.",
+    "milestone": "The accepted v26 champion makes every replacement journey spatially distinct at rendered scale and exact-speed on foot, while the selected panel exposes level-weighted ENERGY n/20 with one brief response at each recorded bite.",
     "completion_check": "npm run check",
     "status": "active",
-    "last_verified": "2026-08-14: accepted v25 was published from feature commit 64bae81; official Actions v7 workflow run 31769972977 passed without annotations, project asset commit 32770de published the preview, and profile asset commit fba394f plus README commit 4e5881a published byte-identical 700x206 theme files. The public 10-member scene contains the stepped fence-linked panel, ten-cell meters, terminal persistence, and a 34.216-second data-dependent runtime. npm run check passed with a 1,117,182-byte, 48.087-second deterministic fixture and a fresh independent Gate scored v25 20/20 with no blocker.",
-    "next_action": "Keep accepted v25 stable pending new user feedback; open another bounded candidate only for a reproduced defect.",
+    "last_verified": "2026-08-14: npm run check and npm run visual:fixture passed with a 1,223,216-byte, 49.868-second deterministic fixture. A fresh independent Gate scored v26 20/20 with no blocker: all 201 arrivals match 201 meter responses; all 22 turnovers use aligned pickup/drop actors, 43.267–49.477px separation, exact 0.312-second cleared adjacent edges, and neutral long holds; 10/28/62 rosters, reduced motion, early final pickup, terminal persistence, both themes, and 53 finale phases pass.",
+    "next_action": "Publish accepted v26 to main, verify the official workflow and project/profile theme assets, then record the public commit evidence.",
     "blockers": [],
     "approved_permissions": [
       "Read and write files inside this repository",
@@ -23,10 +23,10 @@
       "last_promotion_id": null
     },
     "worker": {
-      "version": 25,
+      "version": 26,
       "job": "Implement one bounded motion or rendering change and report its mechanical and visual evidence.",
       "profile_path": "AGENTS.md",
-      "last_promotion_id": "promotion-remote-turnover-pixel-panel-v25-20260814"
+      "last_promotion_id": "promotion-stronger-energy-turnover-position-v26-20260814"
     },
     "coach": {
       "version": 1,
@@ -401,6 +401,30 @@
       "expected": "Treat a turnover as one complete spatial story: collect the full sheep at its real location, fly to a visibly different work area, deploy a new hungry sheep there, resume causal grazing immediately, preserve the full completed panel after the animation ends, show fullness as ten contribution cells that jump only on bites, connect the panel with the existing brown fence color, and give the whole sequence 30 percent more time without reducing actors or motion.",
       "evidence": "Source tracing found that the UFO stop used the last grass cell while the sheep keyframe used a later route position, and both pickup and deployment shared one service stop. The shared panel visibility helper forced every interval back to opacity zero at 100 percent. The fullness renderer scaled one continuous rectangle with linear interpolation despite already having level-weighted bite progress, and every full-timeline SVG animation exposed one shared duration that could be stretched without changing event ownership.",
       "reproduction": "Run npm run visual:fixture; inspect 700px light and dark frames from 6.34 through 7.31 seconds, the middle act at 17.94 seconds, the first final pickup at 37.18 seconds, and exact plus post-end frames at 48.09 and 49.00 seconds.",
+      "scope": "project",
+      "status": "converted",
+      "rejected_proposals": []
+    },
+    {
+      "id": "feedback-stronger-bite-energy-20260814",
+      "target_agent": "worker",
+      "source": "user",
+      "observed": "The ten-cell fullness meter correctly jumps on bites, but the selected sheep's reward still reads too softly at 700px because the exact energy gained and the instant of change are implicit.",
+      "expected": "Make each selected-sheep bite feel stronger without adding a new effect system: expose the exact grass-level energy and make the existing filled contribution cells react only at the recorded bite impact.",
+      "evidence": "The existing flock timeline already records each bite time, grass level, cumulative progress, and 20-energy capacity. Exact 700px candidate frames reproduce a 0/20 to 4/20 jump and a two-cell response from one level-four grass bite without changing simulation or pacing.",
+      "reproduction": "Run npm run visual:fixture and inspect forced 700px light and dark frames immediately before, at, and after a selected sheep's recorded bite; verify the number and ten-cell clip hold between bites and the pulse is absent under reduced motion.",
+      "scope": "project",
+      "status": "converted",
+      "rejected_proposals": []
+    },
+    {
+      "id": "feedback-turnover-screen-position-20260814",
+      "target_agent": "worker",
+      "source": "user",
+      "observed": "Pickup and replacement coordinates still look wrong: a three-cell Manhattan rule can place diagonal centres only about 27 pixels apart under a 32-pixel UFO, and a remote sheep can then rush several bridge cells inside one normal movement interval.",
+      "expected": "Make pickup and drop visibly separate at rendered scale, land the replacement under the stopped UFO, and let it walk every cleared bridge cell at the established sheep speed before resuming causal grazing.",
+      "evidence": "The first sparse turnover used pickup [4,4] and drop [3,6], which passes Manhattan distance three but is only 26.8 rendered pixels apart. Representative bridge paths of five cells were compressed into 0.325 playback seconds instead of 1.248 seconds at the shared 1.3x pace.",
+      "reproduction": "Inspect exact 700px frames across pickup, vacancy, remote landing, UFO departure, bridge walking, and the next bite; calculate centre distance from the 12-pixel cell pitch and compare each bridge duration with path edges times SHEEP_CELL_TIME.",
       "scope": "project",
       "status": "converted",
       "rejected_proposals": []
@@ -1399,6 +1423,49 @@
       "rollback": "Restore the v24 one-stop turnover timing and nonterminal visibility helper while retaining the accepted GitHub-style panel and completed UFO icon."
     },
     {
+      "id": "proposal-stronger-bite-energy-v26",
+      "feedback_ids": [
+        "feedback-stronger-bite-energy-20260814",
+        "feedback-turnover-screen-position-20260814"
+      ],
+      "target_agent": "worker",
+      "author_agent": "coach",
+      "change_target": "selected-sheep energy readout, existing ten-cell meter response, rendered turnover separation, landing bridge pace, reduced-motion suppression, README description, and deterministic assertions",
+      "change_level": "task",
+      "status": "accepted",
+      "from_version": 25,
+      "to_version": 26,
+      "cause": "The accepted bite-driven meter does not explicitly reinforce exact energy or bite impact, while the accepted Manhattan-only turnover distance ignores the rendered UFO footprint and compresses multi-cell landing bridges into the old logical bite window.",
+      "candidate_change": "Reuse the existing selected meter and bite records for ENERGY n/20 plus a brief bite-only overlay; select the nearest safe drop whose rendered centre clears one UFO width plus one grass cell, then extend only that sheep's downstream delay so every landing bridge edge keeps SHEEP_CELL_TIME. Remove the invisible drop and release gaps to retain the shared runtime ceiling, and hide only the meter pulse under reduced motion.",
+      "discovery_evidence": "The first representative bite changes 0/20 to 4/20 and fills two of ten cells at the same impact. Rendered-distance tracing reproduced a 26.8px diagonal overlap under the old 32px UFO, and bridge tracing found five-cell paths compressed into 0.325 playback seconds. The accepted candidate clears 42px, gives each edge 0.312 seconds, and closes every edge pose at neutral without a new asset, dependency, filter, or effect layer.",
+      "reproduction": "Run npm run check and npm run visual:fixture; compare exact 700px forced-theme frames at 1.740, 1.755, and 1.840 seconds, inspect a middle frame and the terminal panel, then verify reduced-motion pulse suppression and 10/28/62-member layouts.",
+      "primary_metric": "At 700px, a selected bite produces one readable numerical and cellular reward; every pickup/drop pair has non-overlapping rendered footprints; every incoming sheep lands under the stopped UFO and crosses adjacent safe cells at the established speed; runtime remains at or below 50 seconds.",
+      "prediction": "Combining exact energy with a short causal response on the existing cells will make grass value feel substantially stronger without making the panel busier or adding an unrelated effect language.",
+      "expected_delta": {
+        "selected_energy_readout": 1,
+        "bite_synchronized_pulse_playback_seconds": 0.182,
+        "minimum_pickup_drop_rendered_pixels": 42,
+        "landing_bridge_seconds_per_cell": 0.312,
+        "new_effect_layers": 0,
+        "runtime_max_seconds": 50
+      },
+      "falsification_condition": "Reject if energy changes without a recorded bite, the pulse persists between bites, pickup/drop footprints overlap, the sheep is not under the UFO at either stop, a landing bridge moves faster than SHEEP_CELL_TIME, any route crosses uncleared grass, the panel clips, runtime exceeds 50 seconds, or npm run check fails.",
+      "regression_check": "npm run check plus exact before/impact/after energy frames and pickup/vacancy/drop/walk frames at 700px in both themes, reduced-motion inspection, and sparse/representative/dense roster probes.",
+      "transfer_check": "Not applicable; this is a project-scoped selected-panel feedback correction.",
+      "guardrails": [
+        "Reuse the existing ten-cell meter and bite records",
+        "No simulation ownership, staffing, motion-scale, asset, dependency, filter, blur, or new effect layer",
+        "Energy and meter change only at recorded bite impact",
+        "Rendered pickup and drop centres remain at least one UFO width plus one grass cell apart",
+        "Every cleared landing bridge edge keeps SHEEP_CELL_TIME",
+        "Hide the bite pulse under prefers-reduced-motion",
+        "Preserve accepted light/dark, 10/28/62 roster, terminal panel, 201 arrivals, and 53 finale phases",
+        "No permission expansion"
+      ],
+      "permission_delta": [],
+      "rollback": "Restore the v25 Manhattan drop selection and logical-window bridge timing, remove the selected numerical states and meter pulse, and retain the accepted v25 panel layout."
+    },
+    {
       "id": "proposal-project-motion-routing-v3",
       "feedback_ids": [
         "feedback-project-motion-routing-20260813"
@@ -1537,6 +1604,21 @@
         "metric": "Forced-theme 700px benchmark plus deterministic route, energy, pacing, density, terminal, publication, and public-asset identity checks",
         "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, pickup and drop are fewer than three cells apart, a bridge uses a nonadjacent or uncleared pre-bite cell, fullness changes between bites, the terminal panel disappears, either two-row roster clips, runtime exceeds 50 seconds, or npm run check fails.",
         "evidence": "A fresh Gate that did not author v25 scored it 20/20 with no blocker: hierarchy 4, acting 4, pacing/easing 4, cohesion 4, readability 4. The 1,117,182-byte, 48.087-second fixture preserves all 201 arrivals, 22 remote turnovers, 50 serialized UFO stops, 3–7-cell separation, safe adjacent bridges, final pickup before grass completion, ten-cell bite-only energy, both themes, 10/28/62-member grids, terminal persistence, and 53 finale phases. Feature commit 64bae81 and official Actions v7 run 31769972977 published project asset commit 32770de plus profile asset commit fba394f and README commit 4e5881a. Downloaded project/profile light and dark SVG pairs are byte-identical, 700x206, and contain the v25 panel, ten meters, and terminal keyframes; the public 10-member data scene runs 34.216 seconds."
+      }
+    },
+    {
+      "id": "promotion-stronger-energy-turnover-position-v26-20260814",
+      "proposal_id": "proposal-stronger-bite-energy-v26",
+      "gate_agent": "gate",
+      "before": "The accepted v25 panel hid exact energy behind ten cells, and its three-cell Manhattan turnover rule could overlap 32px UFO footprints diagonally while compressing several landing edges into one logical movement window.",
+      "after": "The accepted v26 panel shows exact ENERGY n/20 and one bite-only meter response; turnover endpoints clear the rendered UFO footprint plus one grass cell, every cleared adjacent landing edge takes exactly 0.312 playback seconds, and early arrivals wait in a neutral pose.",
+      "regressions_passed": true,
+      "decision": "accepted",
+      "live_cycle": {
+        "status": "observed",
+        "metric": "Fresh forced-theme 700px energy, turnover, reduced-motion, roster-density, terminal, and deterministic causal checks",
+        "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, a meter response lacks a recorded bite, pickup/drop centres are below 42px, a bridge edge differs from 0.312 playback seconds, a long hold is not neutral, runtime exceeds 50 seconds, or npm run check fails.",
+        "evidence": "A fresh Gate that did not author v26 scored it 20/20 with no blocker: hierarchy 4, acting 4, pacing/easing 4, cohesion 4, readability 4. The 1,223,216-byte, 49.868-second fixture matches 201 arrivals to 201 pulses, preserves 22 turnovers and 50 serialized stops, measures 43.267–49.477px endpoint separation, reports zero pickup mismatch, broken edge, or uncleared crossing, and gives all 22 bridges exactly 0.312 seconds per edge. Former long holds #9 and #17 remain neutral for 0.949 and 1.261 seconds. Forced light/dark and reduced-motion energy frames, 10/28/62 rosters, early final pickup, identical terminal frames, and 53 finale phases all pass."
       }
     }
   ],

@@ -2,9 +2,12 @@ import type { PlanResult } from "../planning/types.js";
 import { pathBetweenCells } from "./pathUtils.js";
 import type { SimulationResult } from "./sim/simulate.js";
 import {
+  CELL_SIZE,
+  GAP,
   GRASS_STEP_TIMES_S,
   SHEEP_CELL_TIME,
   SHEEP_FULLNESS_CAPACITY,
+  UFO_WIDTH_PX,
 } from "./constants.js";
 
 export type FlockBite = {
@@ -27,6 +30,8 @@ export type FlockTurnover = {
   dropPath: [number, number][];
   resumeHistoryIndex: number;
   bridgeDuration: number;
+  bridgeDelay: number;
+  bridgeHold: number;
 };
 
 export type FlockPlan = {
@@ -73,6 +78,8 @@ export function buildFlockPlan(
   const gridPoints = gridKeys.map((key) => key.split(",").map(Number));
   const maxX = Math.max(0, ...gridPoints.map(([x]) => x));
   const maxY = Math.max(0, ...gridPoints.map(([, y]) => y));
+  const cellPitch = CELL_SIZE + GAP;
+  const minimumDropDistancePx = UFO_WIDTH_PX + CELL_SIZE;
   const remoteDropPath = (
     pickup: [number, number],
     target: [number, number],
@@ -90,14 +97,17 @@ export function buildFlockPlan(
     }
     const candidates = [...allowed]
       .map((key) => key.split(",").map(Number) as [number, number])
-      .filter(
-        ([x, y]) =>
+      .filter(([x, y]) => {
+        const dx = x - pickup[0];
+        const dy = y - pickup[1];
+        return (
           `${x},${y}` !== targetKey &&
-          Math.abs(x - pickup[0]) + Math.abs(y - pickup[1]) >= 3,
-      )
+          (dx * dx + dy * dy) * cellPitch ** 2 >= minimumDropDistancePx ** 2
+        );
+      })
       .map((cell) => ({
-        pickupDistance:
-          Math.abs(cell[0] - pickup[0]) + Math.abs(cell[1] - pickup[1]),
+        pickupDistanceSq:
+          (cell[0] - pickup[0]) ** 2 + (cell[1] - pickup[1]) ** 2,
         path: pathBetweenCells(
           cell[0],
           cell[1],
@@ -114,7 +124,7 @@ export function buildFlockPlan(
         Number(!(a.path.length >= 3 && a.path.length <= 4)) -
           Number(!(b.path.length >= 3 && b.path.length <= 4)) ||
         a.path.length - b.path.length ||
-        b.pickupDistance - a.pickupDistance ||
+        a.pickupDistanceSq - b.pickupDistanceSq ||
         a.path[0][0] - b.path[0][0] ||
         a.path[0][1] - b.path[0][1],
     );
@@ -173,6 +183,12 @@ export function buildFlockPlan(
             history[candidateIndex - 1][1] !== y),
       );
       const dropPath = remoteDropPath(pickupCell, nextCell, bite.arrivalTime);
+      const routeWindow = Math.max(
+        SHEEP_CELL_TIME,
+        nextBite.arrivalTime -
+          (bite.arrivalTime + GRASS_STEP_TIMES_S.at(-1)!),
+      );
+      const bridgeDuration = (dropPath.length - 1) * SHEEP_CELL_TIME;
       boundaryDrafts.push({
         slotIndex,
         baseTime: bite.arrivalTime + GRASS_STEP_TIMES_S.at(-1)!,
@@ -182,11 +198,9 @@ export function buildFlockPlan(
         dropPath,
         resumeHistoryIndex:
           resumeHistoryIndex >= 0 ? resumeHistoryIndex : historyIndex + 1,
-        bridgeDuration: Math.max(
-          SHEEP_CELL_TIME,
-          nextBite.arrivalTime -
-            (bite.arrivalTime + GRASS_STEP_TIMES_S.at(-1)!),
-        ),
+        bridgeDuration,
+        bridgeDelay: Math.max(0, bridgeDuration - routeWindow),
+        bridgeHold: Math.max(0, routeWindow - bridgeDuration),
       });
     }
   }

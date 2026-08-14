@@ -435,7 +435,11 @@ export function buildSheepLayer(params: {
           css: `${pct.toFixed(4)}% { transform: ${transformAt(cell, bridgeAngle)}; opacity: 1; animation-timing-function: linear; }`,
         });
         addPose(atS - stepDuration, "translateY(0) scale(1, 1)");
-        addPose(atS, "translateY(-.7px) scale(1.015, .985)");
+        addPose(
+          atS - stepDuration * 0.54,
+          "translateY(-.7px) scale(1.015, .985)",
+        );
+        addPose(atS, "translateY(0) scale(1, 1)");
       }
       addPose(turnover.pickupArriveAbsS, "translateY(0) scale(1, 1)");
       addPose(turnover.outgoingHiddenAbsS, "translateY(-6px) scale(.86, 1.1)");
