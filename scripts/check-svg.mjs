@@ -175,6 +175,8 @@ for (const required of [
   "assets/live-light\\.svg[^)]*",
   "assets/live-dark\\.svg[^)]*",
   "branches: [main]",
+  "actions/checkout@v7",
+  "actions/setup-node@v7",
   "permissions:",
   "contents: write",
   "Refresh project README preview",
