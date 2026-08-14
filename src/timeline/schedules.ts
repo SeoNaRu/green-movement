@@ -2,16 +2,13 @@ import type { GridContext } from "../svg/buildContext.js";
 import type { PlanResult } from "../planning/types.js";
 import type { SimulationResult } from "../svg/sim/simulate.js";
 import type { TimelineResult } from "./types.js";
+import type { FlockPlan } from "../svg/flock.js";
 import {
   SHEEP_CELL_TIME,
   UFO_ENTRY_S,
   UFO_CELL_TIME,
   UFO_MOVE_MIN_S,
   UFO_MOVE_MAX_S,
-  UFO_RELOCATION_APPROACH_S,
-  UFO_RELOCATION_BOARD_S,
-  UFO_RELOCATION_FLIGHT_S,
-  UFO_RELOCATION_TOTAL_S,
 } from "../svg/constants.js";
 
 const LIGHT_RAMP_S = 0.04;
@@ -31,11 +28,15 @@ const SIGNATURE_REVEAL_S = 1.08;
 const SIGNATURE_CONFIRM_S = 0.28;
 const SIGNATURE_EXIT_S = 0.36;
 const SIGNATURE_HOLD_S = 1.4;
+const TURNOVER_PICKUP_S = 0.16;
+const TURNOVER_EMPTY_GAP_S = 0.08;
+const TURNOVER_DROP_S = LIGHT_RAMP_S + SHEEP_FADE_S;
 
 export function buildTimeline(
   ctx: GridContext,
   plan: PlanResult,
   sim: SimulationResult,
+  flock: FlockPlan,
 ): TimelineResult {
   const {
     sheepCount,
@@ -81,11 +82,6 @@ export function buildTimeline(
     { length: sheepCount },
     () => null,
   );
-  const pickupCells: [number, number][] = activeSheepIndices.map((i) => {
-    const tl = positionsHistory[i]!;
-    const last = tl[tl.length - 1];
-    return [last[0], last[1]];
-  });
   for (let i = 0; i < sheepCount; i++) {
     const prevLeave = i === 0 ? 0 : ufoLeaveAbsS[i - 1];
     let arrive = prevLeave;
@@ -116,29 +112,84 @@ export function buildTimeline(
     ufoLeaveAbsS[i] = (readyAbsS[i] ?? 0) + UFO_RELEASE_S;
   }
 
-  const relocationBiteSettle = 0.23;
-  const relocationFlightStart = UFO_RELOCATION_BOARD_S;
-  const relocationDropArrive = relocationFlightStart + UFO_RELOCATION_FLIGHT_S;
-  const relocationRelease = UFO_RELOCATION_TOTAL_S - UFO_RELOCATION_APPROACH_S;
-  const relocationDuration = relocationBiteSettle + relocationRelease;
-  const relocationStartAbsS = sim.relocation
-    ? (() => {
-        const { sheepIndex, historyIndex } = sim.relocation;
-        const simFirstMoveArrival =
-          (spawnTick[sheepIndex] ?? 0) * SHEEP_CELL_TIME +
-          DROP_STAY_S +
-          Math.max(0, firstMoveIndex[sheepIndex] ?? 0) * SHEEP_CELL_TIME;
-        const visualFirstMoveArrival =
-          (visualMoveStartAbsS[sheepIndex] ?? 0) + SHEEP_CELL_TIME;
-        return (
-          (spawnTick[sheepIndex] ?? 0) * SHEEP_CELL_TIME +
-          DROP_STAY_S +
-          historyIndex * SHEEP_CELL_TIME +
-          visualFirstMoveArrival -
-          simFirstMoveArrival
-        );
-      })()
-    : null;
+  const travelSCells = (from: [number, number], to: [number, number]) => {
+    const dist = Math.abs(to[0] - from[0]) + Math.abs(to[1] - from[1]);
+    return Math.min(
+      UFO_MOVE_MAX_S,
+      Math.max(UFO_MOVE_MIN_S, dist * UFO_CELL_TIME),
+    );
+  };
+  const visualBaseTime = (slotIndex: number, baseTime: number) => {
+    const simFirstMoveArrival =
+      (spawnTick[slotIndex] ?? 0) * SHEEP_CELL_TIME +
+      DROP_STAY_S +
+      Math.max(0, firstMoveIndex[slotIndex] ?? 0) * SHEEP_CELL_TIME;
+    return (
+      baseTime +
+      (visualMoveStartAbsS[slotIndex] ?? 0) +
+      SHEEP_CELL_TIME -
+      simFirstMoveArrival
+    );
+  };
+
+  const slotDelays = new Array(sheepCount).fill(0);
+  const scheduledTurnovers: {
+    slotIndex: number;
+    outgoingRosterIndex: number;
+    incomingRosterIndex: number;
+    historyIndex: number;
+    baseTime: number;
+    cell: [number, number];
+    pickupArriveAbsS: number;
+    outgoingHiddenAbsS: number;
+    incomingSpawnAbsS: number;
+    incomingReadyAbsS: number;
+    leaveAbsS: number;
+    addedDelay: number;
+  }[] = [];
+  const ufoStopCells = funnelPositionsEarly.slice();
+  let serviceCursor = ufoLeaveAbsS.at(-1) ?? 0;
+  let serviceCell = funnelPositionsEarly.at(-1) ?? [0, 0];
+  for (const turnover of flock.turnovers) {
+    const requested =
+      visualBaseTime(turnover.slotIndex, turnover.baseTime) +
+      slotDelays[turnover.slotIndex];
+    const arrive = Math.max(
+      requested,
+      serviceCursor + travelSCells(serviceCell, turnover.cell),
+    );
+    const outgoingHidden = arrive + TURNOVER_PICKUP_S;
+    const incomingSpawn = outgoingHidden + TURNOVER_EMPTY_GAP_S;
+    const incomingReady = incomingSpawn + TURNOVER_DROP_S;
+    const leave = incomingReady + UFO_RELEASE_S;
+    const addedDelay = Math.max(0, incomingReady - requested);
+    slotDelays[turnover.slotIndex] += addedDelay;
+    scheduledTurnovers.push({
+      ...turnover,
+      pickupArriveAbsS: arrive,
+      outgoingHiddenAbsS: outgoingHidden,
+      incomingSpawnAbsS: incomingSpawn,
+      incomingReadyAbsS: incomingReady,
+      leaveAbsS: leave,
+      addedDelay,
+    });
+    ufoStopCells.push(turnover.cell);
+    ufoArriveAbsS.push(arrive);
+    visualSpawnAbsS.push(incomingSpawn);
+    readyAbsS.push(incomingReady);
+    visualMoveStartAbsS.push(incomingReady);
+    ufoLeaveAbsS.push(leave);
+    serviceCursor = leave;
+    serviceCell = turnover.cell;
+  }
+
+  const delayAt = (slotIndex: number, baseTime: number) =>
+    scheduledTurnovers
+      .filter(
+        (turnover) =>
+          turnover.slotIndex === slotIndex && turnover.baseTime < baseTime,
+      )
+      .reduce((sum, turnover) => sum + turnover.addedDelay, 0);
 
   const sheepEndAbsSActive = activeSheepIndices.map((i) => {
     const timeline = positionsHistory[i]!;
@@ -147,38 +198,50 @@ export function buildTimeline(
     return (
       visualMoveStartAbsS[i] +
       (timeline.length - firstMove) * SHEEP_CELL_TIME +
-      (sim.relocation?.sheepIndex === i ? relocationDuration : 0)
+      slotDelays[i]
     );
   });
 
-  // 실제 화면에서 마지막 양이 멈춘 뒤에만 회수를 시작한다.
-  const allSheepDoneAbsS =
-    sheepEndAbsSActive.length > 0 ? Math.max(0, ...sheepEndAbsSActive) : 0;
-  // 그 시점 이후로는 UFO가 드롭 위치로 가지 않도록, 방문할 드롭 개수 제한
-  let lastDropIndex = 0;
-  for (let i = 0; i < sheepCount; i++) {
-    if (ufoLeaveAbsS[i] <= allSheepDoneAbsS) lastDropIndex = i;
-  }
-  const effectiveDropCount = lastDropIndex + 1;
-
-  const travelSCells = (from: [number, number], to: [number, number]) => {
-    const dist = Math.abs(to[0] - from[0]) + Math.abs(to[1] - from[1]);
-    return Math.min(
-      UFO_MOVE_MAX_S,
-      Math.max(UFO_MOVE_MIN_S, dist * UFO_CELL_TIME),
-    );
-  };
-  let tCursor = allSheepDoneAbsS;
-  const pickupStartCell: [number, number] = funnelPositionsEarly[
-    lastDropIndex
-  ] ??
-    funnelPositionsEarly[0] ?? [0, 0];
-  let prevCell: [number, number] = pickupStartCell;
-  for (let k = 0; k < activeSheepIndices.length; k++) {
-    const sheepIndex = activeSheepIndices[k];
-    const nextCell = pickupCells[k];
-    tCursor += travelSCells(prevCell, nextCell);
-    pickupArriveBySheep[sheepIndex] = tCursor;
+  const effectiveDropCount = ufoStopCells.length;
+  const finishBySheep = new Map(
+    activeSheepIndices.map((sheepIndex, index) => [
+      sheepIndex,
+      sheepEndAbsSActive[index],
+    ]),
+  );
+  const finalCellBySheep = new Map(
+    activeSheepIndices.map((sheepIndex) => {
+      const history = positionsHistory[sheepIndex]!;
+      const [x, y] = history[history.length - 1];
+      return [sheepIndex, [x, y] as [number, number]];
+    }),
+  );
+  const pickupCells: [number, number][] = [];
+  const pickupVisitSheep: number[] = [];
+  const pending = [...activeSheepIndices];
+  let tCursor = serviceCursor + UFO_MOVE_MAX_S;
+  let prevCell: [number, number] = serviceCell;
+  while (pending.length > 0) {
+    let nextPendingIndex = 0;
+    let nextArrival = Number.POSITIVE_INFINITY;
+    for (let index = 0; index < pending.length; index++) {
+      const sheepIndex = pending[index];
+      const nextCell = finalCellBySheep.get(sheepIndex)!;
+      const arrival = Math.max(
+        finishBySheep.get(sheepIndex) ?? 0,
+        tCursor + travelSCells(prevCell, nextCell),
+      );
+      if (arrival < nextArrival) {
+        nextPendingIndex = index;
+        nextArrival = arrival;
+      }
+    }
+    const [sheepIndex] = pending.splice(nextPendingIndex, 1);
+    const nextCell = finalCellBySheep.get(sheepIndex)!;
+    tCursor = nextArrival;
+    pickupCells.push(nextCell);
+    pickupVisitSheep.push(sheepIndex);
+    pickupArriveBySheep[sheepIndex] = nextArrival;
     tCursor += PICKUP_WAIT_S;
     tCursor += PICKUP_LIGHT_S + PICKUP_FADE_S;
     prevCell = nextCell;
@@ -240,14 +303,8 @@ export function buildTimeline(
         (visualMoveStartAbsS[sheepIndex] ?? 0) + SHEEP_CELL_TIME;
       const arrivalTime =
         first.arrivalTime + visualFirstMoveArrival - simFirstMoveArrival;
-      const relocationDelay =
-        sim.relocation?.sheepIndex === sheepIndex &&
-        relocationStartAbsS != null &&
-        arrivalTime >= relocationStartAbsS
-          ? relocationDuration
-          : 0;
       firstArrivals.set(k, {
-        arrivalTime: arrivalTime + relocationDelay,
+        arrivalTime: arrivalTime + delayAt(sheepIndex, first.arrivalTime),
         level: first.level,
         sheepIndex,
         directionRad: first.directionRad,
@@ -255,31 +312,80 @@ export function buildTimeline(
     }
   }
 
-  const pickupArriveAbsSOffsetForUfo = activeSheepIndices.map((i) => {
+  const pickupArriveAbsSOffsetForUfo = pickupVisitSheep.map((i) => {
     const t = pickupArriveBySheep[i];
     return t == null ? 0 : t + timelineOffset;
   });
   const pickupArriveAbsSOffset: (number | null)[] = pickupArriveBySheep.map(
     (t) => (t == null ? null : t + timelineOffset),
   );
-  const relocation = sim.relocation
-    ? (() => {
-        const { sheepIndex, historyIndex, from, to } = sim.relocation;
-        const pickupArriveAbsS =
-          (relocationStartAbsS ?? 0) + relocationBiteSettle + timelineOffset;
-        return {
-          sheepIndex,
-          historyIndex,
-          from,
-          to,
-          pickupArriveAbsS,
-          flightStartAbsS: pickupArriveAbsS + relocationFlightStart,
-          dropArriveAbsS: pickupArriveAbsS + relocationDropArrive,
-          releaseAbsS: pickupArriveAbsS + relocationRelease,
-          operationDuration: relocationDuration,
-        };
-      })()
-    : null;
+  const turnovers = scheduledTurnovers.map((turnover) => ({
+    slotIndex: turnover.slotIndex,
+    outgoingRosterIndex: turnover.outgoingRosterIndex,
+    incomingRosterIndex: turnover.incomingRosterIndex,
+    historyIndex: turnover.historyIndex,
+    pickupArriveAbsS: turnover.pickupArriveAbsS + timelineOffset,
+    outgoingHiddenAbsS: turnover.outgoingHiddenAbsS + timelineOffset,
+    incomingSpawnAbsS: turnover.incomingSpawnAbsS + timelineOffset,
+    incomingReadyAbsS: turnover.incomingReadyAbsS + timelineOffset,
+    addedDelay: turnover.addedDelay,
+  }));
+
+  const finalRosterBySlot = Array.from(
+    { length: flock.fieldCount },
+    (_, slotIndex) => slotIndex,
+  );
+  for (const turnover of turnovers) {
+    finalRosterBySlot[turnover.slotIndex] = turnover.incomingRosterIndex;
+  }
+  const flockSheep = Array.from({ length: flock.rosterSize }, (_, rosterIndex) => {
+    const incoming = turnovers.find(
+      (turnover) => turnover.incomingRosterIndex === rosterIndex,
+    );
+    const slotIndex = incoming?.slotIndex ?? rosterIndex;
+    const outgoing = turnovers.find(
+      (turnover) => turnover.outgoingRosterIndex === rosterIndex,
+    );
+    const isFinal = finalRosterBySlot[slotIndex] === rosterIndex;
+    return {
+      rosterIndex,
+      slotIndex,
+      spawnAbsS:
+        incoming?.incomingSpawnAbsS ?? spawnAbsSOffset[slotIndex] ?? timelineOffset,
+      pickupAbsS: outgoing?.pickupArriveAbsS ??
+        (isFinal ? pickupArriveAbsSOffset[slotIndex] ?? null : null),
+      bites: flock.bites
+        .filter((bite) => bite.rosterIndex === rosterIndex)
+        .map((bite) => {
+          const arrival = firstArrivals.get(bite.cell);
+          return {
+            atS: timelineOffset + (arrival?.arrivalTime ?? bite.baseArrivalTime),
+            progress: bite.progress,
+            level: bite.level,
+          };
+        }),
+    };
+  });
+  let clearedEnergy = 0;
+  const grassProgress = flock.bites
+    .map((bite) => {
+      const arrival = firstArrivals.get(bite.cell);
+      return {
+        atS:
+          timelineOffset +
+          (arrival?.arrivalTime ?? bite.baseArrivalTime) +
+          0.23,
+        level: bite.level,
+      };
+    })
+    .sort((a, b) => a.atS - b.atS)
+    .map(({ atS, level }) => ({
+      atS,
+      progress:
+        flock.totalEnergy > 0
+          ? (clearedEnergy += level) / flock.totalEnergy
+          : 1,
+    }));
   const assignedIndices = Array.from(
     { length: sheepCount },
     (_, i) => i,
@@ -298,11 +404,20 @@ export function buildTimeline(
     readyAbsSOffset,
     moveStartAbsSOffset,
     ufoLeaveAbsSOffset,
+    ufoStopCells,
     effectiveDropCount,
     pickupCells,
     pickupArriveAbsSOffsetForUfo,
     pickupArriveAbsSOffset,
-    relocation,
+    relocation: null,
+    turnovers,
+    flock: {
+      fieldCount: flock.fieldCount,
+      totalEnergy: flock.totalEnergy,
+      rosterSize: flock.rosterSize,
+      sheep: flockSheep,
+      grassProgress,
+    },
     sweepPositions,
     sweepArriveAbsSOffset,
     paintSweepStartAbsSOffset,

@@ -23,6 +23,11 @@ export const GITHUB_THEME_CSS = `
     --gm-level-4: #216e39;
     --gm-fence: #8c6a43;
     --gm-beam-core: #ffffff;
+    --gm-panel-bg: #17202a;
+    --gm-panel-slot: #222d38;
+    --gm-panel-track: #0b1117;
+    --gm-panel-line: #65717d;
+    --gm-panel-text: #d7e0e8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -34,6 +39,11 @@ export const GITHUB_THEME_CSS = `
       --gm-level-4: #39d353;
       --gm-fence: #76563b;
       --gm-beam-core: #f0fff4;
+      --gm-panel-bg: #111820;
+      --gm-panel-slot: #1b252f;
+      --gm-panel-track: #080d12;
+      --gm-panel-line: #56636f;
+      --gm-panel-text: #d7e0e8;
     }
   }`;
 
@@ -80,8 +90,10 @@ export const UFO_RELOCATION_FLIGHT_S = 1.2;
 // 한 번의 짧은 물기만 멈추고, 잔디의 단계별 감소는 양이 다시 달리는 동안 이어진다.
 export const SHEEP_GRAZE_HOLD_TICKS = 1;
 // 각 양이 최대 몇 칸의 잔디를 먹을지 (전체 잔디 전부를 원하면 크게)
-export const MAX_MEALS_PER_SHEEP = 50;
+export const MAX_MEALS_PER_SHEEP = 371;
 export const MAX_SHEEP = 6;
+/** 로스터 한 마리가 교대되기 전까지 먹는 기여 레벨 에너지. */
+export const SHEEP_FULLNESS_CAPACITY = 20;
 // 접근칸 예약 TTL: 이 틱 수 지나면 예약 자동 해제 (입구 독점 완화)
 // 경로 계획 시 앞으로 예약하는 최대 틱 수 (이 값만 예약해 뒤쪽 양이 경로를 찾을 수 있게)
 export const RESERVE_AHEAD_LIMIT = 6;

@@ -9,6 +9,7 @@ import {
 import { buildFencePieces } from "./layout/gridLayout.js";
 import { emptyBfsFromSeeds } from "./pathUtils.js";
 import { calculateQuartiles } from "./contribution.js";
+import { getContributionLevel } from "./contribution.js";
 
 export type GridContext = {
   grid: GridCell[];
@@ -58,7 +59,22 @@ export function buildContext(grid: GridCell[]): GridContext {
     (c) => (initialCountByKey.get(`${c.x},${c.y}`) ?? 0) > 0,
   );
 
-  const sheepCountCap = grassCells.length > 0 ? MAX_SHEEP : 0;
+  const allCounts = grid.map((c) => c.count);
+  const quartiles = calculateQuartiles(allCounts);
+  const grassEnergy = grassCells.reduce(
+    (sum, cell) => sum + getContributionLevel(cell.count, quartiles),
+    0,
+  );
+  const sheepCountCap =
+    grassEnergy === 0
+      ? 0
+      : grassEnergy <= 40
+        ? 1
+        : grassEnergy <= 160
+          ? 2
+          : grassEnergy <= 480
+            ? 4
+            : MAX_SHEEP;
 
   const inBounds = (col: number, row: number) =>
     col >= 0 && col <= maxX && row >= 0 && row <= maxY;
@@ -99,10 +115,8 @@ export function buildContext(grid: GridCell[]): GridContext {
     return out;
   }
 
-  const allCounts = grid.map((c) => c.count);
-  const quartiles = calculateQuartiles(allCounts);
   const fenceRects = buildFencePieces({ fenceRightX, fenceBottomY });
-  const totalHeight = baseHeight;
+  const totalHeight = baseHeight + 86;
 
   return {
     grid,

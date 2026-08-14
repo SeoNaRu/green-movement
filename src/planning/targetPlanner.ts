@@ -6,8 +6,6 @@ import { emptyBfsFromSeeds } from "../svg/pathUtils.js";
 import { buildPathFromToGrass } from "../svg/simHelpers.js";
 
 const DROP_TICKS = 1;
-const ADVANCE_FLOCK_SIZE = 4;
-const REINFORCEMENT_TICK = 28;
 
 function buildGrassTargets(
   ctx: GridContext,
@@ -225,10 +223,7 @@ export function planTargets(ctx: GridContext): PlanResult {
 
   const spawnTick: number[] = Array.from(
     { length: sheepCount },
-    (_, i) =>
-      i < ADVANCE_FLOCK_SIZE
-        ? i * DROP_TICKS
-        : REINFORCEMENT_TICK + (i - ADVANCE_FLOCK_SIZE) * DROP_TICKS,
+    (_, i) => i * DROP_TICKS,
   );
   const relayStartTick = spawnTick.slice();
 

@@ -3,11 +3,11 @@
   "personal_evolution_home": null,
   "checkpoint": {
     "goal": "Make the animated contribution pasture feel cohesive, premium, and clearly readable in a GitHub profile README.",
-    "milestone": "The candidate stages four advance sheep, one fixed 2.40-second causal UFO airlift, delayed two-sheep reinforcement, and a one- or two-line username reveal while preserving bite ownership and the Euclidean finale, pending an independent visual Gate.",
+    "milestone": "The accepted v21 champion scales simultaneous field staffing through 1/2/4/6 sheep, separates each full-to-hungry exchange with a readable empty beat, collects finished final sheep before the whole field stops, and exposes the complete flock through a readable two-row selection grid.",
     "completion_check": "npm run check",
     "status": "active",
-    "last_verified": "2026-08-13: npm run check passed; the 799,308-byte fixture lasts 38.69 seconds. The visible airlift is fixed at 2.40 seconds: 0.30 approach, 0.45 boarding, 1.20 transport, and 0.45 landing. Sheep 1 moves from [17,5] to [30,1] during 3.91-6.31 seconds; reinforcements wait until 7.54 and 8.24 seconds. All 201 causal arrivals and the 53-phase finale remain green. A 25-character fixture renders as two centred 3x3 lines; 27+ characters fail explicitly.",
-    "next_action": "Keep middle-act escalation v18 unchanged pending a fresh independent 700px visual Gate of both the 2.40-second airlift and the two-line signature. Do not add continuous UFO following, repeated relocation, extra particles, leader sheep, mixed species, or another effect layer. Publication or deployment still requires explicit user approval.",
+    "last_verified": "2026-08-14: npm run check passed; the 991,057-byte fixture lasts 35.68 seconds. Turnovers show SHEEP 01 extracting, an 80ms empty slot, then SHEEP 07 deploying; final pickup begins at 27.10 seconds with grass still at 90 percent rather than waiting for the 28.54-second last finish. A fresh independent 700px light/dark Gate scored v21 19/20 with no blocker while preserving all 201 arrivals and 53 finale phases.",
+    "next_action": "Keep the accepted v21 champion stable pending new user feedback; open another bounded candidate only for a reproduced defect.",
     "blockers": [],
     "approved_permissions": [
       "Read and write files inside this repository",
@@ -23,10 +23,10 @@
       "last_promotion_id": null
     },
     "worker": {
-      "version": 1,
+      "version": 21,
       "job": "Implement one bounded motion or rendering change and report its mechanical and visual evidence.",
       "profile_path": "AGENTS.md",
-      "last_promotion_id": null
+      "last_promotion_id": "promotion-turnover-identity-early-pickup-v21-20260814"
     },
     "coach": {
       "version": 1,
@@ -317,6 +317,42 @@
       "expected": "Keep short names large, but represent longer readable identities as a centred two-line grass signature without silent truncation.",
       "evidence": "The previous renderer rejected every 14+ character value. The corrected renderer preserves 5x7 for 1-10 characters and 3x5 for 11-13, then splits 14-26 characters across two independently centred 3x3 lines. A 25-character 700px fixture spans rows 0 and 6; 27+ remains an explicit error rather than unreadable compression.",
       "reproduction": "Run npm run check; render VERY-LONG-GITHUB-USERNAME at 700px and confirm two centred lines, then confirm a 27-character value reports maximum 26 instead of truncating.",
+      "scope": "project",
+      "status": "converted",
+      "rejected_proposals": []
+    },
+    {
+      "id": "feedback-fullness-turnover-panel-20260814",
+      "target_agent": "worker",
+      "source": "user",
+      "observed": "A fixed six-sheep cast and one final group pickup flatten the visible difference between developers with roughly 100 and 300 contribution cells, while waiting for every sheep to finish makes the grazing act feel idle.",
+      "expected": "Scale simultaneous staffing as 1, 2, 4, or 6 sheep, exchange each full sheep immediately without lowering the working headcount, and show every required sheep in a two-row StarCraft-style panel with selected status and individual fullness.",
+      "evidence": "The corrected deterministic fixture uses six working slots, partitions their 201 causal bites into 28 visible roster sheep, performs 22 serialized exchanges, and keeps the complete roster readable at 700px without a 12-sheep cap. Separate 100- and 300-cell probes expose 22 and 62 roster sheep respectively.",
+      "reproduction": "Run npm run check and npm run visual:fixture; inspect 700px dark frames at 4.84, 5.08, 5.18, 15.00, 28.00, and 35.50 seconds, plus contribution-energy staffing probes and an empty grid.",
+      "scope": "project",
+      "status": "converted",
+      "rejected_proposals": []
+    },
+    {
+      "id": "feedback-command-panel-readability-20260814",
+      "target_agent": "worker",
+      "source": "user",
+      "observed": "The accepted command panel looked crude: the enlarged field sprite became a distorted white blob, 6-7px monospaced headers were hard to read, and 16px roster slots clustered on the left while leaving unused space.",
+      "expected": "Keep the two-row full roster and live information, but make the selected sheep recognizable, give the header a clear hierarchy, and distribute roster sheep cleanly across the available width at both 28 and 62 members.",
+      "evidence": "The reported 700px frame showed a 44x35 enlargement of the 16x13 field glyph, fixed 16px roster pitch, small undifferentiated header type, and a large empty area to the right of the 28-member roster. The corrected frames keep the original sheep at 28x23 only in the selected card, use 8.5px label/value typography, and replace repeated miniatures with a full-width numbered selection grid and individual progress bars.",
+      "reproduction": "Run npm run visual:fixture; inspect 700px light/dark frames at 5.08, 15.00, and 35.50 seconds, then render the deterministic 300-cell probe and inspect its 62-member roster at 20.00 and 57.50 seconds.",
+      "scope": "project",
+      "status": "converted",
+      "rejected_proposals": []
+    },
+    {
+      "id": "feedback-turnover-identity-final-pickup-20260814",
+      "target_agent": "worker",
+      "source": "user",
+      "observed": "A full sheep and its hungry replacement appeared in the same place without a readable separation, so the exchange looked like one sheep being lifted and returned. The final six sheep also waited motionless until the whole field finished before pickup began.",
+      "expected": "Make each exchange read as an outgoing sheep followed by a different incoming sheep, and begin collecting finished final sheep while the remaining sheep are still eating.",
+      "evidence": "Source tracing found a direct opacity crossfade with no empty frame and a final pickup cursor explicitly clamped to the latest sheep finish. The corrected fixture inserts an 80ms empty slot, changes selection from SHEEP 01 to SHEEP 07, and begins the first final pickup at 27.10 seconds while grass is still 90 percent instead of waiting for the 28.54-second last finish.",
+      "reproduction": "Run npm run visual:fixture; inspect 700px dark frames at 4.84, 5.04, 5.17, 5.27, 27.10, 27.84, 28.76, and 31.16 seconds.",
       "scope": "project",
       "status": "converted",
       "rejected_proposals": []
@@ -911,7 +947,7 @@
       "author_agent": "coach",
       "change_target": "flock cap, arrival ownership metadata, sheep bite keyframes, deterministic synchronization checks, and durable guidance",
       "change_level": "task",
-      "status": "proposed",
+      "status": "rejected",
       "from_version": 1,
       "to_version": 15,
       "cause": "Density scaling changed the cast without a scene reason, while generic stationary-run acting could falsely communicate eating during a collision wait and made the grass relationship unreliable.",
@@ -952,7 +988,7 @@
       "author_agent": "coach",
       "change_target": "shared field-wave distance model, username reveal timing, deterministic checks, and durable guidance",
       "change_level": "task",
-      "status": "proposed",
+      "status": "rejected",
       "from_version": 1,
       "to_version": 17,
       "cause": "Axis-normalized Chebyshev distance made horizontal propagation roughly 7.7 times faster than vertical propagation and kept peak amplitude constant, so the result behaved as a rectangular wipe instead of a point wave.",
@@ -994,7 +1030,7 @@
       "author_agent": "coach",
       "change_target": "spawn schedule, one simulation-backed airlift, bite-driven sheep state, long-username signature layout, deterministic checks, and durable guidance",
       "change_level": "task",
-      "status": "proposed",
+      "status": "rejected",
       "from_version": 1,
       "to_version": 18,
       "cause": "Deploying the full cast at one intensity left the longest act without a state change, while bite progress disappeared immediately instead of accumulating toward the pickup and finale.",
@@ -1033,6 +1069,132 @@
       "rollback": "Restore the v17 simultaneous six-sheep middle act while retaining causal bites and the Euclidean finale."
     },
     {
+      "id": "proposal-fullness-turnover-panel-v19",
+      "feedback_ids": [
+        "feedback-fullness-turnover-panel-20260814"
+      ],
+      "target_agent": "worker",
+      "author_agent": "coach",
+      "change_target": "field staffing, logical flock turnover, command panel, deterministic checks, workflow gate, and durable guidance",
+      "change_level": "task",
+      "status": "accepted",
+      "from_version": 1,
+      "to_version": 19,
+      "cause": "The fixed cast hid contribution scale and deferred every pickup to the ending, leaving full sheep visually idle and making substantially different contribution histories feel too similar.",
+      "candidate_change": "Use total contribution energy to choose 1/2/4/6 simultaneous field sheep. Give each logical sheep 20 energy of capacity, serialize an immediate pickup and hungry replacement in the same working slot, and render the selected sheep plus the uncapped complete roster in a two-row command panel.",
+      "discovery_evidence": "The representative grid contains 201 causal arrivals and partitions into 28 logical sheep across six physical working slots. The corrected 700px dark fixture shows all 28 slots, 22 immediate exchanges, selected DEPLOYING/GRAZING/EXTRACTING states, and FIELD/FLOCK/GRASS counters. Deterministic 100- and 300-cell probes produce 22 and 62 roster sheep.",
+      "reproduction": "Run npm run check and npm run visual:fixture; inspect 700px light/dark frames at 4.84, 5.08, 5.18, 15.00, 28.00, and 35.50 seconds.",
+      "primary_metric": "The complete roster remains readable in two rows, each full sheep is exchanged before its route resumes, field staffing follows 0/1/2/4/6 energy thresholds, all 201 arrivals remain synchronized, and runtime stays below 40 seconds.",
+      "prediction": "Visible per-sheep completion and an uncapped roster will turn contribution volume into a legible achievement while UFO exchanges replace idle waiting with causal motion.",
+      "expected_delta": {
+        "representative_field_sheep": 6,
+        "representative_roster_sheep": 28,
+        "representative_turnovers": 22,
+        "fullness_capacity": 20,
+        "roster_rows": 2,
+        "roster_cap": 0,
+        "fixture_arrivals": 201,
+        "runtime_max_seconds": 40
+      },
+      "falsification_condition": "Reject if any full sheep waits for the final group pickup, a replacement creates a field-idle gap, the roster truncates or exceeds two rows, 100- and 300-scale histories collapse to the same visible flock, any causal arrival is lost, runtime exceeds 40 seconds, or npm run check fails.",
+      "regression_check": "npm run check plus fixed 700px light and dark turnover and finale frames.",
+      "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+      "guardrails": [
+        "npm run check",
+        "Simultaneous field staffing uses only 0, 1, 2, 4, or 6 sheep",
+        "Every full sheep receives one serialized pickup and hungry replacement",
+        "Every logical sheep appears in exactly one of two roster rows",
+        "All 201 grass arrivals remain owner-synchronized",
+        "Runtime at or below 40 seconds",
+        "No new dependency, effect layer, or permission expansion"
+      ],
+      "permission_delta": [],
+      "rollback": "Restore v18 only for comparison; retain the Euclidean finale and causal bite timing either way."
+    },
+    {
+      "id": "proposal-command-panel-readability-v20",
+      "feedback_ids": [
+        "feedback-command-panel-readability-20260814"
+      ],
+      "target_agent": "worker",
+      "author_agent": "coach",
+      "change_target": "command-panel selected card, typography hierarchy, numbered two-row selection grid, and deterministic SVG assertions",
+      "change_level": "task",
+      "status": "accepted",
+      "from_version": 19,
+      "to_version": 20,
+      "cause": "The panel reused a tiny top-down field sprite outside its readable scale, fixed every roster slot at 16px instead of using available width, and assigned equal low-contrast weight to small monospaced labels and values.",
+      "candidate_change": "Keep the original sheep artwork at 28x23 only in the selected card, split header keys from bold values at 8.5px, and replace repeated miniature sheep with row-major numbered tiles, individual green progress bars, and one active green outline across the full responsive two-row roster width.",
+      "discovery_evidence": "The reported frame and source measurements reproduce the white-blob portrait, tiny header, left-clustered 28-member roster, and unused right space. Corrected 700px frames show the original sheep without distortion and a scan-friendly 01-14/15-28 grid; a 62-member probe remains legible as 01-31/32-62 with no overlap.",
+      "reproduction": "Run npm run check and npm run visual:fixture; inspect 700px light/dark frames at 5.08, 15.00, and 35.50 seconds plus the 300-cell 62-member probe at 20.00 and 57.50 seconds.",
+      "primary_metric": "A fresh Gate rates README readability and visual cohesion at least 3/4, recognizes the selected portrait as the original sheep, reads the roster as a game selection grid, and finds no clipping, overlap, left clustering, or unreadable header at 28 and 62 members.",
+      "prediction": "One familiar selected portrait, stronger type hierarchy, numbered row-major tiles, and width-aware spacing will make the HUD feel authored instead of debug-like without changing the accepted motion or adding another effect layer.",
+      "expected_delta": {
+        "selected_glyph_width_px": 28,
+        "representative_slot_width_px": 27,
+        "header_font_px": 8.5,
+        "roster_rows": 2,
+        "repeated_roster_sheep_glyphs": 0,
+        "representative_roster_sheep": 28,
+        "dense_probe_roster_sheep": 62,
+        "fixture_bytes_max": 1111928
+      },
+      "falsification_condition": "Reject if either theme makes the header hard to read, the selected original sheep still looks distorted, tile order is not row-major, 28 slots leave a large unused right area, 62 numbered slots overlap or become unreadable, current selection is not linked by one green outline, any accepted motion behavior changes, fixture growth exceeds 15 percent without benefit, or npm run check fails.",
+      "regression_check": "npm run check plus fixed 700px light/dark panel frames for representative and dense rosters.",
+      "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+      "guardrails": [
+        "npm run check",
+        "No motion, simulation, turnover, finale, or field-art changes",
+        "Exactly two complete roster rows with no 12-sheep cap",
+        "No new dependency, filter, blur, effect layer, or permission expansion",
+        "Generated fixture growth remains below 15 percent"
+      ],
+      "permission_delta": [],
+      "rollback": "Restore only the v19 flockPanelLayer markup and matching assertions; retain all accepted turnover, motion, and finale behavior."
+    },
+    {
+      "id": "proposal-turnover-identity-early-pickup-v21",
+      "feedback_ids": [
+        "feedback-turnover-identity-final-pickup-20260814"
+      ],
+      "target_agent": "worker",
+      "author_agent": "coach",
+      "change_target": "turnover opacity timing, final pickup scheduling, FIELD lifecycle counter, and deterministic assertions",
+      "change_level": "task",
+      "status": "accepted",
+      "from_version": 20,
+      "to_version": 21,
+      "cause": "The same physical sheep group reused one cell and crossed directly from full to empty without a visible absence, while final pickup order was blocked by the maximum finish time of all six workers.",
+      "candidate_change": "Hide the outgoing sheep completely for 80ms before the hungry replacement descends, expose the brief 5/6 service state in FIELD, and greedily route the single UFO to the earliest physically reachable finished sheep without waiting for the whole field.",
+      "discovery_evidence": "Measured frames reproduce the old same-sheep crossfade and all-done barrier. Candidate frames show SHEEP 01 EXTRACTING, one empty service beat, SHEEP 07 DEPLOYING, and a first final pickup at 90 percent grass followed by continuous collection through zero field sheep.",
+      "reproduction": "Run npm run check and npm run visual:fixture; inspect 700px dark frames at 4.84, 5.04, 5.17, 5.27, 27.10, 27.84, 28.76, and 31.16 seconds.",
+      "primary_metric": "A fresh Gate reads each turnover as two sheep and sees no dead all-finished wait before final pickup; FIELD remains within 0/6 through 6/6, all 201 causal arrivals remain synchronized, and runtime stays below 40 seconds.",
+      "prediction": "A tiny absence plus ID handoff will separate identities without another art variant, while finish-aware routing will replace the final idle tableau with continuous causal UFO work.",
+      "expected_delta": {
+        "turnover_empty_gap_ms": 80,
+        "first_final_pickup_seconds": 27.1,
+        "last_sheep_finish_seconds": 28.54,
+        "field_count_min": 0,
+        "field_count_max": 6,
+        "new_effect_layers": 0,
+        "runtime_max_seconds": 40
+      },
+      "falsification_condition": "Reject if the handoff still reads as the same sheep, FIELD leaves the 0-6 range, final pickup waits until every sheep finishes, the UFO reaches a sheep before its final route completes, runtime exceeds 40 seconds, or npm run check fails.",
+      "regression_check": "npm run check plus fixed 700px dark turnover and early-final-pickup frames.",
+      "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+      "guardrails": [
+        "npm run check",
+        "One physical UFO and no overlapping service visits",
+        "Every pickup occurs at or after that sheep's visual finish",
+        "No new glyph, dependency, filter, blur, or effect layer",
+        "All 201 grass arrivals remain owner-synchronized",
+        "Runtime at or below 40 seconds",
+        "No permission expansion"
+      ],
+      "permission_delta": [],
+      "rollback": "Restore v20 turnover crossfade and all-done final pickup barrier while retaining the accepted panel and flock model."
+    },
+    {
       "id": "proposal-project-motion-routing-v3",
       "feedback_ids": [
         "feedback-project-motion-routing-20260813"
@@ -1067,6 +1229,52 @@
       "rollback": "Restore generic visual-skill discovery only if the project contract proves insufficient for a named design decision."
     }
   ],
-  "promotions": [],
+  "promotions": [
+    {
+      "id": "promotion-fullness-turnover-panel-v19-20260814",
+      "proposal_id": "proposal-fullness-turnover-panel-v19",
+      "gate_agent": "gate",
+      "before": "The unpromoted v18 candidate used one fixed six-sheep cast, one delayed relocation, two reinforcements, no persistent flock overview, and a final group pickup.",
+      "after": "The accepted v19 candidate scales field staffing through 1/2/4/6 sheep, immediately exchanges full sheep, and shows the complete uncapped flock in a two-row command panel while preserving the causal pasture and finale.",
+      "regressions_passed": true,
+      "decision": "accepted",
+      "live_cycle": {
+        "status": "observed",
+        "metric": "Frozen 700px visual benchmark plus deterministic product checks",
+        "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, the complete roster truncates, an exchange creates a visible idle gap, or npm run check fails.",
+        "evidence": "A fresh Gate that did not author v19 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Both themes preserved the 4.84 extraction, 5.08 deployment, 5.18 grazing handoff, 28-sheep two-row roster, 201 causal arrivals, and 53-phase finale; npm run check passed at 966,894 bytes and 36.44 seconds."
+      }
+    },
+    {
+      "id": "promotion-command-panel-readability-v20-20260814",
+      "proposal_id": "proposal-command-panel-readability-v20",
+      "gate_agent": "gate",
+      "before": "The accepted v19 panel enlarged the small field sheep into a distorted selected portrait, repeated miniature sheep in fixed-width slots, clustered the 28-member roster on the left, and used tiny undifferentiated header type.",
+      "after": "The accepted v20 panel keeps the original sheep at normal scale only in the selected card and presents the flock as a row-major numbered selection grid with individual progress bars, one active outline, stronger header hierarchy, and density-aware spacing.",
+      "regressions_passed": true,
+      "decision": "accepted",
+      "live_cycle": {
+        "status": "observed",
+        "metric": "Frozen 700px visual benchmark across light/dark and 1/2/9/28/62-member selection grids",
+        "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, the original selected sheep distorts, numbered tiles overlap or lose row-major order, active selection becomes unclear, or npm run check fails.",
+        "evidence": "A fresh Gate that did not author v20 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Both themes and 1, 2, 9, 28, and 62-member layouts passed with no blocker; npm run check passed at 981,652 bytes and all 413 non-panel v19 motion keyframes remained unchanged."
+      }
+    },
+    {
+      "id": "promotion-turnover-identity-early-pickup-v21-20260814",
+      "proposal_id": "proposal-turnover-identity-early-pickup-v21",
+      "gate_agent": "gate",
+      "before": "The accepted v20 turnover crossfaded a full and hungry sheep in the same slot without a visible absence, and final pickup waited for the latest of all six sheep finishes.",
+      "after": "The accepted v21 turnover exposes an 80ms empty service beat between distinct roster IDs, and the single UFO collects final sheep in earliest physically reachable finish order while others keep grazing.",
+      "regressions_passed": true,
+      "decision": "accepted",
+      "live_cycle": {
+        "status": "observed",
+        "metric": "Frozen 700px visual benchmark plus deterministic turnover, FIELD lifecycle, and pickup-order assertions",
+        "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, turnover reads as one sheep redropped, FIELD leaves 0-6, final pickup waits for every sheep, or npm run check fails.",
+        "evidence": "A fresh Gate that did not author v21 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. The 991,057-byte, 35.68-second fixture shows SHEEP 01 extraction, an empty slot, SHEEP 07 deployment, and final pickup beginning at 90 percent grass. All 201 arrivals, 53 finale phases, serialized pickup visits, themes, and banned-effect checks passed with no blocker."
+      }
+    }
+  ],
   "autonomous_episodes": []
 }

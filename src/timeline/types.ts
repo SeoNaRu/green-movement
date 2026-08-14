@@ -11,6 +11,7 @@ export type TimelineResult = {
   readyAbsSOffset: number[];
   moveStartAbsSOffset: number[];
   ufoLeaveAbsSOffset: number[];
+  ufoStopCells: [number, number][];
   /** UFO가 실제로 방문하는 드롭 개수 (잔디 소모 후 회수 시작 시점에 맞춤) */
   effectiveDropCount: number;
   pickupCells: [number, number][];
@@ -27,6 +28,30 @@ export type TimelineResult = {
     releaseAbsS: number;
     operationDuration: number;
   } | null;
+  turnovers: {
+    slotIndex: number;
+    outgoingRosterIndex: number;
+    incomingRosterIndex: number;
+    historyIndex: number;
+    pickupArriveAbsS: number;
+    outgoingHiddenAbsS: number;
+    incomingSpawnAbsS: number;
+    incomingReadyAbsS: number;
+    addedDelay: number;
+  }[];
+  flock: {
+    fieldCount: number;
+    totalEnergy: number;
+    rosterSize: number;
+    sheep: {
+      rosterIndex: number;
+      slotIndex: number;
+      spawnAbsS: number;
+      pickupAbsS: number | null;
+      bites: { atS: number; progress: number; level: number }[];
+    }[];
+    grassProgress: { atS: number; progress: number }[];
+  };
   sweepPositions: [number, number][];
   sweepArriveAbsSOffset: number[];
   paintSweepStartAbsSOffset: number;

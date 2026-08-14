@@ -18,6 +18,8 @@ import { buildSheepLayer } from "./anim/keyframes/sheepKeyframes.js";
 import { getCellCenterPx } from "./layout/gridLayout.js";
 import { composeSvg } from "./render/composeSvg.js";
 import { buildSignatureCells, getGridWaveMetrics } from "./signature.js";
+import { buildFlockPlan } from "./flock.js";
+import { buildFlockPanelLayer } from "./layers/flockPanelLayer.js";
 
 const DROP_STAY_S = 0.14;
 const LIGHT_RAMP_S = 0.04;
@@ -60,16 +62,9 @@ export function renderGridSvg(
     maxX: ctx.maxX,
     maxY: ctx.maxY,
     targetBfsLen: plan.targetBfsLen,
-    relocation:
-      plan.sheepCount >= 6
-        ? {
-            sheepIndex: 1,
-            earliestTick: 10,
-            preferredTarget: [plan.funnelPositionsEarly[3][0], 1],
-          }
-        : undefined,
   });
-  const timeline = buildTimeline(ctx, plan, sim);
+  const flock = buildFlockPlan(plan, sim);
+  const timeline = buildTimeline(ctx, plan, sim, flock);
 
   const signatureCells = buildSignatureCells(
     ctx.maxX,
@@ -107,7 +102,6 @@ export function renderGridSvg(
     timeOffset: timeline.timelineOffset,
   });
 
-  const n = timeline.effectiveDropCount;
   const {
     ufoKeyframesStr,
     ufoLightKeyframesStr,
@@ -115,17 +109,17 @@ export function renderGridSvg(
     ufoRippleKeyframesStr,
     ufoRippleGroupStr,
   } = buildUfoLayer({
-    funnelPositionsEarly: plan.funnelPositionsEarly.slice(0, n),
-    spawnAbsS: timeline.spawnAbsSOffset.slice(0, n),
-    arriveAbsS: timeline.ufoArriveAbsSOffset.slice(0, n),
+    funnelPositionsEarly: timeline.ufoStopCells,
+    spawnAbsS: timeline.spawnAbsSOffset,
+    arriveAbsS: timeline.ufoArriveAbsSOffset,
     beamDelayS: UFO_BEAM_DELAY_S,
     maxTotalTime: timeline.maxTotalTimeWithEntryExit,
     gridLeftX: ctx.gridLeftX,
     gridTopY: ctx.gridTopY,
     lightRampS: LIGHT_RAMP_S,
     lightFadeOutS: LIGHT_FADE_OUT_S,
-    moveStartAbsS: timeline.moveStartAbsSOffset.slice(0, n),
-    ufoLeaveAbsS: timeline.ufoLeaveAbsSOffset.slice(0, n),
+    moveStartAbsS: timeline.moveStartAbsSOffset,
+    ufoLeaveAbsS: timeline.ufoLeaveAbsSOffset,
     ufoEntryS: UFO_ENTRY_S,
     ufoExitS: UFO_EXIT_S,
     maxX: ctx.maxX,
@@ -134,7 +128,6 @@ export function renderGridSvg(
     pickupArriveAbsS: timeline.pickupArriveAbsSOffsetForUfo,
     pickupWaitS: PICKUP_WAIT_S,
     pickupLightS: PICKUP_LIGHT_S,
-    relocation: timeline.relocation,
     sweepPositions: timeline.sweepPositions,
     sweepArriveAbsS: timeline.sweepArriveAbsSOffset,
     paintStartAbsS: timeline.paintSweepStartAbsSOffset,
@@ -150,18 +143,30 @@ export function renderGridSvg(
     { length: plan.sheepCount },
     () => [] as number[],
   );
+  const biteProgressBySheep = Array.from(
+    { length: plan.sheepCount },
+    () => [] as { atS: number; progress: number }[],
+  );
   for (const arrival of timeline.firstArrivals.values()) {
-    biteAbsSBySheep[arrival.sheepIndex]?.push(
-      timeline.timelineOffset + arrival.arrivalTime,
-    );
+    const atS = timeline.timelineOffset + arrival.arrivalTime;
+    biteAbsSBySheep[arrival.sheepIndex]?.push(atS);
+  }
+  for (const sheep of timeline.flock.sheep) {
+    for (const bite of sheep.bites) {
+      biteProgressBySheep[sheep.slotIndex]?.push({
+        atS: bite.atS,
+        progress: bite.progress,
+      });
+    }
   }
 
   const { animationStyles, sheepGroups } = buildSheepLayer({
     positionsHistory: sim.positionsHistory,
     assignedIndices: timeline.assignedIndices,
-    spawnAbsS: timeline.spawnAbsSOffset,
-    moveStartAbsS: timeline.moveStartAbsSOffset,
+    spawnAbsS: timeline.spawnAbsSOffset.slice(0, plan.sheepCount),
+    moveStartAbsS: timeline.moveStartAbsSOffset.slice(0, plan.sheepCount),
     biteAbsSBySheep,
+    biteProgressBySheep,
     maxTotalTime: timeline.maxTotalTimeWithEntryExit,
     gridLeftX: ctx.gridLeftX,
     gridTopY: ctx.gridTopY,
@@ -172,7 +177,14 @@ export function renderGridSvg(
     pickupFadeS: PICKUP_FADE_S,
     pickupWaitS: PICKUP_WAIT_S,
     pickupLightS: PICKUP_LIGHT_S,
-    relocation: timeline.relocation,
+    turnovers: timeline.turnovers,
+  });
+
+  const { panelStyles, panelGroup } = buildFlockPanelLayer({
+    flock: timeline.flock,
+    maxTotalTime: timeline.maxTotalTimeWithEntryExit,
+    panelTop: ctx.baseHeight + 4,
+    totalWidth: ctx.totalWidth,
   });
 
   const DEBUG_LAYER = process.env?.DEBUG_SVG === "1";
@@ -222,5 +234,7 @@ export function renderGridSvg(
     animationStyles,
     ufoKeyframesStr,
     ufoLightKeyframesStr,
+    panelStyles,
+    panelGroup,
   });
 }

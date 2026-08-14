@@ -8,8 +8,6 @@ import {
   SHEEP_WIDTH_PX,
   MAX_SHEEP,
   UFO_ENTRY_S,
-  UFO_RELOCATION_APPROACH_S,
-  UFO_RELOCATION_TOTAL_S,
   UFO_WIDTH_PX,
 } from "../dist/svg/constants.js";
 import { planTargets } from "../dist/planning/targetPlanner.js";
@@ -22,6 +20,7 @@ import {
   getGridWavePhase,
 } from "../dist/svg/signature.js";
 import { getCellCenterPx } from "../dist/svg/layout/gridLayout.js";
+import { buildFlockPlan } from "../dist/svg/flock.js";
 
 let randomState = 0x6d2b79f5;
 Math.random = () => {
@@ -44,6 +43,19 @@ const grid = Array.from({ length: 53 * 7 }, (_, index) => {
 const timingGrid = grid.map((cell) => ({ ...cell }));
 
 const svg = renderGridSvg(grid, { targetWidth: 700 });
+const emptySvg = renderGridSvg(
+  grid.map((cell) => ({ ...cell, count: 0 })),
+  { targetWidth: 700 },
+);
+if (
+  /NaN|undefined/.test(emptySvg) ||
+  !emptySvg.includes(
+    '<tspan class="flock-meta-key">FLOCK</tspan><tspan dx="5" class="flock-meta-value">0</tspan>',
+  ) ||
+  emptySvg.includes('class="ufo-move"')
+) {
+  throw new Error("empty contribution grid does not render as an idle pasture");
+}
 const grazeWindow = SHEEP_GRAZE_HOLD_TICKS * SHEEP_CELL_TIME;
 if (GRASS_STEP_TIMES_S.at(-1) > grazeWindow) {
   throw new Error(
@@ -80,16 +92,22 @@ for (const required of [
   'class="signature-grid-wave-cell" x=',
   'fill="var(--gm-level-3)" style="opacity:0; animation:signature-grid-wave-',
   'class="signature-core"',
+  'class="flock-panel"',
+  'font-size:8.5px',
+  'width="27.00" height="21"',
+  'class="flock-slot-index"',
+  'href="#flock-sheep-icon" x="21"',
+  '<tspan class="flock-meta-key">FLOCK</tspan><tspan dx="5" class="flock-meta-value">28</tspan>',
+  "FULLNESS",
+  "GRAZING",
+  '<tspan class="flock-meta-key">GRASS</tspan><tspan dx="5" class="flock-meta-value">100%</tspan>',
 ]) {
   if (!svg.includes(required)) throw new Error(`SVG fixture missing ${required}`);
 }
 if (/NaN|undefined/.test(svg)) throw new Error("SVG fixture contains invalid values");
 const sheepCount = (svg.match(/class="sheep-\d+"/g) ?? []).length;
 const grassCount = timingGrid.filter(({ count }) => count > 0).length;
-const expectedSheepCount = Math.min(
-  MAX_SHEEP,
-  grassCount,
-);
+const expectedSheepCount = buildContext(timingGrid).sheepCountCap;
 if (sheepCount !== expectedSheepCount) {
   throw new Error(`expected ${expectedSheepCount} sheep for ${grassCount} grass cells, got ${sheepCount}`);
 }
@@ -111,8 +129,7 @@ if (/ufo-(?:hover|bank)/.test(svg)) {
 }
 if (
   /signature-(?:beam|laser|impact|writing)/.test(svg) ||
-  /ufo-scan-gradient|class="ufo-scan"|scan-(?:field|bar|lock)|scan-band-gradient/.test(svg) ||
-  new RegExp(`ufo-ripple-${sheepCount * 2}-`).test(svg)
+  /ufo-scan-gradient|class="ufo-scan"|scan-(?:field|bar|lock)|scan-band-gradient/.test(svg)
 ) {
   throw new Error("SVG fixture contains a rejected spotlight or plotter effect");
 }
@@ -130,11 +147,9 @@ const deploymentTimes = Array.from({ length: sheepCount }, (_, i) => {
 });
 const deploymentSeconds = deploymentTimes.at(-1);
 if (
-  deploymentTimes.slice(0, 4).some((time) => !Number.isFinite(time) || time > 3.2) ||
-  deploymentTimes.slice(4).some((time) => !Number.isFinite(time) || time < 7.2 || time > 8.5) ||
-  deploymentTimes[4] - deploymentTimes[3] < 4.4
+  deploymentTimes.some((time) => !Number.isFinite(time) || time > 4.5)
 ) {
-  throw new Error(`expected a four-sheep advance flock and delayed two-sheep reinforcement: ${deploymentTimes}`);
+  throw new Error(`expected the full field flock to deploy immediately: ${deploymentTimes}`);
 }
 if (!svg.includes("@keyframes sheep-0-growth") || !svg.includes("class=\"sheep-energy\"")) {
   throw new Error("sheep do not accumulate body mass and visible grass energy");
@@ -145,16 +160,6 @@ if (
   !ufoMove.includes("animation-timing-function: cubic-bezier(.4,0,.2,1)")
 ) {
   throw new Error("UFO travel still contains the rejected pre-arrival snap");
-}
-const offstagePcts = [...ufoMove.matchAll(/([\d.]+)% \{[^}]*translate\([^,]+, -59px\)/g)].map(
-  (match) => Number(match[1]),
-);
-if (
-  !offstagePcts.some(
-    (pct) => pct > 0 && (pct / 100) * runtime < deploymentSeconds + 0.6,
-  )
-) {
-  throw new Error("expected UFO to leave the stage after deployment");
 }
 for (let i = 0; i < sheepCount; i++) {
   const move = svg.match(new RegExp(`@keyframes sheep-${i}-move \\{([\\s\\S]*?)\\n  \\}`))?.[1] ?? "";
@@ -171,11 +176,13 @@ for (let i = 0; i < sheepCount; i++) {
 const timingContext = buildContext(timingGrid);
 for (const [activeGrass, expected] of [
   [0, 0],
-  [1, 6],
-  [40, 6],
-  [41, 6],
-  [201, 6],
-  [241, 6],
+  [1, 1],
+  [10, 1],
+  [11, 2],
+  [40, 2],
+  [41, 4],
+  [120, 4],
+  [121, 6],
   [351, 6],
 ]) {
   const countGrid = timingGrid.map((cell, index) => ({
@@ -187,9 +194,36 @@ for (const [activeGrass, expected] of [
     throw new Error(`expected ${expected} sheep for ${activeGrass} grass cells, got ${actual}`);
   }
 }
+const rosterSizeFor = (activeGrass) =>
+  (
+    renderGridSvg(
+      timingGrid.map((cell, index) => ({
+        ...cell,
+        count: index < activeGrass ? 1 : 0,
+      })),
+      { targetWidth: 0 },
+    ).match(/class="flock-slot /g) ?? []
+  ).length;
+const hundredRoster = rosterSizeFor(100);
+const threeHundredRoster = rosterSizeFor(300);
+if (threeHundredRoster <= hundredRoster || threeHundredRoster <= 12) {
+  throw new Error(
+    `full roster hides contribution scale: 100=${hundredRoster}, 300=${threeHundredRoster}`,
+  );
+}
+const oneCellSvg = renderGridSvg(
+  timingGrid.map((cell, index) => ({ ...cell, count: index === 0 ? 1 : 0 })),
+  { targetWidth: 0 },
+);
+if (
+  (oneCellSvg.match(/class="flock-slot /g) ?? []).length !== 1 ||
+  (oneCellSvg.match(/class="flock-meta-key">GRASS/g) ?? []).length !== 2
+) {
+  throw new Error("low-volume selection grid or grass label events overlap");
+}
 const timingPlan = planTargets(timingContext);
-if (timingPlan.spawnTick.join(",") !== "0,1,2,3,28,29") {
-  throw new Error(`unexpected reinforcement schedule: ${timingPlan.spawnTick}`);
+if (timingPlan.spawnTick.join(",") !== "0,1,2,3,4,5") {
+  throw new Error(`unexpected initial deployment schedule: ${timingPlan.spawnTick}`);
 }
 if (timingPlan.relayStartTick.join(",") !== timingPlan.spawnTick.join(",")) {
   throw new Error(`sheep do not start as soon as they are deployed: ${timingPlan.relayStartTick}`);
@@ -236,59 +270,66 @@ const timingSimulation = simulateGrid({
   maxX: timingContext.maxX,
   maxY: timingContext.maxY,
   targetBfsLen: timingPlan.targetBfsLen,
-  relocation:
-    timingPlan.sheepCount >= 6
-      ? {
-          sheepIndex: 1,
-          earliestTick: 10,
-          preferredTarget: [timingPlan.funnelPositionsEarly[3][0], 1],
-        }
-      : undefined,
 });
-const timing = buildTimeline(timingContext, timingPlan, timingSimulation);
+const flock = buildFlockPlan(timingPlan, timingSimulation);
+const timing = buildTimeline(timingContext, timingPlan, timingSimulation, flock);
 if (
-  timing.relocation?.sheepIndex !== 1 ||
-  timing.relocation.to.join(",") !== "30,1" ||
-  timing.relocation.pickupArriveAbsS >= timing.relocation.flightStartAbsS ||
-  timing.relocation.flightStartAbsS >= timing.relocation.dropArriveAbsS ||
-  timing.relocation.dropArriveAbsS >= timing.relocation.releaseAbsS ||
-  timing.relocation.flightStartAbsS - timing.relocation.pickupArriveAbsS < 0.44 ||
-  timing.relocation.dropArriveAbsS - timing.relocation.flightStartAbsS < 1.19 ||
-  timing.relocation.releaseAbsS - timing.relocation.dropArriveAbsS < 0.44 ||
-  Math.abs(
-    timing.relocation.releaseAbsS - timing.relocation.pickupArriveAbsS +
-      UFO_RELOCATION_APPROACH_S - UFO_RELOCATION_TOTAL_S,
-  ) > 0.001
-) {
-  throw new Error(`aerial relocation is missing or out of order: ${JSON.stringify(timing.relocation)}`);
-}
-const relocationMove = svg.match(/@keyframes sheep-1-move \{([\s\S]*?)\n  \}/)?.[1] ?? "";
-const relocationFlightPct =
-  (timing.relocation.flightStartAbsS / runtime) * 100;
-const relocationReleasePct =
-  (timing.relocation.releaseAbsS / runtime) * 100;
-if (
-  !relocationMove.includes(`${relocationFlightPct.toFixed(4)}% {`) ||
-  !relocationMove.includes(`${relocationReleasePct.toFixed(4)}% {`) ||
-  !relocationMove.includes("opacity: 0") ||
-  !svg.includes("100% { transform: scale(1.15); }")
-) {
-  throw new Error("relocated sheep does not board, land, and retain meal growth");
-}
-const relocationSource = getCellCenterPx(
-  timingContext.gridLeftX,
-  timingContext.gridTopY,
-  timing.relocation.from[0],
-  timing.relocation.from[1],
-);
-const relocationPickupPct =
-  (timing.relocation.pickupArriveAbsS / runtime) * 100;
-if (
-  !ufoMove.includes(
-    `${relocationPickupPct.toFixed(4)}% { transform: translate(${relocationSource.x - UFO_WIDTH_PX / 2}px, ${relocationSource.y - UFO_WIDTH_PX / 2}px)`,
+  flock.fieldCount !== 6 ||
+  flock.rosterSize !== 28 ||
+  timing.turnovers.length !== 22 ||
+  timing.ufoStopCells.length !== flock.rosterSize ||
+  timing.turnovers.some(
+    (turnover) =>
+      turnover.pickupArriveAbsS >= turnover.incomingSpawnAbsS ||
+      turnover.pickupArriveAbsS >= turnover.outgoingHiddenAbsS ||
+      turnover.outgoingHiddenAbsS >= turnover.incomingSpawnAbsS ||
+      turnover.incomingSpawnAbsS - turnover.outgoingHiddenAbsS < 0.079 ||
+      turnover.incomingSpawnAbsS >= turnover.incomingReadyAbsS ||
+      turnover.addedDelay <= 0,
   )
 ) {
-  throw new Error("UFO does not arrive over the sheep it transports");
+  throw new Error(`full sheep do not receive immediate serialized replacements`);
+}
+if (
+  timing.flock.grassProgress.some(
+    (entry, index, entries) =>
+      index > 0 &&
+      (entry.atS < entries[index - 1].atS ||
+        entry.progress < entries[index - 1].progress),
+  ) ||
+  Math.abs((timing.flock.grassProgress.at(-1)?.progress ?? 0) - 1) > 0.001
+) {
+  throw new Error("panel grass progress does not follow visual bite order");
+}
+if (
+  (svg.match(/class="flock-slot /g) ?? []).length !== flock.rosterSize ||
+  !svg.includes("@keyframes flock-fill-27") ||
+  !svg.includes(
+    '<tspan class="flock-meta-key">FIELD</tspan><tspan dx="5" class="flock-meta-value">6/6</tspan>',
+  )
+) {
+  throw new Error("two-row flock panel does not expose the complete roster");
+}
+const fieldCounts = [...svg.matchAll(/class="flock-meta-value">(-?\d+)\/6<\/tspan>/g)].map(
+  (match) => Number(match[1]),
+);
+if (
+  fieldCounts.length === 0 ||
+  Math.min(...fieldCounts) !== 0 ||
+  Math.max(...fieldCounts) !== 6 ||
+  fieldCounts.some((count) => count < 0 || count > 6)
+) {
+  throw new Error("panel FIELD lifecycle leaves the 0/6 to 6/6 range");
+}
+const rosterPositions = [...svg.matchAll(
+  /<g class="flock-slot flock-slot-(\d+)">\s*<rect x="[\d.]+" y="([\d.]+)"/g,
+)].map((match) => ({ index: Number(match[1]), y: Number(match[2]) }));
+if (
+  rosterPositions[0]?.y !== rosterPositions[13]?.y ||
+  rosterPositions[14]?.y <= rosterPositions[13]?.y ||
+  (svg.match(/animation:flock-selected-\d+/g) ?? []).length < flock.rosterSize * 2
+) {
+  throw new Error("flock selection grid lost row-major order or active highlights");
 }
 if (Math.abs(timing.timelineOffset - UFO_ENTRY_S) > 0.001) {
   throw new Error("UFO does not deploy directly from its entry flight");
@@ -435,6 +476,7 @@ for (let i = 0; i < timingPlan.sheepCount; i++) {
     throw new Error(`sheep ${i} waits after landing instead of moving immediately`);
   }
 }
+const visualFinishBySheep = [];
 for (let i = 0; i < timingSimulation.positionsHistory.length; i++) {
   const positions = timingSimulation.positionsHistory[i];
   const firstMove = positions.findIndex(
@@ -446,12 +488,22 @@ for (let i = 0; i < timingSimulation.positionsHistory.length; i++) {
   const visualFinish =
     timing.moveStartAbsSOffset[i] +
     (positions.length - firstMove) * SHEEP_CELL_TIME +
-    (timing.relocation?.sheepIndex === i
-      ? timing.relocation.operationDuration
-      : 0);
+    timing.turnovers
+      .filter((turnover) => turnover.slotIndex === i)
+      .reduce((sum, turnover) => sum + turnover.addedDelay, 0);
+  visualFinishBySheep[i] = visualFinish;
   if ((timing.pickupArriveAbsSOffset[i] ?? 0) < visualFinish) {
     throw new Error(`UFO reaches sheep ${i} before its relay run finishes`);
   }
+}
+const finalPickupTimes = timing.pickupArriveAbsSOffset.filter(Number.isFinite);
+if (
+  Math.min(...finalPickupTimes) >= Math.max(...visualFinishBySheep.filter(Number.isFinite)) ||
+  timing.pickupArriveAbsSOffsetForUfo.some(
+    (arrival, index, entries) => index > 0 && arrival <= entries[index - 1],
+  )
+) {
+  throw new Error("UFO waits for the whole field instead of collecting finished sheep");
 }
 for (const [cell, arrivals] of timingSimulation.targetCellArrivals) {
   const arrival = arrivals[0];
@@ -470,15 +522,18 @@ for (const [cell, arrivals] of timingSimulation.targetCellArrivals) {
       index > 0 && (x !== positions[0][0] || y !== positions[0][1]),
   );
   if (arrivalIndex < 0 || firstMoveIndex < 0) continue;
-  const relocationDelay = (index) =>
-    timing.relocation?.sheepIndex === arrival.sheepIndex &&
-    index >= timing.relocation.historyIndex
-      ? timing.relocation.operationDuration
-      : 0;
+  const turnoverDelay = (index) =>
+    timing.turnovers
+      .filter(
+        (turnover) =>
+          turnover.slotIndex === arrival.sheepIndex &&
+          index >= turnover.historyIndex,
+      )
+      .reduce((sum, turnover) => sum + turnover.addedDelay, 0);
   const sheepArrival =
     timing.moveStartAbsSOffset[arrival.sheepIndex] +
     (arrivalIndex - firstMoveIndex + 1) * SHEEP_CELL_TIME +
-    relocationDelay(arrivalIndex);
+    turnoverDelay(arrivalIndex);
   const grassReaction =
     timing.timelineOffset +
     timing.firstArrivals.get(cell).arrivalTime +
@@ -493,7 +548,7 @@ for (const [cell, arrivals] of timingSimulation.targetCellArrivals) {
     const sheepDeparture =
       timing.moveStartAbsSOffset[arrival.sheepIndex] +
       (nextMoveIndex - firstMoveIndex) * SHEEP_CELL_TIME +
-      relocationDelay(nextMoveIndex);
+      turnoverDelay(nextMoveIndex);
     const grassGone =
       timing.timelineOffset +
       timing.firstArrivals.get(cell).arrivalTime +

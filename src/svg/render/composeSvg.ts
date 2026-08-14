@@ -23,6 +23,8 @@ export function composeSvg(params: {
   animationStyles: string;
   ufoKeyframesStr: string;
   ufoLightKeyframesStr: string;
+  panelStyles: string;
+  panelGroup: string;
 }): string {
   const {
     totalWidth,
@@ -45,6 +47,8 @@ export function composeSvg(params: {
     animationStyles,
     ufoKeyframesStr,
     ufoLightKeyframesStr,
+    panelStyles,
+    panelGroup,
   } = params;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -58,6 +62,7 @@ export function composeSvg(params: {
   ${ufoKeyframesStr}
   ${ufoLightKeyframesStr}
   ${ufoRippleKeyframesStr}
+  ${panelStyles}
   @media (prefers-reduced-motion: reduce) {
     .ufo-streak, .ufo-ripple, .signature-reveal, #grass-crumbs { display: none; }
   }
@@ -70,6 +75,7 @@ export function composeSvg(params: {
   ${sheepGroups}
   ${ufoRippleGroupStr}
   ${ufoGroupStr}
+  ${panelGroup}
   ${debugLayer}
-</svg>`;
+</svg>`.replace(/[ \t]+$/gm, "");
 }

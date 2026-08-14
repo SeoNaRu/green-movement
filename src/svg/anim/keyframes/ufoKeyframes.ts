@@ -571,7 +571,7 @@ export function buildUfoLayer(params: {
     );
     ufoRotKeyframePcts.push(`100% { transform: rotate(${exitAngle}deg); }`);
   }
-  const firstPos = funnelPositionsEarly[0];
+  const firstPos = funnelPositionsEarly[0] ?? [0, 0];
   const firstPosPx = getCellCenterPx(
     gridLeftX,
     gridTopY,
