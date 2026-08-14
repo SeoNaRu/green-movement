@@ -1,5 +1,5 @@
 import type { TimelineResult } from "../../timeline/types.js";
-import { SHEEP_CONTENT } from "../constants.js";
+import { SHEEP_CONTENT, UFO_CONTENT, UFO_VIEWBOX } from "../constants.js";
 
 type PanelFlock = TimelineResult["flock"];
 type SelectedState = "DEPLOYING" | "GRAZING" | "EXTRACTING";
@@ -226,7 +226,7 @@ export function buildFlockPanelLayer(params: {
     );
     selectedGroups.push(
       `<g style="opacity:0;animation:flock-inbound ${maxTotalTime}s linear 0s 1 both"><text x="14" y="${panelTop + 44}" class="flock-name">FLOCK INBOUND</text><text x="14" y="${panelTop + 58}" class="flock-status">AWAITING DEPLOYMENT</text></g>`,
-      `<g style="opacity:0;animation:flock-complete ${maxTotalTime}s linear 0s 1 both"><rect x="14" y="${panelTop + 38}" width="10" height="10" rx="2" fill="var(--gm-level-4)"/><text x="32" y="${panelTop + 46}" class="flock-name">PASTURE CLEAR</text><text x="32" y="${panelTop + 60}" class="flock-status">ALL SHEEP COLLECTED</text></g>`,
+      `<g style="opacity:0;animation:flock-complete ${maxTotalTime}s linear 0s 1 both"><use href="#flock-ufo-icon" x="12" y="${panelTop + 34}" width="30" height="30"/><text x="50" y="${panelTop + 46}" class="flock-name">PASTURE CLEAR</text><text x="50" y="${panelTop + 60}" class="flock-status">ALL SHEEP COLLECTED</text></g>`,
     );
   }
 
@@ -287,7 +287,7 @@ export function buildFlockPanelLayer(params: {
   ${headerStyles.join("\n  ")}`;
 
   const panelGroup = `<g class="flock-panel" aria-hidden="true">
-    <defs><symbol id="flock-sheep-icon" viewBox="0.5 0 15 12.5">${SHEEP_CONTENT}</symbol></defs>
+    <defs><symbol id="flock-sheep-icon" viewBox="0.5 0 15 12.5">${SHEEP_CONTENT}</symbol><symbol id="flock-ufo-icon" viewBox="${UFO_VIEWBOX}">${UFO_CONTENT}</symbol></defs>
     <rect class="flock-panel-surface" x=".5" y="${panelTop + 0.5}" width="${totalWidth - 1}" height="${panelHeight - 1}" rx="6" fill="var(--gm-panel-bg)" stroke="var(--gm-panel-line)"/>
     <path class="flock-panel-divider" d="M9 ${panelTop + 23}H${totalWidth - 9}M188 ${panelTop + 29}V${panelTop + panelHeight - 7}" stroke="var(--gm-panel-line)" stroke-width=".7"/>
     ${fieldLabels.join("")}

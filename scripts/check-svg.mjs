@@ -114,6 +114,7 @@ for (const required of [
   'width="26.71" height="18"',
   'class="flock-slot-index"',
   'href="#flock-sheep-icon" x="13"',
+  'href="#flock-ufo-icon" x="12"',
   '<tspan class="flock-meta-key">Flock</tspan><tspan dx="5" class="flock-meta-value">28</tspan>',
   "FULLNESS",
   "GRAZING",

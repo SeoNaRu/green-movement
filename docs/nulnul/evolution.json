@@ -3,11 +3,11 @@
   "personal_evolution_home": null,
   "checkpoint": {
     "goal": "Make the animated contribution pasture feel cohesive, premium, and clearly readable in a GitHub profile README.",
-    "milestone": "The accepted v23 champion joins the pasture and uncapped roster into one flat GitHub contribution surface while preserving explicit light/dark publishing, contribution-scaled staffing, readable turnover, finish-aware pickup, and the full two-row roster.",
+    "milestone": "The accepted v24 champion joins the pasture and uncapped roster into one flat GitHub contribution surface, then hands the completed selected region from the departed sheep to the original UFO while preserving explicit light/dark publishing, readable turnover, and finish-aware pickup.",
     "completion_check": "npm run check",
     "status": "active",
-    "last_verified": "2026-08-14: npm run check passed with a 1,032,013-byte, 35.68-second fixture. Exact-time 700px light/dark captures show one flat GitHub contribution panel, full-width 10- and 28-member two-row rosters, distinct active/extracting/collected states, and selected identity plus FIELD synchronized with visual presence. A fresh independent Gate scored v23 19/20 with no blocker; all accepted motion, 201 arrivals, and 53 finale phases remain green.",
-    "next_action": "Publish accepted v23 to main, observe the triggered profile workflow, and verify the public profile serves the new flat panel in both GitHub themes.",
+    "last_verified": "2026-08-14: npm run check passed with a 1,034,299-byte, 35.68-second fixture. Exact current-source 700px light/dark complete frames for 10 and 28 roster sheep show the original static 30px UFO balancing PASTURE CLEAR without competing with the field UFO or username finale. A fresh independent Gate scored v24 19/20 with no blocker; all v23 panel state, accepted motion, 201 arrivals, and 53 finale phases remain green.",
+    "next_action": "Publish accepted v24 to main, observe the cache-safe profile workflow, and verify the pinned public light and dark SVGs contain the completed-state panel UFO.",
     "blockers": [],
     "approved_permissions": [
       "Read and write files inside this repository",
@@ -23,10 +23,10 @@
       "last_promotion_id": null
     },
     "worker": {
-      "version": 23,
+      "version": 24,
       "job": "Implement one bounded motion or rendering change and report its mechanical and visual evidence.",
       "profile_path": "AGENTS.md",
-      "last_promotion_id": "promotion-github-pasture-panel-v23-20260814"
+      "last_promotion_id": "promotion-complete-panel-ufo-v24-20260814"
     },
     "coach": {
       "version": 1,
@@ -377,6 +377,18 @@
       "expected": "Make the panel feel like the same GitHub contribution surface as the pasture, distribute sparse and dense rosters across the available width, expose active, extracting, and collected states, and keep the selected sheep plus FIELD count synchronized with visual presence.",
       "evidence": "The reported 700px dark frame shows two inset command boxes, five narrow centred columns inside a much wider roster body, and SHEEP 10 EXTRACTING beside FIELD 1/4 with no visible identity for the remaining field sheep. Source tracing found a 33px slot-pitch cap, pickup-arrival field decrements, and selection intervals that persist until the next event instead of ending when the sheep disappears.",
       "reproduction": "Render forced 700px light and dark frames for 10- and 28-member rosters during grazing, extraction, visual disappearance, and completion; compare panel palette, spacing, sheep identity, FIELD lifecycle, and collected-state legibility with the pasture above.",
+      "scope": "project",
+      "status": "converted",
+      "rejected_proposals": []
+    },
+    {
+      "id": "feedback-complete-panel-ufo-20260814",
+      "target_agent": "worker",
+      "source": "user",
+      "observed": "After every sheep is collected, the selected sheep disappears and the left panel region loses its character anchor; the green completion square does not connect the empty state to the UFO that performed the collection.",
+      "expected": "When FIELD reaches zero, replace the missing selected sheep with the same original UFO used in the pasture while retaining PASTURE CLEAR and ALL SHEEP COLLECTED.",
+      "evidence": "The accepted v23 complete frame shows a small generic green square at the left edge of the selected region, while the source already exposes the synchronized original UFO constant used by the field layer.",
+      "reproduction": "Run npm run visual:fixture and inspect forced 700px light and dark frames after the last sheep visually disappears and during the final username reveal.",
       "scope": "project",
       "status": "converted",
       "rejected_proposals": []
@@ -1297,6 +1309,42 @@
       "rollback": "Restore only the v22 panel markup, palette tokens, and pickup-arrival panel events while retaining profile theme variants and publishing."
     },
     {
+      "id": "proposal-complete-panel-ufo-v24",
+      "feedback_ids": [
+        "feedback-complete-panel-ufo-20260814"
+      ],
+      "target_agent": "worker",
+      "author_agent": "coach",
+      "change_target": "completed-state selected region and deterministic SVG assertion",
+      "change_level": "task",
+      "status": "accepted",
+      "from_version": 23,
+      "to_version": 24,
+      "cause": "The completed panel replaced the selected sheep with a generic contribution square, leaving the character-oriented left region visually under-specified after the flock departed.",
+      "candidate_change": "Reuse the exact inline UFO constant as a 30x30 completion icon in the left region, align the existing completion copy with the normal selected-sheep text column, and assert the panel symbol remains present.",
+      "discovery_evidence": "The original UFO constant and field glyph already exist and are synchronized with assets/ufo.svg, so the completion state needs only one reused symbol and no new asset, dependency, animation, or effect.",
+      "reproduction": "Run npm run check and npm run visual:fixture; inspect exact 700px light and dark frames at the representative complete state and final username reveal plus the 10-member complete probe.",
+      "primary_metric": "The completed left region remains occupied and reads as the UFO that collected the flock without competing with PASTURE CLEAR, the roster, or the final username at 700px.",
+      "prediction": "Replacing the generic square with the familiar UFO will close the character handoff and keep the left region balanced without changing panel structure or pacing.",
+      "expected_delta": {
+        "reused_ufo_symbols": 1,
+        "generic_completion_squares": -1,
+        "new_assets": 0,
+        "runtime_delta_seconds": 0
+      },
+      "falsification_condition": "Reject if the UFO is unreadable at 700px, looks like a second active field UFO, crowds the completion copy, competes with the username finale, changes motion timing, or npm run check fails.",
+      "regression_check": "npm run check plus exact complete-state light/dark frames for the 10- and 28-member fixtures.",
+      "transfer_check": "Not applicable; this is a project-scoped completion-panel detail.",
+      "guardrails": [
+        "Reuse the exact original UFO constant",
+        "No new asset, dependency, animation, filter, blur, or effect",
+        "No panel layout, roster, simulation, motion, or finale timing change",
+        "Runtime at or below 40 seconds"
+      ],
+      "permission_delta": [],
+      "rollback": "Restore the v23 green completion square and remove only the panel UFO symbol."
+    },
+    {
       "id": "proposal-project-motion-routing-v3",
       "feedback_ids": [
         "feedback-project-motion-routing-20260813"
@@ -1404,7 +1452,22 @@
         "status": "observed",
         "metric": "Forced-theme 700px visual benchmark across representative 28-member and sparse 10-member roster lifecycle frames",
         "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, the panel diverges from the pasture palette, sparse rosters float or clip, collected and active sheep are ambiguous, selected identity disagrees with visual presence, FIELD changes before hide, or npm run check fails.",
-        "evidence": "A fresh Gate that did not author v23 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Exact current-source light/dark captures show 28 sheep at 5.04, 15.00, and 28.20 seconds plus 10 sheep at 6.00, 11.70, and 12.10 seconds. The 10-member roster fills 5x2 across the body; its final state moves from Field 1/4 and SHEEP 08 EXTRACTING to Field 0/4 and PASTURE CLEAR only after visual disappearance. The 1,032,013-byte, 35.68-second fixture, 201 arrivals, 53 finale phases, themes, roster checks, and banned-effect assertions pass with no blocker."
+        "evidence": "A fresh Gate that did not author v23 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Exact current-source light/dark captures show 28 sheep at 5.04, 15.00, and 28.20 seconds plus 10 sheep at 6.00, 11.70, and 12.10 seconds. The 10-member roster fills 5x2 across the body; its final state moves from Field 1/4 and SHEEP 08 EXTRACTING to Field 0/4 and PASTURE CLEAR only after visual disappearance. The 1,032,013-byte, 35.68-second fixture, 201 arrivals, 53 finale phases, themes, roster checks, and banned-effect assertions pass with no blocker. Main commit 34e58b0 and cache-safe workflow run 31764748585 published the live result; the public README pins both GitHub theme images to profile asset commit 1b674b3, whose 700x206 SVGs contain v23 and no nested v22 frames."
+      }
+    },
+    {
+      "id": "promotion-complete-panel-ufo-v24-20260814",
+      "proposal_id": "proposal-complete-panel-ufo-v24",
+      "gate_agent": "gate",
+      "before": "The accepted v23 complete state removed the selected sheep but left a generic green square beside PASTURE CLEAR, weakening the character handoff after collection.",
+      "after": "The accepted v24 complete state reuses the exact original UFO as a static 30px panel icon, keeping the left region occupied and aligning completion copy with the selected-sheep text column.",
+      "regressions_passed": true,
+      "decision": "accepted",
+      "live_cycle": {
+        "status": "observed",
+        "metric": "Forced-theme 700px complete-state frames for representative 28-member and sparse 10-member rosters",
+        "rollback_threshold": "Roll back if the completion UFO becomes unreadable, crowds the copy, reads as a second active action, competes with the username finale, diverges from the original glyph, changes timing, or npm run check fails.",
+        "evidence": "A fresh Gate that did not author v24 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Exact current-source light/dark frames at 33.4 seconds for 28 roster sheep and 12.1 seconds for 10 show the static original UFO balancing PASTURE CLEAR without crowding copy or competing with the glowing field UFO and SEONARU. The 1,034,299-byte, 35.68-second fixture and 419,181-byte sparse probe pass all v23 state, roster, motion, timing, theme, and banned-effect checks with no blocker."
       }
     }
   ],

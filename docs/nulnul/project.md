@@ -8,11 +8,11 @@ Turn the GitHub contribution graph into a polished animated miniature pasture th
 
 ## Current milestone
 
-Keep the accepted sub-40-second 700px champion stable: contribution-energy field staffing at 1/2/4/6 sheep, identity-readable turnover, finish-aware pickup, one flat GitHub-style uncapped roster panel, explicit GitHub light/dark assets, then the Euclidean username reveal.
+Keep the accepted sub-40-second 700px champion stable: contribution-energy field staffing at 1/2/4/6 sheep, identity-readable turnover, finish-aware pickup, one flat GitHub-style uncapped roster panel with the original UFO anchoring its completed state, explicit GitHub light/dark assets, then the Euclidean username reveal.
 
 Observable completion check: `npm run check`
 
-Final local verification: 2026-08-14, `npm run check` passed with a 1,032,013-byte, 35.68-second deterministic fixture. Forced light/dark 700x206 assets share one animation and one flat GitHub contribution panel; exact-time 28- and 10-member frames keep the original sheep, use both roster rows across the available width, distinguish active/extracting/collected states, and synchronize FIELD with visual presence. A fresh independent Gate scored v23 19/20 with no blocker; all accepted motion, 201 arrivals, and 53 finale phases remain green.
+Final local verification: 2026-08-14, `npm run check` passed with a 1,034,299-byte, 35.68-second deterministic fixture. Forced light/dark 700x206 assets share one animation and one flat GitHub contribution panel; exact-time 28- and 10-member frames keep the original sheep, use both roster rows across the available width, distinguish active/extracting/collected states, synchronize FIELD with visual presence, and reuse the original static UFO after the flock departs. A fresh independent Gate scored v24 19/20 with no blocker; all accepted motion, 201 arrivals, and 53 finale phases remain green.
 
 ## Constraints and permissions
 
@@ -108,6 +108,7 @@ For live state and version ownership, use `docs/nulnul/evolution.json`.
 - Accepted candidate: turnover-identity/early-pickup v21 hides the outgoing sheep for 80ms before the next roster ID descends, exposes the brief service dip through FIELD, and routes the single UFO to the earliest physically reachable finished final sheep instead of waiting for all six. The 991,057-byte fixture begins final pickup at 27.10 seconds with grass at 90%, finishes in 35.68 seconds, and a fresh Gate accepted it at 19/20 with no blocker.
 - Accepted candidate: profile-theme/panel-sections v22 derives explicit light and dark 700x206 SVGs from the same animation, switches them with GitHub theme-context image URLs, immediately refreshes the profile on relevant main pushes, gives the light theme a true light HUD, and frames the selected unit and full roster as separate bodies. The 991,941-byte fixture changes no motion, and a fresh Gate accepted it at 19/20 with no blocker.
 - Accepted candidate: GitHub pasture panel v23 removes the nested command-card frames, reuses the contribution canvas, border, cell, and green levels across one flat surface, distributes the 10-member probe as 5×2 and the representative 28-member roster as 14×2, and exposes active, extracting, and collected states. FIELD now decrements only when the selected sheep visually disappears and selection immediately moves to a visible sheep or PASTURE CLEAR. The 1,032,013-byte fixture remains 35.68 seconds with no motion change, and a fresh Gate accepted it at 19/20 with no blocker.
+- Accepted candidate: complete-panel UFO v24 replaces the generic completion square with the exact original UFO as a static 30px state icon beside PASTURE CLEAR. Exact 10- and 28-member completion frames remain balanced in both themes; the icon is weaker than the active field UFO and username finale, adds no animation or asset, and leaves the 35.68-second timeline unchanged. The 1,034,299-byte fixture passed a fresh 19/20 Gate with no blocker.
 - Flower rendering source was deleted; only a negative deterministic assertion remains to prevent accidental reintroduction.
 
 ## Continuity
