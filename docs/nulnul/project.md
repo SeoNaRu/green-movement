@@ -8,11 +8,11 @@ Turn the GitHub contribution graph into a polished animated miniature pasture th
 
 ## Current milestone
 
-Keep the accepted sub-40-second 700px champion stable: contribution-energy field staffing at 1/2/4/6 sheep, identity-readable turnover, finish-aware pickup, a two-section uncapped roster panel, explicit GitHub light/dark assets, then the Euclidean username reveal.
+Keep the accepted sub-40-second 700px champion stable: contribution-energy field staffing at 1/2/4/6 sheep, identity-readable turnover, finish-aware pickup, one flat GitHub-style uncapped roster panel, explicit GitHub light/dark assets, then the Euclidean username reveal.
 
 Observable completion check: `npm run check`
 
-Final local verification: 2026-08-14, `npm run check` passed with a 991,941-byte, 35.68-second deterministic fixture. Forced light/dark 700x206 assets share one animation, use matching HUD palettes, and retain two clearly framed body sections with all 28 roster tiles. A fresh independent Gate scored v22 19/20 with no blocker; all v21 motion, 201 arrivals, and 53 finale phases remain green.
+Final local verification: 2026-08-14, `npm run check` passed with a 1,032,013-byte, 35.68-second deterministic fixture. Forced light/dark 700x206 assets share one animation and one flat GitHub contribution panel; exact-time 28- and 10-member frames keep the original sheep, use both roster rows across the available width, distinguish active/extracting/collected states, and synchronize FIELD with visual presence. A fresh independent Gate scored v23 19/20 with no blocker; all accepted motion, 201 arrivals, and 53 finale phases remain green.
 
 ## Constraints and permissions
 
@@ -107,6 +107,7 @@ For live state and version ownership, use `docs/nulnul/evolution.json`.
 - Accepted candidate: command-panel readability v20 keeps the original sheep only in the selected card at 28×23, replaces repeated miniature sheep with row-major numbered selection tiles and individual green bars, highlights the current tile, and uses density-aware roster spacing. The 28-member grid reads as 01–14/15–28 and the dense 62-member probe as 01–31/32–62 in both themes; 1-, 2-, and 9-member layouts remain deliberately grouped. The 981,652-byte representative fixture changes no motion or simulation, and a fresh Gate accepted it at 19/20 with no blocker.
 - Accepted candidate: turnover-identity/early-pickup v21 hides the outgoing sheep for 80ms before the next roster ID descends, exposes the brief service dip through FIELD, and routes the single UFO to the earliest physically reachable finished final sheep instead of waiting for all six. The 991,057-byte fixture begins final pickup at 27.10 seconds with grass at 90%, finishes in 35.68 seconds, and a fresh Gate accepted it at 19/20 with no blocker.
 - Accepted candidate: profile-theme/panel-sections v22 derives explicit light and dark 700x206 SVGs from the same animation, switches them with GitHub theme-context image URLs, immediately refreshes the profile on relevant main pushes, gives the light theme a true light HUD, and frames the selected unit and full roster as separate bodies. The 991,941-byte fixture changes no motion, and a fresh Gate accepted it at 19/20 with no blocker.
+- Accepted candidate: GitHub pasture panel v23 removes the nested command-card frames, reuses the contribution canvas, border, cell, and green levels across one flat surface, distributes the 10-member probe as 5×2 and the representative 28-member roster as 14×2, and exposes active, extracting, and collected states. FIELD now decrements only when the selected sheep visually disappears and selection immediately moves to a visible sheep or PASTURE CLEAR. The 1,032,013-byte fixture remains 35.68 seconds with no motion change, and a fresh Gate accepted it at 19/20 with no blocker.
 - Flower rendering source was deleted; only a negative deterministic assertion remains to prevent accidental reintroduction.
 
 ## Continuity

@@ -48,6 +48,7 @@ export type TimelineResult = {
       slotIndex: number;
       spawnAbsS: number;
       pickupAbsS: number | null;
+      hiddenAbsS: number | null;
       bites: { atS: number; progress: number; level: number }[];
     }[];
     grassProgress: { atS: number; progress: number }[];

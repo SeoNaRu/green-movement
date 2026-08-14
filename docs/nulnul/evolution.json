@@ -3,11 +3,11 @@
   "personal_evolution_home": null,
   "checkpoint": {
     "goal": "Make the animated contribution pasture feel cohesive, premium, and clearly readable in a GitHub profile README.",
-    "milestone": "The accepted v22 champion publishes the complete pasture and two-section command panel as explicit GitHub light/dark assets while preserving contribution-scaled staffing, readable turnover, finish-aware pickup, and the full two-row roster.",
+    "milestone": "The accepted v23 champion joins the pasture and uncapped roster into one flat GitHub contribution surface while preserving explicit light/dark publishing, contribution-scaled staffing, readable turnover, finish-aware pickup, and the full two-row roster.",
     "completion_check": "npm run check",
     "status": "active",
-    "last_verified": "2026-08-14: accepted v22 was published to main at f688c3a and profile workflow run 31762203574 succeeded. The public profile README selects forced light and dark assets with GitHub theme-context URLs; live.svg, live-light.svg, and live-dark.svg are all 700x206 and contain the flock panel plus distinct selected-unit and complete-roster sections. npm run check and the fresh 19/20 independent Gate passed before publication.",
-    "next_action": "Keep accepted v22 stable pending new user feedback; open another bounded candidate only for a reproduced defect.",
+    "last_verified": "2026-08-14: npm run check passed with a 1,032,013-byte, 35.68-second fixture. Exact-time 700px light/dark captures show one flat GitHub contribution panel, full-width 10- and 28-member two-row rosters, distinct active/extracting/collected states, and selected identity plus FIELD synchronized with visual presence. A fresh independent Gate scored v23 19/20 with no blocker; all accepted motion, 201 arrivals, and 53 finale phases remain green.",
+    "next_action": "Publish accepted v23 to main, observe the triggered profile workflow, and verify the public profile serves the new flat panel in both GitHub themes.",
     "blockers": [],
     "approved_permissions": [
       "Read and write files inside this repository",
@@ -23,10 +23,10 @@
       "last_promotion_id": null
     },
     "worker": {
-      "version": 22,
+      "version": 23,
       "job": "Implement one bounded motion or rendering change and report its mechanical and visual evidence.",
       "profile_path": "AGENTS.md",
-      "last_promotion_id": "promotion-profile-theme-panel-sections-v22-20260814"
+      "last_promotion_id": "promotion-github-pasture-panel-v23-20260814"
     },
     "coach": {
       "version": 1,
@@ -365,6 +365,18 @@
       "expected": "Publish the complete panel to the profile README, select a light or dark SVG from the viewer's GitHub theme, and frame the selected-unit and flock-roster areas as two unmistakable sections.",
       "evidence": "The public SeoNaRu/SeoNaRu asset is the old 468,854-byte, 700x115 SVG with no flock-panel, while the accepted local asset is 991,057 bytes and 700x206 with the panel. The latest successful scheduled workflow predates v21. Source inspection also shows an OS-only prefers-color-scheme rule, a dark command panel even in the light palette, and only thin separator lines between panel jobs.",
       "reproduction": "Compare the public profile asset metadata and README image URL with the generated fixture; inspect forced 700px light and dark panel frames at 5.27, 15.00, and 27.84 seconds.",
+      "scope": "project",
+      "status": "converted",
+      "rejected_proposals": []
+    },
+    {
+      "id": "feedback-github-pasture-panel-cohesion-20260814",
+      "target_agent": "worker",
+      "source": "user",
+      "observed": "The published panel is visible and theme-correct, but its nested sci-fi frames do not match the GitHub contribution pasture. A ten-sheep roster floats in the middle of a wide body, collected and active sheep are not distinguishable, and pickup can show an already removed selected sheep beside a FIELD count that refers to another animal.",
+      "expected": "Make the panel feel like the same GitHub contribution surface as the pasture, distribute sparse and dense rosters across the available width, expose active, extracting, and collected states, and keep the selected sheep plus FIELD count synchronized with visual presence.",
+      "evidence": "The reported 700px dark frame shows two inset command boxes, five narrow centred columns inside a much wider roster body, and SHEEP 10 EXTRACTING beside FIELD 1/4 with no visible identity for the remaining field sheep. Source tracing found a 33px slot-pitch cap, pickup-arrival field decrements, and selection intervals that persist until the next event instead of ending when the sheep disappears.",
+      "reproduction": "Render forced 700px light and dark frames for 10- and 28-member rosters during grazing, extraction, visual disappearance, and completion; compare panel palette, spacing, sheep identity, FIELD lifecycle, and collected-state legibility with the pasture above.",
       "scope": "project",
       "status": "converted",
       "rejected_proposals": []
@@ -1246,6 +1258,45 @@
       "rollback": "Restore the v21 auto-theme asset and separator-only panel while retaining all accepted turnover and pickup behavior."
     },
     {
+      "id": "proposal-github-pasture-panel-v23",
+      "feedback_ids": [
+        "feedback-github-pasture-panel-cohesion-20260814"
+      ],
+      "target_agent": "worker",
+      "author_agent": "coach",
+      "change_target": "command-panel surface, sparse roster distribution, roster lifecycle states, selected identity, FIELD timing, theme tokens, and deterministic assertions",
+      "change_level": "task",
+      "status": "accepted",
+      "from_version": 22,
+      "to_version": 23,
+      "cause": "Nested framed regions introduced a second visual language below the pasture, the 33px pitch cap centred sparse rosters inside unused space, and panel state was driven by pickup arrival rather than each sheep's visual hide time.",
+      "candidate_change": "Use one flat GitHub-style card with only header and body dividers, retain the original sheep at natural panel scale, distribute two-row roster slots across the full body width, tint collected slots with contribution green and mark wide ones with checks, outline active and extracting slots, decrement FIELD only when a sheep visually disappears, and immediately select another visible sheep or a completed pasture summary.",
+      "discovery_evidence": "The project already carries standard GitHub contribution palettes, the original sheep symbol, exact spawn, pickup, turnover-hide, and final-pickup fade timings, and two-row uncapped roster metadata, so the correction needs no new asset, dependency, effect, or simulation change.",
+      "reproduction": "Run npm run check and npm run visual:fixture; inspect forced 700px light and dark frames for the representative 28-member fixture plus a deterministic 10-member probe at grazing, extraction, FIELD 0, and complete states.",
+      "primary_metric": "At 700px, the panel and pasture read as one GitHub contribution system, 10- and 28-member rosters use the full available width without clipping, selected identity matches a visually present sheep through extraction, and FIELD reaches zero only after the last sheep disappears.",
+      "prediction": "Removing inset boxes and reusing contribution cells for roster state will improve cohesion and achievement readability while corrected hide-time state transitions eliminate the apparent frozen or contradictory ending.",
+      "expected_delta": {
+        "nested_body_frames": -2,
+        "roster_lifecycle_states": 3,
+        "sparse_roster_full_width": 1,
+        "new_dependencies": 0,
+        "runtime_delta_seconds": 0
+      },
+      "falsification_condition": "Reject if the panel still reads as a separate game skin, sparse slots float in unused space, collected and active sheep are ambiguous, FIELD changes before visual disappearance, selected identity points to a removed sheep, any roster clips, the benchmark falls below 16/20, or npm run check fails.",
+      "regression_check": "npm run check plus exact-time 700px light and dark captures for 10- and 28-member rosters.",
+      "transfer_check": "Not applicable; this is a project-scoped panel and state correction.",
+      "guardrails": [
+        "npm run check",
+        "No motion, simulation, sheep, UFO, contribution staffing, or finale timing changes",
+        "Keep the original sheep and GitHub contribution palettes",
+        "Keep every logical sheep in exactly two uncapped roster rows",
+        "No nested body cards, new dependency, asset, filter, blur, or effect layer",
+        "Runtime at or below 40 seconds"
+      ],
+      "permission_delta": [],
+      "rollback": "Restore only the v22 panel markup, palette tokens, and pickup-arrival panel events while retaining profile theme variants and publishing."
+    },
+    {
       "id": "proposal-project-motion-routing-v3",
       "feedback_ids": [
         "feedback-project-motion-routing-20260813"
@@ -1339,6 +1390,21 @@
         "metric": "Forced-theme 700px visual benchmark plus deterministic asset identity and profile workflow assertions",
         "rollback_threshold": "Roll back if either GitHub theme selects the opposite palette, the public asset loses the panel, either body section becomes ambiguous or clipped, the benchmark falls below 16/20, or npm run check fails.",
         "evidence": "A fresh Gate that did not author v22 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Corrected CDP frames at 5.27, 15.00, and 27.84 seconds show matching forced palettes, two unmistakable body frames, and all 28 roster slots in both themes. The 991,941-byte, 35.68-second fixture, root-only variant comparison, profile README rewrite, main-push trigger, 201 arrivals, 53 finale phases, and banned-effect checks passed with no blocker. Main commit f688c3a triggered successful workflow run 31762203574; the public profile now serves both GitHub theme-context README URLs and three 700x206 SVGs containing the panel and both section frames."
+      }
+    },
+    {
+      "id": "promotion-github-pasture-panel-v23-20260814",
+      "proposal_id": "proposal-github-pasture-panel-v23",
+      "gate_agent": "gate",
+      "before": "The accepted v22 panel used nested sci-fi body frames, centred sparse roster tiles inside large empty margins, did not distinguish collected sheep, decremented FIELD at pickup arrival, and could keep a removed sheep selected.",
+      "after": "The accepted v23 panel is one flat GitHub contribution surface with full-width two-row roster distribution, contribution-green collected states, active and extracting outlines, original sheep art, visual-hide FIELD timing, and selection that always resolves to a present sheep or PASTURE CLEAR.",
+      "regressions_passed": true,
+      "decision": "accepted",
+      "live_cycle": {
+        "status": "observed",
+        "metric": "Forced-theme 700px visual benchmark across representative 28-member and sparse 10-member roster lifecycle frames",
+        "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, the panel diverges from the pasture palette, sparse rosters float or clip, collected and active sheep are ambiguous, selected identity disagrees with visual presence, FIELD changes before hide, or npm run check fails.",
+        "evidence": "A fresh Gate that did not author v23 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Exact current-source light/dark captures show 28 sheep at 5.04, 15.00, and 28.20 seconds plus 10 sheep at 6.00, 11.70, and 12.10 seconds. The 10-member roster fills 5x2 across the body; its final state moves from Field 1/4 and SHEEP 08 EXTRACTING to Field 0/4 and PASTURE CLEAR only after visual disappearance. The 1,032,013-byte, 35.68-second fixture, 201 arrivals, 53 finale phases, themes, roster checks, and banned-effect assertions pass with no blocker."
       }
     }
   ],

@@ -61,7 +61,7 @@ const emptySvg = renderGridSvg(
 if (
   /NaN|undefined/.test(emptySvg) ||
   !emptySvg.includes(
-    '<tspan class="flock-meta-key">FLOCK</tspan><tspan dx="5" class="flock-meta-value">0</tspan>',
+    '<tspan class="flock-meta-key">Flock</tspan><tspan dx="5" class="flock-meta-value">0</tspan>',
   ) ||
   emptySvg.includes('class="ufo-move"')
 ) {
@@ -106,16 +106,21 @@ for (const required of [
   'fill="var(--gm-level-3)" style="opacity:0; animation:signature-grid-wave-',
   'class="signature-core"',
   'class="flock-panel"',
-  'class="flock-selected-section"',
-  'class="flock-roster-section"',
-  'font-size:8.5px',
-  'width="27.00" height="21"',
+  'class="flock-panel-surface"',
+  'class="flock-panel-divider"',
+  'class="flock-selected-region"',
+  'class="flock-roster-region"',
+  'font-size:9px',
+  'width="26.71" height="18"',
   'class="flock-slot-index"',
-  'href="#flock-sheep-icon" x="21"',
-  '<tspan class="flock-meta-key">FLOCK</tspan><tspan dx="5" class="flock-meta-value">28</tspan>',
+  'href="#flock-sheep-icon" x="13"',
+  '<tspan class="flock-meta-key">Flock</tspan><tspan dx="5" class="flock-meta-value">28</tspan>',
   "FULLNESS",
   "GRAZING",
-  '<tspan class="flock-meta-key">GRASS</tspan><tspan dx="5" class="flock-meta-value">100%</tspan>',
+  "PASTURE CLEAR",
+  "ALL SHEEP COLLECTED",
+  "@keyframes flock-collected-27",
+  '<tspan class="flock-meta-key">Grass</tspan><tspan dx="5" class="flock-meta-value">100%</tspan>',
 ]) {
   if (!svg.includes(required)) throw new Error(`SVG fixture missing ${required}`);
 }
@@ -245,9 +250,29 @@ const oneCellSvg = renderGridSvg(
 );
 if (
   (oneCellSvg.match(/class="flock-slot /g) ?? []).length !== 1 ||
-  (oneCellSvg.match(/class="flock-meta-key">GRASS/g) ?? []).length !== 2
+  (oneCellSvg.match(/class="flock-meta-key">Grass/g) ?? []).length !== 2
 ) {
   throw new Error("low-volume selection grid or grass label events overlap");
+}
+const tenSheepSvg = renderGridSvg(
+  timingGrid.map((cell, index) => ({ ...cell, count: index < 42 ? 1 : 0 })),
+  { targetWidth: 0 },
+);
+const tenSheepSlots = [...tenSheepSvg.matchAll(
+  /<g class="flock-slot flock-slot-\d+">\s*<rect x="([\d.]+)" y="[\d.]+" width="([\d.]+)"/g,
+)].map((match) => ({ x: Number(match[1]), width: Number(match[2]) }));
+if (
+  tenSheepSlots.length !== 10 ||
+  Math.min(...tenSheepSlots.map(({ x }) => x)) >= 215 ||
+  Math.max(...tenSheepSlots.map(({ x, width }) => x + width)) <= 630
+) {
+  throw new Error("ten-sheep roster does not use the full GitHub-style panel width");
+}
+if (
+  svg.includes('class="flock-selected-section"') ||
+  svg.includes('class="flock-roster-section"')
+) {
+  throw new Error("panel restored the rejected nested section boxes");
 }
 const timingPlan = planTargets(timingContext);
 if (timingPlan.spawnTick.join(",") !== "0,1,2,3,4,5") {
@@ -319,6 +344,16 @@ if (
   throw new Error(`full sheep do not receive immediate serialized replacements`);
 }
 if (
+  timing.flock.sheep.some(
+    (sheep) =>
+      sheep.pickupAbsS == null ||
+      sheep.hiddenAbsS == null ||
+      sheep.hiddenAbsS <= sheep.pickupAbsS,
+  )
+) {
+  throw new Error("panel sheep lifecycle does not extend through visual pickup");
+}
+if (
   timing.flock.grassProgress.some(
     (entry, index, entries) =>
       index > 0 &&
@@ -333,7 +368,7 @@ if (
   (svg.match(/class="flock-slot /g) ?? []).length !== flock.rosterSize ||
   !svg.includes("@keyframes flock-fill-27") ||
   !svg.includes(
-    '<tspan class="flock-meta-key">FIELD</tspan><tspan dx="5" class="flock-meta-value">6/6</tspan>',
+    '<tspan class="flock-meta-key">Field</tspan><tspan dx="5" class="flock-meta-value">6/6</tspan>',
   )
 ) {
   throw new Error("two-row flock panel does not expose the complete roster");

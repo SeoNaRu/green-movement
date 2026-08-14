@@ -319,6 +319,12 @@ export function buildTimeline(
   const pickupArriveAbsSOffset: (number | null)[] = pickupArriveBySheep.map(
     (t) => (t == null ? null : t + timelineOffset),
   );
+  const pickupHiddenAbsSOffset: (number | null)[] =
+    pickupArriveAbsSOffset.map((t) =>
+      t == null
+        ? null
+        : t + PICKUP_WAIT_S + PICKUP_LIGHT_S * 0.6 + PICKUP_FADE_S,
+    );
   const turnovers = scheduledTurnovers.map((turnover) => ({
     slotIndex: turnover.slotIndex,
     outgoingRosterIndex: turnover.outgoingRosterIndex,
@@ -347,13 +353,19 @@ export function buildTimeline(
       (turnover) => turnover.outgoingRosterIndex === rosterIndex,
     );
     const isFinal = finalRosterBySlot[slotIndex] === rosterIndex;
+    const pickupAbsS =
+      outgoing?.pickupArriveAbsS ??
+      (isFinal ? pickupArriveAbsSOffset[slotIndex] ?? null : null);
+    const hiddenAbsS =
+      outgoing?.outgoingHiddenAbsS ??
+      (isFinal ? pickupHiddenAbsSOffset[slotIndex] ?? null : null);
     return {
       rosterIndex,
       slotIndex,
       spawnAbsS:
         incoming?.incomingSpawnAbsS ?? spawnAbsSOffset[slotIndex] ?? timelineOffset,
-      pickupAbsS: outgoing?.pickupArriveAbsS ??
-        (isFinal ? pickupArriveAbsSOffset[slotIndex] ?? null : null),
+      pickupAbsS,
+      hiddenAbsS,
       bites: flock.bites
         .filter((bite) => bite.rosterIndex === rosterIndex)
         .map((bite) => {

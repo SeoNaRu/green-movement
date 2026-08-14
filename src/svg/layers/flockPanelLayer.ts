@@ -2,6 +2,7 @@ import type { TimelineResult } from "../../timeline/types.js";
 import { SHEEP_CONTENT } from "../constants.js";
 
 type PanelFlock = TimelineResult["flock"];
+type SelectedState = "DEPLOYING" | "GRAZING" | "EXTRACTING";
 
 const pctAt = (time: number, total: number) =>
   Math.min(100, Math.max(0, total > 0 ? (time * 100) / total : 0));
@@ -34,74 +35,92 @@ export function buildFlockPanelLayer(params: {
 }): { panelStyles: string; panelGroup: string } {
   const { flock, maxTotalTime, panelTop, totalWidth } = params;
   const panelHeight = 78;
-  const leftWidth = 181;
-  const rosterLeft = leftWidth + 11;
-  const rosterWidth = totalWidth - rosterLeft - 11;
+  const rosterLeft = 194;
+  const rosterWidth = totalWidth - rosterLeft - 8;
   const columns = Math.max(1, Math.ceil(flock.rosterSize / 2));
-  const slotPitch = Math.min(33, rosterWidth / columns);
-  const rosterStart = rosterLeft + (rosterWidth - slotPitch * columns) / 2;
-  const slotWidth = Math.min(27, Math.max(10, slotPitch - 3));
+  const slotPitch = rosterWidth / columns;
+  const slotWidth = Math.min(72, Math.max(10, slotPitch - 6));
 
-  const selectionEvents: { atS: number; rosterIndex: number; status: string }[] = [];
-  for (const sheep of flock.sheep.slice(0, flock.fieldCount)) {
-    selectionEvents.push({
-      atS: sheep.spawnAbsS,
-      rosterIndex: sheep.rosterIndex,
-      status: "DEPLOYING",
-    });
-    selectionEvents.push({
-      atS: sheep.spawnAbsS + 0.18,
-      rosterIndex: sheep.rosterIndex,
-      status: "GRAZING",
-    });
-  }
+  const stateAt = (
+    sheep: PanelFlock["sheep"][number],
+    time: number,
+  ): SelectedState | null => {
+    if (
+      time < sheep.spawnAbsS ||
+      (sheep.hiddenAbsS != null && time >= sheep.hiddenAbsS)
+    ) {
+      return null;
+    }
+    if (time < sheep.spawnAbsS + 0.18) return "DEPLOYING";
+    if (sheep.pickupAbsS != null && time >= sheep.pickupAbsS) {
+      return "EXTRACTING";
+    }
+    return "GRAZING";
+  };
+
+  const boundaries = new Set<number>([0, maxTotalTime]);
   for (const sheep of flock.sheep) {
-    if (sheep.rosterIndex >= flock.fieldCount) {
-      selectionEvents.push({
-        atS: sheep.spawnAbsS,
-        rosterIndex: sheep.rosterIndex,
-        status: "DEPLOYING",
-      });
-      selectionEvents.push({
-        atS: sheep.spawnAbsS + 0.18,
-        rosterIndex: sheep.rosterIndex,
-        status: "GRAZING",
-      });
-    }
-    if (sheep.pickupAbsS != null) {
-      selectionEvents.push({
-        atS: sheep.pickupAbsS,
-        rosterIndex: sheep.rosterIndex,
-        status: "EXTRACTING",
-      });
-    }
+    boundaries.add(sheep.spawnAbsS);
+    boundaries.add(Math.min(maxTotalTime, sheep.spawnAbsS + 0.18));
+    if (sheep.pickupAbsS != null) boundaries.add(sheep.pickupAbsS);
+    if (sheep.hiddenAbsS != null) boundaries.add(sheep.hiddenAbsS);
   }
-  selectionEvents.sort(
-    (a, b) => a.atS - b.atS || a.rosterIndex - b.rosterIndex,
-  );
+  const times = [...boundaries]
+    .filter((time) => time >= 0 && time <= maxTotalTime)
+    .sort((a, b) => a - b);
   const selectedIntervals = new Map<
     number,
-    { start: number; end: number; status: string }[]
+    { start: number; end: number; status: SelectedState }[]
   >();
-  for (let index = 0; index < selectionEvents.length; index++) {
-    const event = selectionEvents[index];
-    const end = selectionEvents[index + 1]?.atS ?? maxTotalTime;
-    const list = selectedIntervals.get(event.rosterIndex) ?? [];
-    list.push({ start: event.atS, end, status: event.status });
-    selectedIntervals.set(event.rosterIndex, list);
+  let priorRosterIndex: number | null = null;
+  for (let index = 0; index < times.length - 1; index++) {
+    const start = times[index];
+    const end = times[index + 1];
+    if (end <= start) continue;
+    const middle = start + (end - start) / 2;
+    const available = flock.sheep
+      .map((sheep) => ({ sheep, status: stateAt(sheep, middle) }))
+      .filter(
+        (entry): entry is { sheep: PanelFlock["sheep"][number]; status: SelectedState } =>
+          entry.status != null,
+      );
+    const priority = available.filter(({ status }) => status === "EXTRACTING");
+    const deploying = available.filter(({ status }) => status === "DEPLOYING");
+    const grazing = available.filter(({ status }) => status === "GRAZING");
+    const preferred = grazing.find(
+      ({ sheep }) => sheep.rosterIndex === priorRosterIndex,
+    );
+    const selected =
+      priority.at(-1) ?? deploying.at(-1) ?? preferred ?? grazing.at(-1);
+    if (!selected) {
+      priorRosterIndex = null;
+      continue;
+    }
+    priorRosterIndex = selected.sheep.rosterIndex;
+    const list = selectedIntervals.get(priorRosterIndex) ?? [];
+    const previous = list.at(-1);
+    if (previous?.end === start && previous.status === selected.status) {
+      previous.end = end;
+    } else {
+      list.push({ start, end, status: selected.status });
+    }
+    selectedIntervals.set(priorRosterIndex, list);
   }
 
   const progressStyles: string[] = [];
+  const rosterStateStyles: string[] = [];
   const rosterSlots = flock.sheep.map((sheep, index) => {
     const row = Math.floor(index / columns);
     const column = index % columns;
-    const x = rosterStart + column * slotPitch + (slotPitch - slotWidth) / 2;
-    const y = panelTop + 27 + row * 25;
+    const x = rosterLeft + column * slotPitch + (slotPitch - slotWidth) / 2;
+    const y = panelTop + 28 + row * 23;
     const label = String(sheep.rosterIndex + 1).padStart(2, "0");
     const labelSize = Math.max(
       4.2,
-      Math.min(8, (slotWidth - 2) / (label.length * 0.62)),
+      Math.min(8, (slotWidth - 4) / (label.length * 0.62)),
     );
+    const labelX = slotWidth >= 36 ? x + 6 : x + slotWidth / 2;
+    const labelAnchor = slotWidth >= 36 ? "start" : "middle";
     const progressFrames = [
       `0% { transform:scaleX(0); }`,
       `${pctAt(sheep.spawnAbsS, maxTotalTime).toFixed(4)}% { transform:scaleX(0); }`,
@@ -114,12 +133,44 @@ export function buildFlockPanelLayer(params: {
     progressStyles.push(
       `@keyframes flock-fill-${index} { ${progressFrames.join(" ")} }`,
     );
+
+    const pickup = sheep.pickupAbsS ?? maxTotalTime;
+    const hidden = sheep.hiddenAbsS ?? maxTotalTime;
+    rosterStateStyles.push(
+      visibilityKeyframes(
+        `flock-active-${index}`,
+        [{ start: sheep.spawnAbsS, end: pickup }],
+        maxTotalTime,
+      ),
+      visibilityKeyframes(
+        `flock-extracting-${index}`,
+        sheep.pickupAbsS != null
+          ? [{ start: sheep.pickupAbsS, end: hidden }]
+          : [],
+        maxTotalTime,
+      ),
+      visibilityKeyframes(
+        `flock-collected-${index}`,
+        sheep.hiddenAbsS != null
+          ? [{ start: sheep.hiddenAbsS, end: maxTotalTime }]
+          : [],
+        maxTotalTime,
+      ),
+    );
+    const check =
+      slotWidth >= 28
+        ? `<path d="M${(x + slotWidth - 12).toFixed(2)} ${(y + 8.5).toFixed(2)}l2.2 2.2 4-4.4" fill="none" stroke="var(--gm-level-4)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0;animation:flock-collected-${index} ${maxTotalTime}s linear 0s 1 both"/>`
+        : "";
     return `<g class="flock-slot flock-slot-${index}">
-      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotWidth.toFixed(2)}" height="21" rx="2.5" fill="var(--gm-panel-slot)" stroke="var(--gm-panel-line)" stroke-width=".45" opacity=".92"/>
-      <text x="${(x + slotWidth / 2).toFixed(2)}" y="${(y + 12).toFixed(2)}" text-anchor="middle" class="flock-slot-index" font-size="${labelSize.toFixed(2)}">${label}</text>
-      <rect x="${(x + 2).toFixed(2)}" y="${(y + 17).toFixed(2)}" width="${Math.max(1, slotWidth - 4).toFixed(2)}" height="2.8" rx="1.4" fill="var(--gm-panel-track)"/>
-      <rect x="${(x + 2).toFixed(2)}" y="${(y + 17).toFixed(2)}" width="${Math.max(1, slotWidth - 4).toFixed(2)}" height="2.8" rx="1.4" fill="var(--gm-level-4)" style="transform-box:fill-box;transform-origin:left;animation:flock-fill-${index} ${maxTotalTime}s linear 0s 1 both"/>
-      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotWidth.toFixed(2)}" height="21" rx="2.5" fill="none" stroke="var(--gm-level-3)" stroke-width="1.2" style="opacity:0;animation:flock-selected-${sheep.rosterIndex} ${maxTotalTime}s linear 0s 1 both"/>
+      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotWidth.toFixed(2)}" height="18" rx="2" fill="var(--gm-panel-section)" stroke="var(--gm-panel-line)" stroke-width=".5"/>
+      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotWidth.toFixed(2)}" height="18" rx="2" fill="var(--gm-level-1)" style="opacity:0;animation:flock-collected-${index} ${maxTotalTime}s linear 0s 1 both"/>
+      <text x="${labelX.toFixed(2)}" y="${(y + 10.5).toFixed(2)}" text-anchor="${labelAnchor}" class="flock-slot-index" font-size="${labelSize.toFixed(2)}">${label}</text>
+      ${check}
+      <rect x="${(x + 3).toFixed(2)}" y="${(y + 14).toFixed(2)}" width="${Math.max(1, slotWidth - 6).toFixed(2)}" height="2.5" rx="1.25" fill="var(--gm-panel-track)"/>
+      <rect x="${(x + 3).toFixed(2)}" y="${(y + 14).toFixed(2)}" width="${Math.max(1, slotWidth - 6).toFixed(2)}" height="2.5" rx="1.25" fill="var(--gm-level-4)" style="transform-box:fill-box;transform-origin:left;animation:flock-fill-${index} ${maxTotalTime}s linear 0s 1 both"/>
+      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotWidth.toFixed(2)}" height="18" rx="2" fill="none" stroke="var(--gm-level-2)" stroke-width=".9" style="opacity:0;animation:flock-active-${index} ${maxTotalTime}s linear 0s 1 both"/>
+      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotWidth.toFixed(2)}" height="18" rx="2" fill="none" stroke="var(--gm-level-4)" stroke-width="1.5" style="opacity:0;animation:flock-extracting-${index} ${maxTotalTime}s linear 0s 1 both"/>
+      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotWidth.toFixed(2)}" height="18" rx="2" fill="none" stroke="var(--gm-level-4)" stroke-width="1.2" style="opacity:0;animation:flock-selected-${sheep.rosterIndex} ${maxTotalTime}s linear 0s 1 both"/>
     </g>`;
   });
 
@@ -127,7 +178,6 @@ export function buildFlockPanelLayer(params: {
   const selectedGroups: string[] = [];
   for (const sheep of flock.sheep) {
     const intervals = selectedIntervals.get(sheep.rosterIndex) ?? [];
-    if (intervals.length === 0) continue;
     selectedStyles.push(
       visibilityKeyframes(
         `flock-selected-${sheep.rosterIndex}`,
@@ -141,30 +191,50 @@ export function buildFlockPanelLayer(params: {
         visibilityKeyframes(name, [interval], maxTotalTime),
       );
       selectedGroups.push(
-        `<text x="70" y="${panelTop + 66}" class="flock-status" style="opacity:0;animation:${name} ${maxTotalTime}s linear 0s 1 both">${interval.status}</text>`,
+        `<text x="50" y="${panelTop + 51}" class="flock-status" style="opacity:0;animation:${name} ${maxTotalTime}s linear 0s 1 both">${interval.status}</text>`,
       );
     }
     selectedGroups.push(`<g style="opacity:0;animation:flock-selected-${sheep.rosterIndex} ${maxTotalTime}s linear 0s 1 both">
-      <path d="M14 ${panelTop + 27}H56L61 ${panelTop + 32}V${panelTop + 68}H14L9 ${panelTop + 63}V${panelTop + 32}Z" fill="var(--gm-panel-slot)" stroke="var(--gm-panel-line)" stroke-width=".8"/>
-      <path d="M13 ${panelTop + 31}V${panelTop + 64}" stroke="var(--gm-level-3)" stroke-width="2" opacity=".72"/>
-      <use href="#flock-sheep-icon" x="21" y="${panelTop + 38}" width="28" height="23"/>
-      <text x="70" y="${panelTop + 39}" class="flock-name">SHEEP ${String(sheep.rosterIndex + 1).padStart(2, "0")}</text>
-      <text x="70" y="${panelTop + 53}" class="flock-label">FULLNESS</text>
-      <rect x="111" y="${panelTop + 46}" width="55" height="8" rx="2" fill="var(--gm-panel-track)"/>
-      <rect x="111" y="${panelTop + 46}" width="55" height="8" rx="2" fill="var(--gm-level-4)" style="transform-box:fill-box;transform-origin:left;animation:flock-fill-${sheep.rosterIndex} ${maxTotalTime}s linear 0s 1 both"/>
+      <use href="#flock-sheep-icon" x="13" y="${panelTop + 38}" width="28" height="23"/>
+      <text x="50" y="${panelTop + 39}" class="flock-name">SHEEP ${String(sheep.rosterIndex + 1).padStart(2, "0")}</text>
+      <text x="50" y="${panelTop + 66}" class="flock-label">FULLNESS</text>
+      <rect x="96" y="${panelTop + 59}" width="80" height="6" rx="2" fill="var(--gm-panel-track)"/>
+      <rect x="96" y="${panelTop + 59}" width="80" height="6" rx="2" fill="var(--gm-level-4)" style="transform-box:fill-box;transform-origin:left;animation:flock-fill-${sheep.rosterIndex} ${maxTotalTime}s linear 0s 1 both"/>
     </g>`);
   }
 
-  const fieldDeltas: { atS: number; delta: number }[] = [];
-  for (const sheep of flock.sheep.slice(0, flock.fieldCount)) {
-    fieldDeltas.push({ atS: sheep.spawnAbsS + 0.18, delta: 1 });
+  const firstSpawn = Math.min(
+    maxTotalTime,
+    ...flock.sheep.map((sheep) => sheep.spawnAbsS),
+  );
+  const lastHidden = Math.max(
+    0,
+    ...flock.sheep.map((sheep) => sheep.hiddenAbsS ?? 0),
+  );
+  if (flock.sheep.length > 0) {
+    selectedStyles.push(
+      visibilityKeyframes(
+        "flock-inbound",
+        [{ start: 0, end: firstSpawn }],
+        maxTotalTime,
+      ),
+      visibilityKeyframes(
+        "flock-complete",
+        [{ start: lastHidden, end: maxTotalTime }],
+        maxTotalTime,
+      ),
+    );
+    selectedGroups.push(
+      `<g style="opacity:0;animation:flock-inbound ${maxTotalTime}s linear 0s 1 both"><text x="14" y="${panelTop + 44}" class="flock-name">FLOCK INBOUND</text><text x="14" y="${panelTop + 58}" class="flock-status">AWAITING DEPLOYMENT</text></g>`,
+      `<g style="opacity:0;animation:flock-complete ${maxTotalTime}s linear 0s 1 both"><rect x="14" y="${panelTop + 38}" width="10" height="10" rx="2" fill="var(--gm-level-4)"/><text x="32" y="${panelTop + 46}" class="flock-name">PASTURE CLEAR</text><text x="32" y="${panelTop + 60}" class="flock-status">ALL SHEEP COLLECTED</text></g>`,
+    );
   }
+
+  const fieldDeltas: { atS: number; delta: number }[] = [];
   for (const sheep of flock.sheep) {
-    if (sheep.rosterIndex >= flock.fieldCount) {
-      fieldDeltas.push({ atS: sheep.spawnAbsS + 0.18, delta: 1 });
-    }
-    if (sheep.pickupAbsS != null) {
-      fieldDeltas.push({ atS: sheep.pickupAbsS, delta: -1 });
+    fieldDeltas.push({ atS: sheep.spawnAbsS + 0.18, delta: 1 });
+    if (sheep.hiddenAbsS != null) {
+      fieldDeltas.push({ atS: sheep.hiddenAbsS, delta: -1 });
     }
   }
   fieldDeltas.sort((a, b) => a.atS - b.atS || a.delta - b.delta);
@@ -187,7 +257,7 @@ export function buildFlockPanelLayer(params: {
         .filter((event) => event.value === value);
       const name = `flock-field-${value}`;
       headerStyles.push(visibilityKeyframes(name, intervals, maxTotalTime));
-      return `<text x="14" y="${panelTop + 15}" class="flock-meta" style="opacity:0;animation:${name} ${maxTotalTime}s linear 0s 1 both"><tspan class="flock-meta-key">FIELD</tspan><tspan dx="5" class="flock-meta-value">${value}/${flock.fieldCount}</tspan></text>`;
+      return `<text x="14" y="${panelTop + 15}" class="flock-meta" style="opacity:0;animation:${name} ${maxTotalTime}s linear 0s 1 both"><tspan class="flock-meta-key">Field</tspan><tspan dx="5" class="flock-meta-value">${value}/${flock.fieldCount}</tspan></text>`;
     },
   );
 
@@ -204,29 +274,27 @@ export function buildFlockPanelLayer(params: {
     headerStyles.push(
       visibilityKeyframes(name, [{ start, end }], maxTotalTime),
     );
-    return `<text x="${totalWidth - 14}" y="${panelTop + 15}" text-anchor="end" class="flock-meta" style="opacity:0;animation:${name} ${maxTotalTime}s linear 0s 1 both"><tspan class="flock-meta-key">GRASS</tspan><tspan dx="5" class="flock-meta-value">${value}%</tspan></text>`;
+    return `<text x="${totalWidth - 14}" y="${panelTop + 15}" text-anchor="end" class="flock-meta" style="opacity:0;animation:${name} ${maxTotalTime}s linear 0s 1 both"><tspan class="flock-meta-key">Grass</tspan><tspan dx="5" class="flock-meta-value">${value}%</tspan></text>`;
   });
 
   const panelStyles = `
   .flock-meta,.flock-name,.flock-label,.flock-status,.flock-slot-index{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:var(--gm-panel-text)}
-  .flock-meta{font-size:8.5px;letter-spacing:.7px}.flock-meta-key{opacity:.62;font-weight:600}.flock-meta-value{font-weight:800;letter-spacing:.2px}
-  .flock-name{font-size:10.5px;font-weight:750;letter-spacing:.25px}.flock-label{font-size:6.5px;letter-spacing:.45px;opacity:.68}.flock-status{font-size:7px;font-weight:700;letter-spacing:.55px;fill:var(--gm-level-3)}
-  .flock-slot-index{font-weight:750;letter-spacing:.15px;opacity:.82}
+  .flock-meta{font-size:9px}.flock-meta-key{opacity:.64;font-weight:500}.flock-meta-value{font-weight:650}.flock-name{font-size:10px;font-weight:650}.flock-label{font-size:6.5px;letter-spacing:.35px;opacity:.62}.flock-status{font-size:7px;font-weight:650;letter-spacing:.35px;fill:var(--gm-level-3)}
+  .flock-slot-index{font-weight:650;opacity:.8}
   ${progressStyles.join("\n  ")}
+  ${rosterStateStyles.join("\n  ")}
   ${selectedStyles.join("\n  ")}
   ${headerStyles.join("\n  ")}`;
 
   const panelGroup = `<g class="flock-panel" aria-hidden="true">
     <defs><symbol id="flock-sheep-icon" viewBox="0.5 0 15 12.5">${SHEEP_CONTENT}</symbol></defs>
-    <path d="M6 ${panelTop}H${totalWidth - 6}L${totalWidth} ${panelTop + 6}V${panelTop + panelHeight - 6}L${totalWidth - 6} ${panelTop + panelHeight}H6L0 ${panelTop + panelHeight - 6}V${panelTop + 6}Z" fill="var(--gm-panel-bg)" stroke="var(--gm-panel-line)" stroke-width="1"/>
-    <rect class="flock-selected-section" x="8" y="${panelTop + 26}" width="174" height="47" rx="3" fill="var(--gm-panel-section)" stroke="var(--gm-panel-line)" stroke-width=".8"/>
-    <rect class="flock-roster-section" x="188" y="${panelTop + 26}" width="${totalWidth - 196}" height="47" rx="3" fill="var(--gm-panel-section)" stroke="var(--gm-panel-line)" stroke-width=".8"/>
-    <path d="M9 ${panelTop + 22}H${totalWidth - 9}M185 ${panelTop + 6}V${panelTop + panelHeight - 6}" stroke="var(--gm-panel-line)" stroke-width=".9" opacity=".82"/>
+    <rect class="flock-panel-surface" x=".5" y="${panelTop + 0.5}" width="${totalWidth - 1}" height="${panelHeight - 1}" rx="6" fill="var(--gm-panel-bg)" stroke="var(--gm-panel-line)"/>
+    <path class="flock-panel-divider" d="M9 ${panelTop + 23}H${totalWidth - 9}M188 ${panelTop + 29}V${panelTop + panelHeight - 7}" stroke="var(--gm-panel-line)" stroke-width=".7"/>
     ${fieldLabels.join("")}
-    <text x="${totalWidth / 2}" y="${panelTop + 15}" text-anchor="middle" class="flock-meta"><tspan class="flock-meta-key">FLOCK</tspan><tspan dx="5" class="flock-meta-value">${flock.rosterSize}</tspan></text>
+    <text x="${totalWidth / 2}" y="${panelTop + 15}" text-anchor="middle" class="flock-meta"><tspan class="flock-meta-key">Flock</tspan><tspan dx="5" class="flock-meta-value">${flock.rosterSize}</tspan></text>
     ${grassLabels.join("")}
-    ${selectedGroups.join("")}
-    ${rosterSlots.join("")}
+    <g class="flock-selected-region">${selectedGroups.join("")}</g>
+    <g class="flock-roster-region">${rosterSlots.join("")}</g>
   </g>`;
 
   return { panelStyles, panelGroup };

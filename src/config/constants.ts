@@ -24,11 +24,10 @@ export const GITHUB_THEME_CSS = `
     --gm-level-4: #216e39;
     --gm-fence: #8c6a43;
     --gm-beam-core: #ffffff;
-    --gm-panel-bg: #f6f8fa;
-    --gm-panel-section: #ffffff;
-    --gm-panel-slot: #f0f3f6;
+    --gm-panel-bg: #ffffff;
+    --gm-panel-section: #f6f8fa;
     --gm-panel-track: #d0d7de;
-    --gm-panel-line: #8c959f;
+    --gm-panel-line: #d0d7de;
     --gm-panel-text: #24292f;
   }
   :root[data-theme="dark"] {
@@ -40,12 +39,11 @@ export const GITHUB_THEME_CSS = `
     --gm-level-4: #39d353;
     --gm-fence: #76563b;
     --gm-beam-core: #f0fff4;
-    --gm-panel-bg: #111820;
-    --gm-panel-section: #161f28;
-    --gm-panel-slot: #1b252f;
-    --gm-panel-track: #080d12;
-    --gm-panel-line: #56636f;
-    --gm-panel-text: #d7e0e8;
+    --gm-panel-bg: #0d1117;
+    --gm-panel-section: #161b22;
+    --gm-panel-track: #21262d;
+    --gm-panel-line: #30363d;
+    --gm-panel-text: #c9d1d9;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme]) {
@@ -57,12 +55,11 @@ export const GITHUB_THEME_CSS = `
       --gm-level-4: #39d353;
       --gm-fence: #76563b;
       --gm-beam-core: #f0fff4;
-      --gm-panel-bg: #111820;
-      --gm-panel-section: #161f28;
-      --gm-panel-slot: #1b252f;
-      --gm-panel-track: #080d12;
-      --gm-panel-line: #56636f;
-      --gm-panel-text: #d7e0e8;
+      --gm-panel-bg: #0d1117;
+      --gm-panel-section: #161b22;
+      --gm-panel-track: #21262d;
+      --gm-panel-line: #30363d;
+      --gm-panel-text: #c9d1d9;
     }
   }`;
 
