@@ -6,8 +6,8 @@
     "milestone": "The accepted v26 champion makes every replacement journey spatially distinct at rendered scale and exact-speed on foot, while the selected panel exposes level-weighted ENERGY n/20 with one brief response at each recorded bite.",
     "completion_check": "npm run check",
     "status": "active",
-    "last_verified": "2026-08-14: npm run check and npm run visual:fixture passed with a 1,223,216-byte, 49.868-second deterministic fixture. A fresh independent Gate scored v26 20/20 with no blocker: all 201 arrivals match 201 meter responses; all 22 turnovers use aligned pickup/drop actors, 43.267–49.477px separation, exact 0.312-second cleared adjacent edges, and neutral long holds; 10/28/62 rosters, reduced motion, early final pickup, terminal persistence, both themes, and 53 finale phases pass.",
-    "next_action": "Publish accepted v26 to main, verify the official workflow and project/profile theme assets, then record the public commit evidence.",
+    "last_verified": "2026-08-14: npm run check and npm run visual:fixture passed with a 1,223,216-byte, 49.868-second deterministic fixture, and a fresh independent Gate scored v26 20/20 with no blocker. Feature commit 6555cdf and official workflow run 31777271690 published project asset commit 4b7521e, profile asset commit d8f7d4c, and profile README commit 16f60a7. Downloaded project/profile light and dark files are byte-identical by theme, 700x206, contain ENERGY n/20 plus the terminal panel, and the public 10-member data scene runs 34.775 seconds.",
+    "next_action": "Keep accepted and published v26 stable pending new user feedback; open another bounded candidate only for a reproduced defect.",
     "blockers": [],
     "approved_permissions": [
       "Read and write files inside this repository",
@@ -1618,7 +1618,7 @@
         "status": "observed",
         "metric": "Fresh forced-theme 700px energy, turnover, reduced-motion, roster-density, terminal, and deterministic causal checks",
         "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, a meter response lacks a recorded bite, pickup/drop centres are below 42px, a bridge edge differs from 0.312 playback seconds, a long hold is not neutral, runtime exceeds 50 seconds, or npm run check fails.",
-        "evidence": "A fresh Gate that did not author v26 scored it 20/20 with no blocker: hierarchy 4, acting 4, pacing/easing 4, cohesion 4, readability 4. The 1,223,216-byte, 49.868-second fixture matches 201 arrivals to 201 pulses, preserves 22 turnovers and 50 serialized stops, measures 43.267–49.477px endpoint separation, reports zero pickup mismatch, broken edge, or uncleared crossing, and gives all 22 bridges exactly 0.312 seconds per edge. Former long holds #9 and #17 remain neutral for 0.949 and 1.261 seconds. Forced light/dark and reduced-motion energy frames, 10/28/62 rosters, early final pickup, identical terminal frames, and 53 finale phases all pass."
+        "evidence": "A fresh Gate that did not author v26 scored it 20/20 with no blocker: hierarchy 4, acting 4, pacing/easing 4, cohesion 4, readability 4. The 1,223,216-byte, 49.868-second fixture matches 201 arrivals to 201 pulses, preserves 22 turnovers and 50 serialized stops, measures 43.267–49.477px endpoint separation, reports zero pickup mismatch, broken edge, or uncleared crossing, and gives all 22 bridges exactly 0.312 seconds per edge. Former long holds #9 and #17 remain neutral for 0.949 and 1.261 seconds. Forced light/dark and reduced-motion energy frames, 10/28/62 rosters, early final pickup, identical terminal frames, and 53 finale phases all pass. Feature 6555cdf and workflow 31777271690 published project asset 4b7521e plus profile asset d8f7d4c and README 16f60a7; downloaded theme pairs are byte-identical, 700x206, and the public 10-member scene runs 34.775 seconds."
       }
     }
   ],

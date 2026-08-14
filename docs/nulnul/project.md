@@ -12,7 +12,7 @@ Keep the accepted 700px champion stable: contribution-energy field staffing at 1
 
 Observable completion check: `npm run check`
 
-Final local verification: 2026-08-14, `npm run check` passed with a 1,223,216-byte, 49.868-second deterministic fixture. Forced light/dark 700x206 assets show exact selected energy and a recorded-bite-only response while reduced motion removes only the response. All 22 turnovers use 50 serialized stops, 43.267–49.477px pickup/drop separation, exact 0.312-second cleared adjacent bridge edges, aligned actors, and neutral long holds. The 10-, 28-, and 62-member two-row grids, early final pickup, terminal state, all 201 arrivals, 201 pulses, and 53 finale phases remain green. A fresh independent Gate scored v26 20/20 with no blocker.
+Final verification: 2026-08-14, `npm run check` passed with a 1,223,216-byte, 49.868-second deterministic fixture. Forced light/dark 700x206 assets show exact selected energy and a recorded-bite-only response while reduced motion removes only the response. All 22 turnovers use 50 serialized stops, 43.267–49.477px pickup/drop separation, exact 0.312-second cleared adjacent bridge edges, aligned actors, and neutral long holds. The 10-, 28-, and 62-member two-row grids, early final pickup, terminal state, all 201 arrivals, 201 pulses, and 53 finale phases remain green. A fresh independent Gate scored v26 20/20 with no blocker. Feature `6555cdf` and workflow `31777271690` published project asset `4b7521e`, profile asset `d8f7d4c`, and profile README `16f60a7`; downloaded project/profile theme pairs are byte-identical and the public 10-member scene is 700x206/34.775 seconds.
 
 ## Constraints and permissions
 
