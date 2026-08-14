@@ -6,8 +6,8 @@
     "milestone": "The accepted v22 champion publishes the complete pasture and two-section command panel as explicit GitHub light/dark assets while preserving contribution-scaled staffing, readable turnover, finish-aware pickup, and the full two-row roster.",
     "completion_check": "npm run check",
     "status": "active",
-    "last_verified": "2026-08-14: npm run check passed; the 991,941-byte fixture lasts 35.68 seconds. Forced 700x206 light and dark assets share one animation and render matching HUD palettes with separately framed selected-unit and 28-member roster bodies. A fresh independent Gate scored v22 19/20 with no blocker; profile publishing stages all three SVGs plus GitHub theme-context README URLs and runs immediately on a main source push.",
-    "next_action": "Publish accepted v22 to main, observe the triggered profile workflow, and verify the public profile asset dimensions, panel, and theme-context README URLs.",
+    "last_verified": "2026-08-14: accepted v22 was published to main at f688c3a and profile workflow run 31762203574 succeeded. The public profile README selects forced light and dark assets with GitHub theme-context URLs; live.svg, live-light.svg, and live-dark.svg are all 700x206 and contain the flock panel plus distinct selected-unit and complete-roster sections. npm run check and the fresh 19/20 independent Gate passed before publication.",
+    "next_action": "Keep accepted v22 stable pending new user feedback; open another bounded candidate only for a reproduced defect.",
     "blockers": [],
     "approved_permissions": [
       "Read and write files inside this repository",
@@ -1338,7 +1338,7 @@
         "status": "observed",
         "metric": "Forced-theme 700px visual benchmark plus deterministic asset identity and profile workflow assertions",
         "rollback_threshold": "Roll back if either GitHub theme selects the opposite palette, the public asset loses the panel, either body section becomes ambiguous or clipped, the benchmark falls below 16/20, or npm run check fails.",
-        "evidence": "A fresh Gate that did not author v22 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Corrected CDP frames at 5.27, 15.00, and 27.84 seconds show matching forced palettes, two unmistakable body frames, and all 28 roster slots in both themes. The 991,941-byte, 35.68-second fixture, root-only variant comparison, profile README rewrite, main-push trigger, 201 arrivals, 53 finale phases, and banned-effect checks passed with no blocker."
+        "evidence": "A fresh Gate that did not author v22 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Corrected CDP frames at 5.27, 15.00, and 27.84 seconds show matching forced palettes, two unmistakable body frames, and all 28 roster slots in both themes. The 991,941-byte, 35.68-second fixture, root-only variant comparison, profile README rewrite, main-push trigger, 201 arrivals, 53 finale phases, and banned-effect checks passed with no blocker. Main commit f688c3a triggered successful workflow run 31762203574; the public profile now serves both GitHub theme-context README URLs and three 700x206 SVGs containing the panel and both section frames."
       }
     }
   ],
