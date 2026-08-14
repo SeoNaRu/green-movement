@@ -130,12 +130,14 @@ for (const required of [
   "assets/live-dark.svg",
   "#gh-light-mode-only",
   "#gh-dark-mode-only",
-  "?v=${GITHUB_RUN_ID}#gh-light-mode-only",
-  "?v=${GITHUB_RUN_ID}#gh-dark-mode-only",
+  "${PROFILE_REPO}/${ASSET_COMMIT}/assets/live-light.svg#gh-light-mode-only",
+  "${PROFILE_REPO}/${ASSET_COMMIT}/assets/live-dark.svg#gh-dark-mode-only",
+  "git log -1 --format=%H -- assets/live-light.svg assets/live-dark.svg",
   "assets/live-light\\.svg[^)]*",
   "assets/live-dark\\.svg[^)]*",
   "branches: [main]",
-  "git add README.md assets/live.svg assets/live-light.svg assets/live-dark.svg",
+  "git add assets/live.svg assets/live-light.svg assets/live-dark.svg",
+  "git add README.md",
 ]) {
   if (!workflow.includes(required)) {
     throw new Error(`profile workflow missing ${required}`);
