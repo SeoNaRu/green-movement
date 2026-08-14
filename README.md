@@ -4,7 +4,8 @@ GitHub Contribution Graph를 **움직이는 미니어처 목장**으로 바꿔 �
 UFO가 양을 배치하고, 양이 실제 기여 셀을 먹으며, 마지막에 자신의 GitHub 아이디를 잔디로 남깁니다.
 
 <p align="center">
-  <img src="assets/live.svg" alt="green movement preview" width="700" />
+  <img src="assets/live-light.svg#gh-light-mode-only" alt="green movement preview" width="700" />
+  <img src="assets/live-dark.svg#gh-dark-mode-only" alt="green movement preview" width="700" />
 </p>
 
 <p align="center"><sub>검증용 샘플 미리보기·실제 생성 시 자신의 기여 데이터와 GitHub 아이디가 사용됩니다.</sub></p>
@@ -90,7 +91,8 @@ Fork(또는 Template)한 **green-movement** 저장소에서:
 ```md
 ## 🌱 잔디
 
-![grass](https://raw.githubusercontent.com/사용자명/사용자명/main/assets/live.svg)
+![grass](https://raw.githubusercontent.com/사용자명/사용자명/main/assets/live-light.svg#gh-light-mode-only)
+![grass](https://raw.githubusercontent.com/사용자명/사용자명/main/assets/live-dark.svg#gh-dark-mode-only)
 ```
 
 > 브랜치가 `main`이 아니면 `main` 부분을 해당 브랜치 이름으로 바꿔 주세요.
@@ -134,7 +136,7 @@ npm install
 npm run generate
 ```
 
-성공하면 `assets/live.svg`가 생성됩니다. 이 파일을 프로필 저장소의 `assets/live.svg`에 수동으로 올려도 됩니다.
+성공하면 `assets/live.svg`, `assets/live-light.svg`, `assets/live-dark.svg`가 생성됩니다. 세 파일을 프로필 저장소의 `assets/`에 수동으로 올려도 됩니다.
 
 ---
 

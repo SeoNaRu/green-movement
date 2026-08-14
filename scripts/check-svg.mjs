@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { buildContext } from "../dist/svg/buildContext.js";
 import {
   GRASS_STEP_TIMES_S,
@@ -21,6 +21,7 @@ import {
 } from "../dist/svg/signature.js";
 import { getCellCenterPx } from "../dist/svg/layout/gridLayout.js";
 import { buildFlockPlan } from "../dist/svg/flock.js";
+import { withSvgTheme } from "../dist/app/generateSvg.js";
 
 let randomState = 0x6d2b79f5;
 Math.random = () => {
@@ -43,6 +44,16 @@ const grid = Array.from({ length: 53 * 7 }, (_, index) => {
 const timingGrid = grid.map((cell) => ({ ...cell }));
 
 const svg = renderGridSvg(grid, { targetWidth: 700 });
+const lightSvg = withSvgTheme(svg, "light");
+const darkSvg = withSvgTheme(svg, "dark");
+if (
+  !lightSvg.startsWith('<?xml version="1.0" encoding="UTF-8"?>\n<svg data-theme="light"') ||
+  !darkSvg.startsWith('<?xml version="1.0" encoding="UTF-8"?>\n<svg data-theme="dark"') ||
+  lightSvg.replace(' data-theme="light"', "") !== svg ||
+  darkSvg.replace(' data-theme="dark"', "") !== svg
+) {
+  throw new Error("forced theme variants do not share the same animation SVG");
+}
 const emptySvg = renderGridSvg(
   grid.map((cell) => ({ ...cell, count: 0 })),
   { targetWidth: 700 },
@@ -80,6 +91,8 @@ for (const required of [
   'id="grass-crumbs"',
   "@keyframes grass-crumb",
   "@media (prefers-color-scheme: dark)",
+  ':root[data-theme="light"]',
+  ':root[data-theme="dark"]',
   "--gm-background: #ffffff",
   "--gm-background: #0d1117",
   "--gm-level-4: #216e39",
@@ -93,6 +106,8 @@ for (const required of [
   'fill="var(--gm-level-3)" style="opacity:0; animation:signature-grid-wave-',
   'class="signature-core"',
   'class="flock-panel"',
+  'class="flock-selected-section"',
+  'class="flock-roster-section"',
   'font-size:8.5px',
   'width="27.00" height="21"',
   'class="flock-slot-index"',
@@ -103,6 +118,19 @@ for (const required of [
   '<tspan class="flock-meta-key">GRASS</tspan><tspan dx="5" class="flock-meta-value">100%</tspan>',
 ]) {
   if (!svg.includes(required)) throw new Error(`SVG fixture missing ${required}`);
+}
+const workflow = readFileSync(".github/workflows/update-profile-readme.yml", "utf8");
+for (const required of [
+  "assets/live-light.svg",
+  "assets/live-dark.svg",
+  "#gh-light-mode-only",
+  "#gh-dark-mode-only",
+  "branches: [main]",
+  "git add README.md assets/live.svg assets/live-light.svg assets/live-dark.svg",
+]) {
+  if (!workflow.includes(required)) {
+    throw new Error(`profile workflow missing ${required}`);
+  }
 }
 if (/NaN|undefined/.test(svg)) throw new Error("SVG fixture contains invalid values");
 const sheepCount = (svg.match(/class="sheep-\d+"/g) ?? []).length;

@@ -3,11 +3,11 @@
   "personal_evolution_home": null,
   "checkpoint": {
     "goal": "Make the animated contribution pasture feel cohesive, premium, and clearly readable in a GitHub profile README.",
-    "milestone": "The accepted v21 champion scales simultaneous field staffing through 1/2/4/6 sheep, separates each full-to-hungry exchange with a readable empty beat, collects finished final sheep before the whole field stops, and exposes the complete flock through a readable two-row selection grid.",
+    "milestone": "The accepted v22 champion publishes the complete pasture and two-section command panel as explicit GitHub light/dark assets while preserving contribution-scaled staffing, readable turnover, finish-aware pickup, and the full two-row roster.",
     "completion_check": "npm run check",
     "status": "active",
-    "last_verified": "2026-08-14: npm run check passed; the 991,057-byte fixture lasts 35.68 seconds. Turnovers show SHEEP 01 extracting, an 80ms empty slot, then SHEEP 07 deploying; final pickup begins at 27.10 seconds with grass still at 90 percent rather than waiting for the 28.54-second last finish. A fresh independent 700px light/dark Gate scored v21 19/20 with no blocker while preserving all 201 arrivals and 53 finale phases.",
-    "next_action": "Keep the accepted v21 champion stable pending new user feedback; open another bounded candidate only for a reproduced defect.",
+    "last_verified": "2026-08-14: npm run check passed; the 991,941-byte fixture lasts 35.68 seconds. Forced 700x206 light and dark assets share one animation and render matching HUD palettes with separately framed selected-unit and 28-member roster bodies. A fresh independent Gate scored v22 19/20 with no blocker; profile publishing stages all three SVGs plus GitHub theme-context README URLs and runs immediately on a main source push.",
+    "next_action": "Publish accepted v22 to main, observe the triggered profile workflow, and verify the public profile asset dimensions, panel, and theme-context README URLs.",
     "blockers": [],
     "approved_permissions": [
       "Read and write files inside this repository",
@@ -23,10 +23,10 @@
       "last_promotion_id": null
     },
     "worker": {
-      "version": 21,
+      "version": 22,
       "job": "Implement one bounded motion or rendering change and report its mechanical and visual evidence.",
       "profile_path": "AGENTS.md",
-      "last_promotion_id": "promotion-turnover-identity-early-pickup-v21-20260814"
+      "last_promotion_id": "promotion-profile-theme-panel-sections-v22-20260814"
     },
     "coach": {
       "version": 1,
@@ -353,6 +353,18 @@
       "expected": "Make each exchange read as an outgoing sheep followed by a different incoming sheep, and begin collecting finished final sheep while the remaining sheep are still eating.",
       "evidence": "Source tracing found a direct opacity crossfade with no empty frame and a final pickup cursor explicitly clamped to the latest sheep finish. The corrected fixture inserts an 80ms empty slot, changes selection from SHEEP 01 to SHEEP 07, and begins the first final pickup at 27.10 seconds while grass is still 90 percent instead of waiting for the 28.54-second last finish.",
       "reproduction": "Run npm run visual:fixture; inspect 700px dark frames at 4.84, 5.04, 5.17, 5.27, 27.10, 27.84, 28.76, and 31.16 seconds.",
+      "scope": "project",
+      "status": "converted",
+      "rejected_proposals": []
+    },
+    {
+      "id": "feedback-profile-theme-panel-deployment-20260814",
+      "target_agent": "worker",
+      "source": "user",
+      "observed": "The profile README still shows the pre-panel SVG, the card follows the operating-system color preference instead of the GitHub theme selected by the viewer, and the command panel does not separate its left and right jobs strongly enough.",
+      "expected": "Publish the complete panel to the profile README, select a light or dark SVG from the viewer's GitHub theme, and frame the selected-unit and flock-roster areas as two unmistakable sections.",
+      "evidence": "The public SeoNaRu/SeoNaRu asset is the old 468,854-byte, 700x115 SVG with no flock-panel, while the accepted local asset is 991,057 bytes and 700x206 with the panel. The latest successful scheduled workflow predates v21. Source inspection also shows an OS-only prefers-color-scheme rule, a dark command panel even in the light palette, and only thin separator lines between panel jobs.",
+      "reproduction": "Compare the public profile asset metadata and README image URL with the generated fixture; inspect forced 700px light and dark panel frames at 5.27, 15.00, and 27.84 seconds.",
       "scope": "project",
       "status": "converted",
       "rejected_proposals": []
@@ -1195,6 +1207,45 @@
       "rollback": "Restore v20 turnover crossfade and all-done final pickup barrier while retaining the accepted panel and flock model."
     },
     {
+      "id": "proposal-profile-theme-panel-sections-v22",
+      "feedback_ids": [
+        "feedback-profile-theme-panel-deployment-20260814"
+      ],
+      "target_agent": "worker",
+      "author_agent": "coach",
+      "change_target": "theme tokens, generated SVG variants, profile publishing workflow, README embed, command-panel section framing, and deterministic assertions",
+      "change_level": "task",
+      "status": "accepted",
+      "from_version": 21,
+      "to_version": 22,
+      "cause": "One self-theming external SVG cannot observe a GitHub-only theme override, the scheduled profile deployment has not run since the panel shipped, and the panel body relies on subtle rules instead of framed functional regions.",
+      "candidate_change": "Generate one animation once and derive explicit light and dark SVG variants, publish both plus the complete fallback asset, update the profile README image line to GitHub's theme-context fragments, give the light theme a real light HUD palette, and frame the selected-unit and flock-roster bodies independently.",
+      "discovery_evidence": "GitHub's documented gh-light-mode-only and gh-dark-mode-only URL fragments select images from the viewer's GitHub theme. The existing generator and profile workflow already own the SVG and destination asset path, so no dependency or new service is required.",
+      "reproduction": "Run npm run check and npm run visual:fixture; inspect forced 700px light/dark frames at 5.27, 15.00, and 27.84 seconds, verify three synchronized assets, then inspect the published profile README and asset dimensions after workflow dispatch.",
+      "primary_metric": "The public profile README loads a 700x206-or-taller asset with the full panel, GitHub light and dark themes select their matching forced variant, and both selected-unit and flock-roster regions read as separate panels without losing the 28-member grid.",
+      "prediction": "Explicit variants remove the cross-document theme ambiguity, while two inset section frames will improve scan order more than adding labels or another information layer.",
+      "expected_delta": {
+        "published_theme_variants": 2,
+        "profile_panel_present": 1,
+        "panel_body_sections": 2,
+        "new_dependencies": 0,
+        "runtime_max_seconds": 40
+      },
+      "falsification_condition": "Reject if GitHub theme selection can still show the opposite palette, the published SVG omits the panel, either section is ambiguous or cramped at 700px, the roster clips, runtime exceeds 40 seconds, or npm run check fails.",
+      "regression_check": "npm run check plus forced-theme 700px panel frames and a local profile README rewrite fixture.",
+      "transfer_check": "Not applicable; this is a project-scoped publishing and panel candidate.",
+      "guardrails": [
+        "npm run check",
+        "No motion, simulation, sheep, UFO, or finale timing changes",
+        "One generated animation shared byte-for-byte across theme variants except the root theme attribute",
+        "Exactly two framed panel body sections",
+        "No new dependency, effect layer, credential, or permission expansion",
+        "Runtime at or below 40 seconds"
+      ],
+      "permission_delta": [],
+      "rollback": "Restore the v21 auto-theme asset and separator-only panel while retaining all accepted turnover and pickup behavior."
+    },
+    {
       "id": "proposal-project-motion-routing-v3",
       "feedback_ids": [
         "feedback-project-motion-routing-20260813"
@@ -1273,6 +1324,21 @@
         "metric": "Frozen 700px visual benchmark plus deterministic turnover, FIELD lifecycle, and pickup-order assertions",
         "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, turnover reads as one sheep redropped, FIELD leaves 0-6, final pickup waits for every sheep, or npm run check fails.",
         "evidence": "A fresh Gate that did not author v21 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. The 991,057-byte, 35.68-second fixture shows SHEEP 01 extraction, an empty slot, SHEEP 07 deployment, and final pickup beginning at 90 percent grass. All 201 arrivals, 53 finale phases, serialized pickup visits, themes, and banned-effect checks passed with no blocker."
+      }
+    },
+    {
+      "id": "promotion-profile-theme-panel-sections-v22-20260814",
+      "proposal_id": "proposal-profile-theme-panel-sections-v22",
+      "gate_agent": "gate",
+      "before": "The public profile still served a 700x115 pre-panel asset, the SVG could only read the operating-system theme, the light palette retained a dark HUD, and panel jobs were divided by subtle rules.",
+      "after": "The accepted v22 candidate derives forced light and dark 700x206 assets from one animation, publishes them with GitHub theme-context URLs, and frames selected-unit and complete-roster bodies as two distinct sections with matching theme palettes.",
+      "regressions_passed": true,
+      "decision": "accepted",
+      "live_cycle": {
+        "status": "observed",
+        "metric": "Forced-theme 700px visual benchmark plus deterministic asset identity and profile workflow assertions",
+        "rollback_threshold": "Roll back if either GitHub theme selects the opposite palette, the public asset loses the panel, either body section becomes ambiguous or clipped, the benchmark falls below 16/20, or npm run check fails.",
+        "evidence": "A fresh Gate that did not author v22 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Corrected CDP frames at 5.27, 15.00, and 27.84 seconds show matching forced palettes, two unmistakable body frames, and all 28 roster slots in both themes. The 991,941-byte, 35.68-second fixture, root-only variant comparison, profile README rewrite, main-push trigger, 201 arrivals, 53 finale phases, and banned-effect checks passed with no blocker."
       }
     }
   ],

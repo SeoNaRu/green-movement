@@ -219,7 +219,9 @@ export function buildFlockPanelLayer(params: {
   const panelGroup = `<g class="flock-panel" aria-hidden="true">
     <defs><symbol id="flock-sheep-icon" viewBox="0.5 0 15 12.5">${SHEEP_CONTENT}</symbol></defs>
     <path d="M6 ${panelTop}H${totalWidth - 6}L${totalWidth} ${panelTop + 6}V${panelTop + panelHeight - 6}L${totalWidth - 6} ${panelTop + panelHeight}H6L0 ${panelTop + panelHeight - 6}V${panelTop + 6}Z" fill="var(--gm-panel-bg)" stroke="var(--gm-panel-line)" stroke-width="1"/>
-    <path d="M9 ${panelTop + 22}H${totalWidth - 9}M${leftWidth} ${panelTop + 25}V${panelTop + panelHeight - 8}" stroke="var(--gm-panel-line)" stroke-width=".8" opacity=".7"/>
+    <rect class="flock-selected-section" x="8" y="${panelTop + 26}" width="174" height="47" rx="3" fill="var(--gm-panel-section)" stroke="var(--gm-panel-line)" stroke-width=".8"/>
+    <rect class="flock-roster-section" x="188" y="${panelTop + 26}" width="${totalWidth - 196}" height="47" rx="3" fill="var(--gm-panel-section)" stroke="var(--gm-panel-line)" stroke-width=".8"/>
+    <path d="M9 ${panelTop + 22}H${totalWidth - 9}M185 ${panelTop + 6}V${panelTop + panelHeight - 6}" stroke="var(--gm-panel-line)" stroke-width=".9" opacity=".82"/>
     ${fieldLabels.join("")}
     <text x="${totalWidth / 2}" y="${panelTop + 15}" text-anchor="middle" class="flock-meta"><tspan class="flock-meta-key">FLOCK</tspan><tspan dx="5" class="flock-meta-value">${flock.rosterSize}</tspan></text>
     ${grassLabels.join("")}

@@ -2,6 +2,13 @@
 name: Update profile README with grass SVG
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/update-profile-readme.yml"
   schedule:
     # KST 22:00 = UTC 13:00
     - cron: "0 13 * * *"
@@ -45,11 +52,17 @@ jobs:
           mkdir -p ../profile-repo
           git clone "https://x-access-token:${{ secrets.PROFILE_README_TOKEN }}@github.com/${PROFILE_REPO}.git" ../profile-repo
           mkdir -p ../profile-repo/assets
-          cp assets/live.svg ../profile-repo/assets/
+          cp assets/live.svg assets/live-light.svg assets/live-dark.svg ../profile-repo/assets/
+          README_PATH="../profile-repo/README.md"
+          LIGHT_IMAGE="![grass](https://raw.githubusercontent.com/${PROFILE_REPO}/main/assets/live-light.svg#gh-light-mode-only)"
+          DARK_IMAGE="![grass](https://raw.githubusercontent.com/${PROFILE_REPO}/main/assets/live-dark.svg#gh-dark-mode-only)"
+          if grep -Eq '^!\[grass\]\(.*assets/live\.svg\)$' "${README_PATH}"; then
+            sed -i -E "s|^!\[grass\]\(.*assets/live\.svg\)$|${LIGHT_IMAGE}\\n${DARK_IMAGE}|" "${README_PATH}"
+          fi
           cd ../profile-repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add assets/live.svg
+          git add README.md assets/live.svg assets/live-light.svg assets/live-dark.svg
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else

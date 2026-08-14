@@ -11,9 +11,10 @@ export const README_TARGET_WIDTH = 700;
 export const BORDER_RADIUS = 2;
 export const BACKGROUND_COLOR = "var(--gm-background)";
 
-/** GitHub 기본 기여 그래프의 light/dark 팔레트. 외부 SVG는 시스템 테마를 따른다. */
+/** GitHub 기본 기여 그래프의 light/dark 팔레트. data-theme은 README용 강제 변형에 쓴다. */
 export const GITHUB_THEME_CSS = `
-  :root {
+  :root,
+  :root[data-theme="light"] {
     color-scheme: light dark;
     --gm-background: #ffffff;
     --gm-level-0: #ebedf0;
@@ -23,14 +24,31 @@ export const GITHUB_THEME_CSS = `
     --gm-level-4: #216e39;
     --gm-fence: #8c6a43;
     --gm-beam-core: #ffffff;
-    --gm-panel-bg: #17202a;
-    --gm-panel-slot: #222d38;
-    --gm-panel-track: #0b1117;
-    --gm-panel-line: #65717d;
+    --gm-panel-bg: #f6f8fa;
+    --gm-panel-section: #ffffff;
+    --gm-panel-slot: #f0f3f6;
+    --gm-panel-track: #d0d7de;
+    --gm-panel-line: #8c959f;
+    --gm-panel-text: #24292f;
+  }
+  :root[data-theme="dark"] {
+    --gm-background: #0d1117;
+    --gm-level-0: #161b22;
+    --gm-level-1: #0e4429;
+    --gm-level-2: #006d32;
+    --gm-level-3: #26a641;
+    --gm-level-4: #39d353;
+    --gm-fence: #76563b;
+    --gm-beam-core: #f0fff4;
+    --gm-panel-bg: #111820;
+    --gm-panel-section: #161f28;
+    --gm-panel-slot: #1b252f;
+    --gm-panel-track: #080d12;
+    --gm-panel-line: #56636f;
     --gm-panel-text: #d7e0e8;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme]) {
       --gm-background: #0d1117;
       --gm-level-0: #161b22;
       --gm-level-1: #0e4429;
@@ -40,6 +58,7 @@ export const GITHUB_THEME_CSS = `
       --gm-fence: #76563b;
       --gm-beam-core: #f0fff4;
       --gm-panel-bg: #111820;
+      --gm-panel-section: #161f28;
       --gm-panel-slot: #1b252f;
       --gm-panel-track: #080d12;
       --gm-panel-line: #56636f;
