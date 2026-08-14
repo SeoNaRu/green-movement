@@ -3,11 +3,11 @@
   "personal_evolution_home": null,
   "checkpoint": {
     "goal": "Make the animated contribution pasture feel cohesive, premium, and clearly readable in a GitHub profile README.",
-    "milestone": "The accepted v24 champion joins the pasture and uncapped roster into one flat GitHub contribution surface, then hands the completed selected region from the departed sheep to the original UFO while preserving explicit light/dark publishing, readable turnover, and finish-aware pickup.",
+    "milestone": "The accepted v25 champion turns every full-sheep exchange into an actual pickup, remote flight, and safe replacement journey; expresses bite-only energy through a ten-cell pixel pasture panel; and gives the complete light/dark scene a shared 1.3x pace while preserving the terminal roster and username.",
     "completion_check": "npm run check",
     "status": "active",
-    "last_verified": "2026-08-14: accepted v24 was published to main at c23eeb8 and cache-safe profile workflow run 31765183005 succeeded. The public profile README pins both 700x206 theme assets to commit 40f72b8; each contains the original completed-state panel UFO, PASTURE CLEAR, the flat full-width 10-member roster, and no nested v22 frames. npm run check passed with a 1,034,299-byte, 35.68-second fixture and a fresh independent Gate scored v24 19/20 with no blocker.",
-    "next_action": "Keep accepted v24 stable pending new user feedback; open another bounded candidate only for a reproduced defect.",
+    "last_verified": "2026-08-14: accepted v25 was published from feature commit 64bae81; official Actions v7 workflow run 31769972977 passed without annotations, project asset commit 32770de published the preview, and profile asset commit fba394f plus README commit 4e5881a published byte-identical 700x206 theme files. The public 10-member scene contains the stepped fence-linked panel, ten-cell meters, terminal persistence, and a 34.216-second data-dependent runtime. npm run check passed with a 1,117,182-byte, 48.087-second deterministic fixture and a fresh independent Gate scored v25 20/20 with no blocker.",
+    "next_action": "Keep accepted v25 stable pending new user feedback; open another bounded candidate only for a reproduced defect.",
     "blockers": [],
     "approved_permissions": [
       "Read and write files inside this repository",
@@ -23,10 +23,10 @@
       "last_promotion_id": null
     },
     "worker": {
-      "version": 24,
+      "version": 25,
       "job": "Implement one bounded motion or rendering change and report its mechanical and visual evidence.",
       "profile_path": "AGENTS.md",
-      "last_promotion_id": "promotion-complete-panel-ufo-v24-20260814"
+      "last_promotion_id": "promotion-remote-turnover-pixel-panel-v25-20260814"
     },
     "coach": {
       "version": 1,
@@ -1365,7 +1365,7 @@
       "author_agent": "coach",
       "change_target": "turnover route planning, serialized UFO service stops, replacement sheep bridge keyframes, terminal panel visibility, discrete ten-cell fullness meters, shared playback pacing, pasture-linked panel lines, README behavior description, and deterministic assertions",
       "change_level": "task",
-      "status": "proposed",
+      "status": "accepted",
       "from_version": 24,
       "to_version": 25,
       "cause": "Turnover was modeled as an opacity handoff at one nominal grass cell instead of a spatial service journey, and the shared interval helper treated terminal visibility like a temporary state.",
@@ -1522,6 +1522,21 @@
         "metric": "Forced-theme 700px complete-state frames for representative 28-member and sparse 10-member rosters",
         "rollback_threshold": "Roll back if the completion UFO becomes unreadable, crowds the copy, reads as a second active action, competes with the username finale, diverges from the original glyph, changes timing, or npm run check fails.",
         "evidence": "A fresh Gate that did not author v24 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Exact current-source light/dark frames at 33.4 seconds for 28 roster sheep and 12.1 seconds for 10 show the static original UFO balancing PASTURE CLEAR without crowding copy or competing with the glowing field UFO and SEONARU. The 1,034,299-byte, 35.68-second fixture and 419,181-byte sparse probe pass all v23 state, roster, motion, timing, theme, and banned-effect checks with no blocker. Main commit c23eeb8 and workflow run 31765183005 published v24; the public README pins both theme images to profile asset commit 40f72b8, whose 700x206 files contain the panel UFO and no nested v22 frames."
+      }
+    },
+    {
+      "id": "promotion-remote-turnover-pixel-panel-v25-20260814",
+      "proposal_id": "proposal-remote-turnover-terminal-panel-v25",
+      "gate_agent": "gate",
+      "before": "The accepted v24 turnover collected and deployed at one nominal cell, continuous bars could look time-driven, the final panel states vanished at the exact animation end, the flat panel lacked a clear pixel-pasture frame, and the full sequence felt rushed.",
+      "after": "The accepted v25 turnover collects at the sheep's actual location and deploys a new identity 3–7 cells away through a safe causal bridge; ten fixed contribution cells jump only on bites; a stepped brown-fence panel persists through the terminal state; and one 1.3x scale gives every motion track more time.",
+      "regressions_passed": true,
+      "decision": "accepted",
+      "live_cycle": {
+        "status": "observed",
+        "metric": "Forced-theme 700px benchmark plus deterministic route, energy, pacing, density, terminal, publication, and public-asset identity checks",
+        "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, pickup and drop are fewer than three cells apart, a bridge uses a nonadjacent or uncleared pre-bite cell, fullness changes between bites, the terminal panel disappears, either two-row roster clips, runtime exceeds 50 seconds, or npm run check fails.",
+        "evidence": "A fresh Gate that did not author v25 scored it 20/20 with no blocker: hierarchy 4, acting 4, pacing/easing 4, cohesion 4, readability 4. The 1,117,182-byte, 48.087-second fixture preserves all 201 arrivals, 22 remote turnovers, 50 serialized UFO stops, 3–7-cell separation, safe adjacent bridges, final pickup before grass completion, ten-cell bite-only energy, both themes, 10/28/62-member grids, terminal persistence, and 53 finale phases. Feature commit 64bae81 and official Actions v7 run 31769972977 published project asset commit 32770de plus profile asset commit fba394f and README commit 4e5881a. Downloaded project/profile light and dark SVG pairs are byte-identical, 700x206, and contain the v25 panel, ten meters, and terminal keyframes; the public 10-member data scene runs 34.216 seconds."
       }
     }
   ],
