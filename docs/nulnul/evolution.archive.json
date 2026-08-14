@@ -1,0 +1,1542 @@
+{
+  "schema_version": 1,
+  "source_schema_version": 4,
+  "records": {
+    "feedback": [
+      {
+        "id": "feedback-motion-hierarchy-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The pasture reads as assembled effects: too many sheep compete with the UFO, linear motion lacks weight, character acting is absent, and subpixel flowers and crumbs add clutter.",
+        "expected": "A coherent miniature pasture with one clear UFO hero, four readable sheep actions, restrained secondary effects, and detail that survives at 700px.",
+        "evidence": "Frozen 700px frames reproduce the clutter and flat motion, while source inspection shows a 40-sheep cap, zero-pixel drop descent, and linear per-effect animation tracks.",
+        "reproduction": "The frozen 53x7 fixture scored 8/20 in docs/nulnul/visual-benchmark.md and rendered at 4,099,243 bytes with a sheep cap of 40 and per-particle keyframes.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": [
+          "proposal-motion-hierarchy-v2"
+        ]
+      },
+      {
+        "id": "feedback-motion-rhythm-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The replacement UFO shape is worse than the original, its hovering and banking feel cheap, eight sheep still feel dense, and the scene lacks speed.",
+        "expected": "Restore the original UFO, use six sheep, and create a faster rhythm with brief acceleration and precise stops instead of constant floating.",
+        "evidence": "The rejected fixture lasts 139.51 seconds, uses eight sheep, and adds continuous hover plus 3D bank transforms to a newly simplified UFO glyph.",
+        "reproduction": "Inspect the rejected candidate at 700px around UFO entry, inter-drop travel, and grazing; compare the glyph with the repository's original UFO asset.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": [
+          "proposal-motion-hierarchy-v2"
+        ]
+      },
+      {
+        "id": "feedback-ufo-heading-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The restored UFO keeps looking downward while it travels, and the pickup phase contains a long unintended drift instead of a clean wait and departure.",
+        "expected": "Turn toward the next destination before departure, preserve that heading through flight, and remain fixed while waiting.",
+        "evidence": "The v3 source forced every direction angle to zero, while the generated movement keyframes interpolated directly from the final drop at 12.63% toward the first pickup at 91.29% without a departure hold.",
+        "reproduction": "Inspect the deterministic fixture at 700px during the first rightward flight and again at 60 seconds before the first pickup.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": [
+          "proposal-motion-rhythm-v3"
+        ]
+      },
+      {
+        "id": "feedback-research-first-motion-20260813",
+        "target_agent": "coach",
+        "source": "user",
+        "observed": "The motion direction was proposed before studying established film, game-animation, game-feel, and web-motion methods, so the result remained a generic bundle of effects rather than a grounded scene grammar.",
+        "expected": "Research reputable motion-direction material first, preserve a concise learning synthesis, and preregister one measurable shot plan before changing source.",
+        "evidence": "The previous tactical-drop suggestion contained timing guesses and effect ideas without source evidence, while the research pass found consistent principles around staging, anticipation, timing and spacing, action-reaction, movement composition, restrained juiciness, and transform/opacity performance.",
+        "reproduction": "Compare the previous effect-led suggestion with the sourced Obsidian study and its explicit three-second storyboard, rejection list, and 700px Gate checks.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": [
+          "proposal-directional-flight-v4",
+          "proposal-research-first-motion-v5"
+        ]
+      },
+      {
+        "id": "feedback-pasture-performance-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The faster opening improved, but the UFO then occupied the pasture while the sheep moved; sheep motion still felt awkward and flowers read as undirected dots rather than part of the scene.",
+        "expected": "Let the flock own the middle act, give sheep readable turns and restrained grazing acting, and make sparse flowers recognizable at the real 700px size.",
+        "evidence": "Fixed 5, 15, and 35 second frames show the UFO stationary over the action; source inspection shows repeated whole-body squash on every stationary tick, 270-degree direction values that can take the long rotation path, and flowers rendered as one colored circle plus a subpixel center.",
+        "reproduction": "Render the deterministic fixture at 700px and inspect 5, 15, 35, 65, and 73 seconds, then inspect consecutive sheep turns and stationary runs.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": [
+          "proposal-cinematic-flight-v6"
+        ]
+      },
+      {
+        "id": "feedback-bite-timing-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "Grass could disappear before a sheep visibly arrived, sheep were about 20 percent too large, and the start of grazing lacked speed, impact, and a readable payoff.",
+        "expected": "Never react before visible arrival, reduce sheep to 80 percent of the current size, and stage grazing as a brief anticipation, decisive bite, and restrained grass reaction.",
+        "evidence": "The representative timeline measured grass 0.10 to 1.05 seconds ahead of visible sheep because simulation arrival ignored visual deployment delay; the grazing pose had no brace-impact body beat and matching-color crumbs were dispersed over three later chew times.",
+        "reproduction": "Run the deterministic fixture and compare a representative grass cell immediately before arrival, at arrival, 80 milliseconds later, 160 milliseconds later, and during recovery; audit all first-arrival pairs mechanically.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": [
+          "proposal-pasture-performance-v7"
+        ]
+      },
+      {
+        "id": "feedback-middle-act-relay-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "After the UFO exits, six independent nearest-target sheep repeat the same graze loop with no new event, focus transfer, or visible act progression, so changing locomotion alone would not fix the boredom.",
+        "expected": "Use the learned staging principles to give the UFO-free middle act one restrained macro-event: three readable two-sheep focus transfers with speed contrast, spatial progression, and purposeful flower traces.",
+        "evidence": "The v8 700px frames at 4.5, 6.2, 7.85, and 20 seconds show simultaneous undirected activity, while the planner and simulator assign every sheep by nearest reachable grass without a flock-level phase or role.",
+        "reproduction": "Render v8 and the relay candidate at 700px; compare the UFO exit boundary and fixed frames at 4.40, 6.05, 7.70, and 20 seconds, then inspect target bands, launch times, flower count, and pickup start mechanically.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": [
+          "proposal-flock-relay-v9"
+        ]
+      },
+      {
+        "id": "feedback-crop-signature-continuity-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The relay candidate improved the middle act but sheep still stopped too often, the ending lacked a memorable payoff, and the final beam had no causal relationship to a personal signature.",
+        "expected": "Keep six sheep moving with a faster walk-bite-walk rhythm, then stage one game-intro-style ending in which the UFO beam visibly writes SEONARU as grass and leaves the completed image on screen.",
+        "evidence": "The v9 simulation spent about 71% of sheep ticks stationary and lasted 76.00 seconds. Fixed end frames contained no identity reveal. The project-specific shot study calls for one one-more-thing setpiece, trajectory continuity, and a readable 5x7 bitmap wordmark.",
+        "reproduction": "Run npm run visual:fixture; inspect one sheep across consecutive movement and grazing frames, then inspect 700px frames from beam preparation through the final hold. Run the signature, runtime, sweep, all-grass, and timing assertions.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-graze-disappearance-sync-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "After the speed pass, sheep resumed walking before higher-level grass finished its 1.30-second disappearance, so eating and its visible result no longer belonged to the same action.",
+        "expected": "Every grass level must begin reacting after visible arrival and become empty while the sheep is still performing the single bite hold.",
+        "evidence": "The sheep held one 240ms tick while the grass keyframes lasted up to 1.30 seconds; the new deterministic check reproduced cells whose grass remained after departure.",
+        "reproduction": "Run npm run check and inspect consecutive 700px bite frames; the all-cell assertion compares each level-specific final grass step with that sheep's next visible move.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-scan-density-theme-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The final laser still read like thread, sheep waited after landing, flowers added clutter, a fixed flock ignored contribution density, the palette could conflict with GitHub theme, and drop positions lacked a visible reason.",
+        "expected": "Scan every grass position before deployment, place a density-scaled flock at optimized locations, move each sheep immediately after landing, remove flowers, strengthen the laser silhouette, and match standard GitHub light and dark contribution palettes.",
+        "evidence": "Source tracing found a fixed six-sheep cap, relay-start delays, an active flower layer, a single narrow line-like beam, fixed colors, and no pre-drop scan. Fixed 700px frames reproduced the weak causal deployment story and theme mismatch risk.",
+        "reproduction": "Run npm run visual:fixture and inspect 700px light and dark frames at 0.90, 1.15, 1.48, 2.05, 4.75, 34.55, and 35.50 seconds; run density, scan, immediate-start, no-flower, theme-token, laser-sync, and runtime assertions.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": [
+          "proposal-crop-signature-v10"
+        ]
+      },
+      {
+        "id": "feedback-directing-reset-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The v11 spotlight-like scan did not communicate analysis or placement, and the top-rail cell-by-cell laser pass made the ending feel like the worst possible mechanical plotter rather than a directed reveal.",
+        "expected": "Replace the scene grammar if needed, use learned film, animation, comics, webtoon, and game-VFX principles, and produce one restrained causal opening plus a cinematic identity reveal that survives at 700px.",
+        "evidence": "Fixed v11 frames showed a moving effect with no persistent decision handoff and an actor tracing 123 implementation steps. Source research converged on one idea per beat, quiet contrast, meaningful movement, previsualized eye flow, mechanic-readable VFX, audience closure, and title restraint.",
+        "reproduction": "Compare v11 and v12 at 700px. Inspect 0.82, 1.20, and 1.62 seconds for scan-to-lock causality; 31.98 through 33.45 seconds for central impact, wave/cell synchronization, actor exit, and final hold; run npm run check.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": [
+          "proposal-scan-and-deploy-v11"
+        ]
+      },
+      {
+        "id": "feedback-scan-marker-drop-layout-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The bright line sweeping from above still looked cheap, the visible drop-point crosshairs looked unrelated to the pasture, and the actual sheep drop positions also felt poorly composed.",
+        "expected": "Recheck the real 700px sequence, remove the rejected explanatory effects, and choose deployment positions that distribute the flock cleanly across the field.",
+        "evidence": "V12 opening frames read as a barcode scanner plus game HUD. The representative points [9,5], [7,5], [26,5], [26,0], [45,0], [44,3] placed two left drops on the same lower row and did not alternate vertical weight consistently.",
+        "reproduction": "Generate the fixture and inspect 700px light/dark frames from 0.64 through 4.10 seconds. Assert that no scan/lock renderer exists and that every populated horizontal band separates its paired drops vertically.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": [
+          "proposal-cinematic-field-v12"
+        ]
+      },
+      {
+        "id": "feedback-flight-continuity-grid-wave-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The UFO movement looked chaotic and interrupted, the opening centre hold felt empty, deployment travel was slightly too fast, and the finale still looked like a generic growing circle.",
+        "expected": "Use a slower continuous one-way deployment route with no unexplained centre pause, then express the final propagation through the contribution squares as a readable rectangular front and wake.",
+        "evidence": "Generated keyframes exposed a three-pixel correction in the final 70ms of each flight and drop points that forced repeated vertical reversals. Fixed 700px finale frames exposed the normalized Euclidean wave as an ellipse and its white overlay as nearly invisible on the light palette.",
+        "reproduction": "Run npm run visual:fixture; inspect 700px opening frames from 0.64 through 5.14 seconds and light/dark finale frames from 30.60 through 32.02 seconds; run npm run check.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": [
+          "proposal-silent-observation-v13"
+        ]
+      },
+      {
+        "id": "feedback-dynamic-signature-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The final identity appeared correct for SEONARU, but the renderer did not actually connect the target GitHub account to the signature text.",
+        "expected": "Each configured account should leave its own GitHub username instead of the repository author's hard-coded name.",
+        "evidence": "renderGridSvg called buildSignatureCells without text and generateSvg discarded GITHUB_USERNAME after fetching the contribution calendar, so the default SEONARU was always rendered.",
+        "reproduction": "Trace GITHUB_USERNAME from src/app/generateSvg.ts to renderGridSvg and buildSignatureCells; run npm run check with the 13-character compact-font assertion.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-direct-drop-middle-act-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The UFO should enter directly onto its first drop rather than visiting centre, and the sheep-owned middle act still needs a more entertaining but disciplined idea.",
+        "expected": "Remove the centre waypoint completely and identify a middle-act improvement from measured motion rather than adding arbitrary decoration.",
+        "evidence": "The opening still generated centre-to-first-drop states. Per-sheep movement keyframes contain 31–42 repeated-position stops, equal to 36–49% of visible position frames, because grazing duplicates each occupied cell before the next move.",
+        "reproduction": "Inspect fixed 700px frames at 0, 0.16, 0.32, 0.48, 0.64, 0.80, and 1.04 seconds; count consecutive same-position transforms in sheep-0 through sheep-5 keyframes; run npm run check.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": [
+          "proposal-continuous-flight-grid-wave-v14"
+        ]
+      },
+      {
+        "id": "feedback-causal-bite-fixed-flock-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "Removing grazing holds would break the causal link between the sheep's action and disappearing grass, and the maximum flock size should not be derived from how much grass exists.",
+        "expected": "Keep the stop causally readable as approach, contact, consumption, and departure, while using the same six-sheep scene budget for every non-empty contribution grid whenever six distinct assignments are feasible.",
+        "evidence": "The previous suggestion optimized continuity by omitting holds but allowed grass to disappear during travel. Source inspection also showed generic stationary runs driving bite poses, even though a stationary run can be caused by collision, and buildContext used ceil(grassCount/40).",
+        "reproduction": "Run npm run check; inspect the sheep head/body keyframes at each first grass step, density-cap probes from 1 through 351 active cells, and fixed 700px frames from 5.56 through 6.10 seconds.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": [
+          "proposal-direct-drop-v15"
+        ]
+      },
+      {
+        "id": "feedback-physical-wave-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The final propagation looked like a generic expanding shape, and its physical wave behavior was questionable.",
+        "expected": "Use a coherent point-wave model whose front travels at equal speed in grid space, weakens with distance, stays readable at 700px in both themes, and reveals the username at the same front without drawing a circle outline.",
+        "evidence": "The previous phase function used max(abs(dx/23), abs(dy/3)), so one phase represented about 7.7 horizontal cells but one vertical cell. The final phase therefore lit complete top and bottom rows together at constant peak opacity, which was an anisotropic rectangular wipe rather than point propagation.",
+        "reproduction": "Run npm run visual:fixture; inspect fixed 700px light/dark frames at 30.18, 30.28, 30.42, 30.60, 30.80, 31.00, 31.20, and 31.38 seconds; run npm run check.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-middle-act-escalation-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The grazing middle act remained repetitive even after causal bite timing; the user selected progressive fullness, one UFO airlift, stored grass energy, and a two-sheep reinforcement.",
+        "expected": "Turn those choices into one causal escalation without permanently increasing the cast or adding unrelated effects.",
+        "evidence": "The previous fixture kept the same six actors and repeated walk-bite-depart for most of the middle act. The corrected fixture stages four visible sheep first, relocates sheep 1 from [17,5] to [30,1] at 4.21-4.93 seconds, adds sheep 4 and 5 at 6.10 and 6.80 seconds, and maps all 201 bites to growth and energy.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect fixed 700px light/dark frames at 3.80, 4.05, 4.21, 4.37, 4.57, 4.77, 4.93, 5.20, 6.16, 6.56, 6.90, 10, and 20 seconds.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-middle-act-airlift-pacing-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The middle pickup, transport, and redrop happened so quickly that the airlift read as frantic rather than as a clear incident.",
+        "expected": "Keep normal deployment speed, but give boarding, diagonal transport, and landing separate readable beats.",
+        "evidence": "The first version compressed 0.16-second boarding, 0.40-second transport, and 0.16-second landing into 0.72 seconds; a 1.28-second correction still felt too fast. The current shot explicitly totals 2.40 seconds: 0.30 approach, 0.45 boarding, 1.20 transport, and 0.45 landing, with reinforcement delayed until after release.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect 700px frames at 3.91, 4.21, 4.43, 4.66, 5.26, 5.86, 6.08, 6.31, 7.54, and 8.24 seconds.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-long-username-signature-20260813",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "GitHub identities longer than 13 characters could not be represented because generation stopped instead of producing a signature.",
+        "expected": "Keep short names large, but represent longer readable identities as a centred two-line grass signature without silent truncation.",
+        "evidence": "The previous renderer rejected every 14+ character value. The corrected renderer preserves 5x7 for 1-10 characters and 3x5 for 11-13, then splits 14-26 characters across two independently centred 3x3 lines. A 25-character 700px fixture spans rows 0 and 6; 27+ remains an explicit error rather than unreadable compression.",
+        "reproduction": "Run npm run check; render VERY-LONG-GITHUB-USERNAME at 700px and confirm two centred lines, then confirm a 27-character value reports maximum 26 instead of truncating.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-fullness-turnover-panel-20260814",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "A fixed six-sheep cast and one final group pickup flatten the visible difference between developers with roughly 100 and 300 contribution cells, while waiting for every sheep to finish makes the grazing act feel idle.",
+        "expected": "Scale simultaneous staffing as 1, 2, 4, or 6 sheep, exchange each full sheep immediately without lowering the working headcount, and show every required sheep in a two-row StarCraft-style panel with selected status and individual fullness.",
+        "evidence": "The corrected deterministic fixture uses six working slots, partitions their 201 causal bites into 28 visible roster sheep, performs 22 serialized exchanges, and keeps the complete roster readable at 700px without a 12-sheep cap. Separate 100- and 300-cell probes expose 22 and 62 roster sheep respectively.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect 700px dark frames at 4.84, 5.08, 5.18, 15.00, 28.00, and 35.50 seconds, plus contribution-energy staffing probes and an empty grid.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-command-panel-readability-20260814",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The accepted command panel looked crude: the enlarged field sprite became a distorted white blob, 6-7px monospaced headers were hard to read, and 16px roster slots clustered on the left while leaving unused space.",
+        "expected": "Keep the two-row full roster and live information, but make the selected sheep recognizable, give the header a clear hierarchy, and distribute roster sheep cleanly across the available width at both 28 and 62 members.",
+        "evidence": "The reported 700px frame showed a 44x35 enlargement of the 16x13 field glyph, fixed 16px roster pitch, small undifferentiated header type, and a large empty area to the right of the 28-member roster. The corrected frames keep the original sheep at 28x23 only in the selected card, use 8.5px label/value typography, and replace repeated miniatures with a full-width numbered selection grid and individual progress bars.",
+        "reproduction": "Run npm run visual:fixture; inspect 700px light/dark frames at 5.08, 15.00, and 35.50 seconds, then render the deterministic 300-cell probe and inspect its 62-member roster at 20.00 and 57.50 seconds.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-turnover-identity-final-pickup-20260814",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "A full sheep and its hungry replacement appeared in the same place without a readable separation, so the exchange looked like one sheep being lifted and returned. The final six sheep also waited motionless until the whole field finished before pickup began.",
+        "expected": "Make each exchange read as an outgoing sheep followed by a different incoming sheep, and begin collecting finished final sheep while the remaining sheep are still eating.",
+        "evidence": "Source tracing found a direct opacity crossfade with no empty frame and a final pickup cursor explicitly clamped to the latest sheep finish. The corrected fixture inserts an 80ms empty slot, changes selection from SHEEP 01 to SHEEP 07, and begins the first final pickup at 27.10 seconds while grass is still 90 percent instead of waiting for the 28.54-second last finish.",
+        "reproduction": "Run npm run visual:fixture; inspect 700px dark frames at 4.84, 5.04, 5.17, 5.27, 27.10, 27.84, 28.76, and 31.16 seconds.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-profile-theme-panel-deployment-20260814",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The profile README still shows the pre-panel SVG, the card follows the operating-system color preference instead of the GitHub theme selected by the viewer, and the command panel does not separate its left and right jobs strongly enough.",
+        "expected": "Publish the complete panel to the profile README, select a light or dark SVG from the viewer's GitHub theme, and frame the selected-unit and flock-roster areas as two unmistakable sections.",
+        "evidence": "The public SeoNaRu/SeoNaRu asset is the old 468,854-byte, 700x115 SVG with no flock-panel, while the accepted local asset is 991,057 bytes and 700x206 with the panel. The latest successful scheduled workflow predates v21. Source inspection also shows an OS-only prefers-color-scheme rule, a dark command panel even in the light palette, and only thin separator lines between panel jobs.",
+        "reproduction": "Compare the public profile asset metadata and README image URL with the generated fixture; inspect forced 700px light and dark panel frames at 5.27, 15.00, and 27.84 seconds.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-github-pasture-panel-cohesion-20260814",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The published panel is visible and theme-correct, but its nested sci-fi frames do not match the GitHub contribution pasture. A ten-sheep roster floats in the middle of a wide body, collected and active sheep are not distinguishable, and pickup can show an already removed selected sheep beside a FIELD count that refers to another animal.",
+        "expected": "Make the panel feel like the same GitHub contribution surface as the pasture, distribute sparse and dense rosters across the available width, expose active, extracting, and collected states, and keep the selected sheep plus FIELD count synchronized with visual presence.",
+        "evidence": "The reported 700px dark frame shows two inset command boxes, five narrow centred columns inside a much wider roster body, and SHEEP 10 EXTRACTING beside FIELD 1/4 with no visible identity for the remaining field sheep. Source tracing found a 33px slot-pitch cap, pickup-arrival field decrements, and selection intervals that persist until the next event instead of ending when the sheep disappears.",
+        "reproduction": "Render forced 700px light and dark frames for 10- and 28-member rosters during grazing, extraction, visual disappearance, and completion; compare panel palette, spacing, sheep identity, FIELD lifecycle, and collected-state legibility with the pasture above.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-complete-panel-ufo-20260814",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "After every sheep is collected, the selected sheep disappears and the left panel region loses its character anchor; the green completion square does not connect the empty state to the UFO that performed the collection.",
+        "expected": "When FIELD reaches zero, replace the missing selected sheep with the same original UFO used in the pasture while retaining PASTURE CLEAR and ALL SHEEP COLLECTED.",
+        "evidence": "The accepted v23 complete frame shows a small generic green square at the left edge of the selected region, while the source already exposes the synchronized original UFO constant used by the field layer.",
+        "reproduction": "Run npm run visual:fixture and inspect forced 700px light and dark frames after the last sheep visually disappears and during the final username reveal.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-remote-turnover-terminal-panel-20260814",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The replacement sheep was deployed where the full sheep had just been collected, so the exchange still looked like one sheep being lifted and returned. At the exact end of the animation, the completed left panel UFO, FIELD 0, GRASS 100%, completion copy, and collected roster states disappeared. Continuous fullness bars suggested time-based charging, the panel lacked the pasture's grid-and-fence language, and the full eating-flight sequence felt about 30 percent too fast.",
+        "expected": "Treat a turnover as one complete spatial story: collect the full sheep at its real location, fly to a visibly different work area, deploy a new hungry sheep there, resume causal grazing immediately, preserve the full completed panel after the animation ends, show fullness as ten contribution cells that jump only on bites, connect the panel with the existing brown fence color, and give the whole sequence 30 percent more time without reducing actors or motion.",
+        "evidence": "Source tracing found that the UFO stop used the last grass cell while the sheep keyframe used a later route position, and both pickup and deployment shared one service stop. The shared panel visibility helper forced every interval back to opacity zero at 100 percent. The fullness renderer scaled one continuous rectangle with linear interpolation despite already having level-weighted bite progress, and every full-timeline SVG animation exposed one shared duration that could be stretched without changing event ownership.",
+        "reproduction": "Run npm run visual:fixture; inspect 700px light and dark frames from 6.34 through 7.31 seconds, the middle act at 17.94 seconds, the first final pickup at 37.18 seconds, and exact plus post-end frames at 48.09 and 49.00 seconds.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-stronger-bite-energy-20260814",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The ten-cell fullness meter correctly jumps on bites, but the selected sheep's reward still reads too softly at 700px because the exact energy gained and the instant of change are implicit.",
+        "expected": "Make each selected-sheep bite feel stronger without adding a new effect system: expose the exact grass-level energy and make the existing filled contribution cells react only at the recorded bite impact.",
+        "evidence": "The existing flock timeline already records each bite time, grass level, cumulative progress, and 20-energy capacity. Exact 700px candidate frames reproduce a 0/20 to 4/20 jump and a two-cell response from one level-four grass bite without changing simulation or pacing.",
+        "reproduction": "Run npm run visual:fixture and inspect forced 700px light and dark frames immediately before, at, and after a selected sheep's recorded bite; verify the number and ten-cell clip hold between bites and the pulse is absent under reduced motion.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-turnover-screen-position-20260814",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "Pickup and replacement coordinates still look wrong: a three-cell Manhattan rule can place diagonal centres only about 27 pixels apart under a 32-pixel UFO, and a remote sheep can then rush several bridge cells inside one normal movement interval.",
+        "expected": "Make pickup and drop visibly separate at rendered scale, land the replacement under the stopped UFO, and let it walk every cleared bridge cell at the established sheep speed before resuming causal grazing.",
+        "evidence": "The first sparse turnover used pickup [4,4] and drop [3,6], which passes Manhattan distance three but is only 26.8 rendered pixels apart. Representative bridge paths of five cells were compressed into 0.325 playback seconds instead of 1.248 seconds at the shared 1.3x pace.",
+        "reproduction": "Inspect exact 700px frames across pickup, vacancy, remote landing, UFO departure, bridge walking, and the next bite; calculate centre distance from the 12-pixel cell pitch and compare each bridge duration with path edges times SHEEP_CELL_TIME.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      }
+    ],
+    "proposals": [
+      {
+        "id": "proposal-motion-hierarchy-v2",
+        "feedback_ids": [
+          "feedback-motion-hierarchy-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "product code and its deterministic SVG regression check",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 2,
+        "cause": "Actor count, duplicated secondary animation tracks, and whole-group linear transforms flatten the motion hierarchy and consume the visual budget needed for character acting.",
+        "candidate_change": "Cap the flock at eight, add nested landing/walk/graze/pickup poses, activate UFO banking and hover, simplify the UFO art, and share sparse flower and crumb animations.",
+        "discovery_evidence": "The user correction and frozen benchmark identify motion hierarchy, character acting, easing, cohesion, and README readability as the causal quality dimensions.",
+        "reproduction": "Render the deterministic 53x7 fixture at 700px and compare fixed frames at entry, grazing, pickup, and completion.",
+        "primary_metric": "Frozen visual benchmark score out of 20, target at least 16 with no dimension below 3.",
+        "prediction": "A single hero actor plus eight or fewer characterful sheep will make the narrative readable while shared secondary motion removes visual and rendering noise.",
+        "expected_delta": {
+          "visual_benchmark_points": 8,
+          "representative_svg_bytes_change": -2981077
+        },
+        "falsification_condition": "Reject if any benchmark dimension stays below 3, the total stays below 16, npm run check fails, or SVG size exceeds the recorded 15% guardrail.",
+        "regression_check": "npm run check plus fixed 700px frames at entry, grazing, pickup, and completion.",
+        "transfer_check": "Not applicable; this is a project-scoped task candidate with no personal or core transfer claim.",
+        "guardrails": [
+          "npm run check",
+          "No NaN or undefined SVG values",
+          "Four to eight sheep in the representative fixture",
+          "No network, credential, deployment, or publication permission expansion",
+          "Representative SVG no larger than 4,714,129 bytes"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the pre-candidate motion and rendering source while retaining the feedback record."
+      },
+      {
+        "id": "proposal-motion-rhythm-v3",
+        "feedback_ids": [
+          "feedback-motion-rhythm-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "UFO glyph, flock density, timeline constants, and motion keyframes",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 3,
+        "cause": "The rejected candidate spent its motion budget on ambient wobble and 3D distortion while long travel, spawn, grazing, and pickup intervals kept the actual narrative slow.",
+        "candidate_change": "Restore the original UFO, remove hover and 3D banking, cap the flock at six, accelerate UFO travel with a strong ease-out, shorten spawn spacing, and compress sheep, grazing, pickup, entry, and exit timing.",
+        "discovery_evidence": "User review directly prefers the original glyph and identifies higher speed plus six sheep as the desired correction; fixed frames reproduce the cheap wobble and slow total rhythm.",
+        "reproduction": "Render the same deterministic 53x7 fixture at 700px and inspect consecutive frames across the first UFO travel plus entry, grazing, and pickup frames.",
+        "primary_metric": "User or independent visual Gate accepts UFO shape and motion rhythm with exactly six sheep; npm run check passes.",
+        "prediction": "Moving faster only during purposeful travel, then stopping cleanly, will feel more premium than continuous hover while reducing total runtime by at least 35% from the rejected 139.51-second candidate.",
+        "expected_delta": {
+          "fixture_runtime_seconds_max": 90,
+          "sheep_count": 6,
+          "continuous_ambient_ufo_animations": 0
+        },
+        "falsification_condition": "Reject if the original UFO is not restored, the representative fixture does not contain exactly six sheep, runtime exceeds 90 seconds, motion still reads as floating or cheap at 700px, or npm run check fails.",
+        "regression_check": "npm run check, deterministic fixture runtime and sheep-count assertions, and fixed 700px consecutive UFO-travel frames.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "Exactly six sheep in the representative fixture",
+          "No ufo-hover or ufo-bank animation",
+          "Representative runtime no more than 90 seconds",
+          "No permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the rejected candidate source only for comparison; do not reactivate it without new visual evidence."
+      },
+      {
+        "id": "proposal-directional-flight-v4",
+        "feedback_ids": [
+          "feedback-ufo-heading-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "UFO rotation and movement keyframes",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 4,
+        "cause": "Direction was removed to avoid cheap spinning, and pickup travel had no explicit departure keyframe, so the glyph faced down and position interpolation created a long slow drift.",
+        "candidate_change": "Use shortest-path directional headings, turn during the final 100 milliseconds before departure, hold the heading through flight, and add explicit stationary pickup departure keyframes.",
+        "discovery_evidence": "User review identified the downward-facing flight; source and generated-keyframe inspection exposed both the fixed zero-degree rotation and the missing pickup departure hold.",
+        "reproduction": "Render the deterministic 53x7 fixture at 700px and inspect the first rightward flight plus the 60-second pickup-wait frame.",
+        "primary_metric": "Every purposeful flight points toward its destination before translation and pickup waiting has zero position drift; npm run check passes.",
+        "prediction": "A staged turn, fast flight, and precise stop will read as intentional direction changes without adding trails, shake, hover, or banking.",
+        "expected_delta": {
+          "directional_heading_samples_min": 2,
+          "pickup_wait_position_drift_px": 0,
+          "continuous_ambient_ufo_animations": 0
+        },
+        "falsification_condition": "Reject if the first rightward departure is not at -90 degrees, pickup waiting drifts, ambient hover or banking returns, or npm run check fails.",
+        "regression_check": "npm run check plus fixed 700px frames during the first flight and at 60 seconds.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "Exactly six sheep in the representative fixture",
+          "No ufo-hover or ufo-bank animation",
+          "Representative runtime no more than 90 seconds",
+          "No permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the v3 fixed heading and pickup movement only for comparison; keep the accepted six-sheep timing and original UFO glyph."
+      },
+      {
+        "id": "proposal-research-first-motion-v5",
+        "feedback_ids": [
+          "feedback-research-first-motion-20260813"
+        ],
+        "target_agent": "coach",
+        "author_agent": "coach",
+        "change_target": "motion-direction discovery and preregistration procedure",
+        "change_level": "meta",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 2,
+        "cause": "The Coach jumped from visual symptoms to implementation effects without first grounding the scene in established motion language or a measurable storyboard.",
+        "candidate_change": "Before future motion source edits, review reputable material across animation, game feel, film movement and editing, and web performance; write one 700px storyboard with numeric timing, a single primary-action budget, a rejection list, performance boundaries, and falsifiable Gate questions.",
+        "discovery_evidence": "The user explicitly required a learning pass; nine video lessons and five research or official references converged on staging, timing and spacing, anticipation, action-reaction, contrast, restrained embellishment, and compositor-friendly SVG motion.",
+        "reproduction": "Compare the unsourced tactical-drop suggestion with the Obsidian research page, which records the evidence, three-second shot table, numeric motion contract, forbidden effects, and post-implementation Gate checklist.",
+        "primary_metric": "The next motion candidate has one sourced and measurable 700px shot contract before any source edit, and the user or independent visual Gate accepts its direction as specific rather than generic or effect-led.",
+        "prediction": "Research-first staging will reduce repeated visual rejection by making timing, hierarchy, and effect restraint explicit before implementation begins.",
+        "expected_delta": {
+          "reputable_sources_min": 10,
+          "youtube_lessons_min": 6,
+          "preimplementation_shot_contracts": 1,
+          "unbounded_effect_bundles": 0
+        },
+        "falsification_condition": "Reject if the next candidate starts source work without the shot contract, bundles unrelated effects, lacks 700px performance and reduced-motion boundaries, or is still rejected as generic despite following the recorded plan.",
+        "regression_check": "Validate evolution state, confirm the Obsidian page contains sources, storyboard, numeric contract, forbidden list, and Gate questions, then run the repository check only after later source changes.",
+        "transfer_check": "Not applicable; this is a project-scoped Coach procedure with no personal or core transfer claim.",
+        "guardrails": [
+          "No product source change during the research pass",
+          "No copyrighted video transcript or copied course material in the wiki",
+          "One primary action and at most one supporting reaction per beat",
+          "Evaluate at 700px with reduced-motion and SVG performance boundaries",
+          "No publication, deployment, credential, or network-write expansion"
+        ],
+        "permission_delta": [
+          "Write the requested synthesis to the user-designated local Obsidian vault"
+        ],
+        "rollback": "Remove the research-first proposal from active consideration if it fails the next visual Gate; retain the sourced wiki page as project research rather than accepted procedure."
+      },
+      {
+        "id": "proposal-cinematic-flight-v6",
+        "feedback_ids": [
+          "feedback-motion-rhythm-20260813",
+          "feedback-ufo-heading-20260813",
+          "feedback-research-first-motion-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "UFO travel keyframes, deployment timeline, and deterministic SVG regression check",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 5,
+        "cause": "UFO translation was faster than before, but 1.98-second simulation spawn gaps and sheep-walk-coupled departures still made the six-drop opening read as a slow sequence of independent stops.",
+        "candidate_change": "Decouple UFO departure from sheep walking, deploy six sheep in one sub-four-second passage, and stage each flight as pre-turn, accelerated travel, three-pixel overshoot, 70-millisecond settle, and one travel-only streak.",
+        "discovery_evidence": "The preregistered Obsidian shot contract calls for anticipation, 180-320 millisecond travel, 50-80 millisecond impact, two-to-three-pixel overshoot, and at most one supporting reaction; source tracing located the pacing bottleneck in spawn and release scheduling rather than glyph speed alone.",
+        "reproduction": "Run npm run visual:fixture and inspect the 700px fixture from 0.8 to 3.8 seconds, including a frame during a rightward flight and the sixth sheep landing.",
+        "primary_metric": "A fresh visual Gate accepts pacing and hierarchy at 700px; all six sheep are visible by four seconds and npm run check passes.",
+        "prediction": "Removing the hidden scheduling waits while keeping one restrained speed cue will make the opening feel like one directed game-intro passage rather than six UI transitions.",
+        "expected_delta": {
+          "deployment_seconds_max": 4,
+          "fixture_runtime_seconds_max": 80,
+          "travel_only_streak_layers": 1,
+          "continuous_ambient_ufo_animations": 0
+        },
+        "falsification_condition": "Reject if the opening still feels mechanical or cheap at 700px, any departure drifts before its actual start, the streak competes with the UFO, all six sheep are not visible by four seconds, runtime exceeds 80 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus fixed 700px frames at 0.9, 1.6, 2.6, and 3.7 seconds.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "Exactly six sheep in the representative fixture",
+          "All six sheep visible by four seconds",
+          "No ufo-hover, ufo-bank, blur, filter, or camera shake",
+          "One streak element visible only during purposeful travel",
+          "prefers-reduced-motion hides nonessential streak, ripple, crumb, and flower motion",
+          "Representative runtime no more than 80 seconds",
+          "No permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the v4 travel constants, six-tick spawn spacing, sheep-walk-coupled UFO release, and non-overshooting movement keyframes while retaining the research record."
+      },
+      {
+        "id": "proposal-pasture-performance-v7",
+        "feedback_ids": [
+          "feedback-pasture-performance-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "UFO stage lifecycle, sheep pose and heading keyframes, flower silhouette, and deterministic SVG regression check",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 6,
+        "cause": "The scene had no act boundary after deployment, stationary sheep reused a full-body tick pulse, direction angles could interpolate along the long arc, and a single-circle flower lost its identity at README size.",
+        "candidate_change": "Exit the UFO immediately after deployment and re-enter from offstage for pickup; use shortest-path sheep headings, walking bounce only during travel, one head nod per multi-tick stop, and sparse four-petal flowers with a quiet scale reveal.",
+        "discovery_evidence": "The user's mid-scene correction is reproduced in fixed frames, and the source paths isolate one lifecycle omission, one rotation defect, one repeated-pose defect, and one silhouette defect rather than a need for more effects.",
+        "reproduction": "Run npm run visual:fixture; compare 700px frames at 3.7, 4.0, 15, 35, 65, 73.0, and 73.4 seconds and inspect consecutive sheep heading values.",
+        "primary_metric": "A fresh visual Gate accepts mid-scene hierarchy, sheep acting, and flower readability at 700px; npm run check passes.",
+        "prediction": "Giving each act one owner and correcting motion and silhouette defects will improve perceived polish more than adding another cinematic effect.",
+        "expected_delta": {
+          "mid_scene_ufo_visible_frames": 0,
+          "sheep_rotation_jumps_over_180_degrees": 0,
+          "stationary_whole_body_pulses": 0,
+          "flower_petals_per_glyph": 4,
+          "fixture_runtime_seconds_max": 80
+        },
+        "falsification_condition": "Reject if the UFO remains visible through grazing, pickup re-entry teleports onstage, sheep still spin or pulse mechanically, flowers still read as clutter at 700px, runtime exceeds 80 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus fixed 700px frames spanning deployment exit, middle-act grazing and flowers, and pickup re-entry.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "Exactly six sheep in the representative fixture",
+          "UFO offstage after deployment and before pickup",
+          "No sheep heading jump above 180 degrees",
+          "No stationary full-body tick pulse",
+          "Sparse four-petal flowers readable at 700px",
+          "No ufo-hover, ufo-bank, blur, filter, or camera shake",
+          "Representative runtime no more than 80 seconds",
+          "No permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the v6 onstage hold, sheep scale and pose track, original dark head palette, and circle flowers while retaining the user feedback and fixed-frame evidence."
+      },
+      {
+        "id": "proposal-bite-timing-v8",
+        "feedback_ids": [
+          "feedback-bite-timing-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "visual arrival mapping, sheep grazing pose and scale, grass and crumb timing, and deterministic SVG regression check",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 7,
+        "cause": "Grass and crumb layers consumed simulation arrival times while sheep keyframes consumed deployment-delayed visual times, and the grazing-start reaction was spread across several low-contrast beats instead of staged around one impact.",
+        "candidate_change": "Map every grass arrival onto the sheep's visible movement clock, render sheep at 80 percent of v7 scale, then stage grazing as an 80ms brace, 160ms bite impact, 280ms body recovery, and one 320ms higher-contrast grass-chip burst.",
+        "discovery_evidence": "The deterministic fixture proves a 0.10 to 1.05 second clock mismatch across 201 cells; animation research already preregistered anticipation, action-reaction, timing contrast, and one supporting reaction per beat.",
+        "reproduction": "Run npm run visual:fixture and inspect 700px frames around one measured arrival at T-130ms, T, T+80ms, T+160ms, and T+320ms; run the all-cell arrival regression.",
+        "primary_metric": "Zero representative grass reactions occur before visible sheep arrival, the first grass reaction occurs 160ms after arrival, and a fresh visual Gate accepts bite speed and clarity at 700px.",
+        "prediction": "Synchronizing clocks and concentrating the reaction into one fast bite will feel more responsive and playful without adding ambient motion, shake, flash, or another effect system.",
+        "expected_delta": {
+          "prearrival_grass_reactions": 0,
+          "first_reaction_after_arrival_ms": 160,
+          "sheep_scale_ratio_vs_v7": 0.8,
+          "bite_anticipation_ms": 80,
+          "bite_impact_ms": 160,
+          "crumb_burst_duration_ms": 320
+        },
+        "falsification_condition": "Reject if any grass cell reacts before visible sheep arrival, the sheep scale is not 80 percent of v7, the bite still lacks a readable acceleration-impact-recovery beat at 700px, secondary effects compete, runtime exceeds 80 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus measured 700px frames spanning pre-arrival through bite recovery.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "All representative grass reactions occur after visible sheep arrival",
+          "Sheep scale is exactly 80 percent of v7",
+          "One bite action and one grass-chip reaction",
+          "No camera shake, flash, blur, new trail, or ambient motion",
+          "Exactly six sheep and runtime no more than 80 seconds",
+          "No permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore v7 simulation-clock grass timing, sheep scale, stationary head-only nod, original grass steps, and dispersed crumb beats while retaining the measured timing defect."
+      },
+      {
+        "id": "proposal-flock-relay-v9",
+        "feedback_ids": [
+          "feedback-middle-act-relay-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "initial target bands, pair launch schedule, shared sheep launch pose, purposeful flower placement, pickup boundary, and deterministic SVG regression check",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 8,
+        "cause": "The middle act had no flock-level state: all six sheep entered the same nearest-target loop as soon as they were deployed, random flowers did not encode progress, and pickup used the earlier simulation finish rather than the last visible motion.",
+        "candidate_change": "Divide six sheep into three spatial pairs, hold all movement until the UFO exits plus a 280ms breath, launch each pair 1.65 seconds apart with one shared brace-release pose, prefer left-center-right target bands, and place flowers only at pair starts plus sparse route checkpoints; begin pickup only after every visible run finishes.",
+        "discovery_evidence": "The user asked for a structural idea rather than more locomotion polish, and the researched staging contract favors one orchestrated moment, anticipation-action-reaction, clear screen direction, and restrained secondary support over scattered effects.",
+        "reproduction": "Run npm run visual:fixture; compare v8 and v9 at 700px around 4.00, 4.40, 6.05, 7.70, and 20 seconds, then run the deterministic relay, all-grass, timing, size, and pickup-boundary assertions.",
+        "primary_metric": "A fresh visual Gate reads three distinct focus transfers and a left-to-right middle-act progression at 700px without new visual clutter; npm run check passes.",
+        "prediction": "Staged pair releases and purposeful traces will create a readable middle-act arc while reducing simultaneous competition and keeping the scene faster and lighter than v8.",
+        "expected_delta": {
+          "relay_pairs": 3,
+          "post_exit_breath_ms": 280,
+          "pair_handoff_interval_ms": 1650,
+          "representative_grass_cells_cleared": 201,
+          "representative_runtime_seconds_max": 80,
+          "representative_svg_bytes_change": -94937
+        },
+        "falsification_condition": "Reject if the three launches merge into one event, any pair starts before the UFO exit breath, spatial bands make sheep look stranded, flowers read as clutter or fail to mark progression, pickup begins before visible motion ends, any representative grass cell remains, runtime exceeds 80 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus 700px fixed frames spanning UFO exit, all three pair launches, later grazing, and pickup entry.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "Exactly three two-sheep relay pairs on the representative fixture",
+          "At least 1.5 seconds between pair launches",
+          "UFO exit plus at least 0.5 seconds before the first launch",
+          "All 201 representative grass cells clear before pickup",
+          "Six to eighteen sparse four-petal flowers",
+          "No new asset, HUD, shake, flash, blur, trail, or ambient motion",
+          "Representative runtime no more than 80 seconds",
+          "No permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Remove relayStartTick and band preference, restore the v8 move-start floor and random sparse flower selection, and restore simulation-clock pickup start while retaining the middle-act feedback."
+      },
+      {
+        "id": "proposal-crop-signature-v10",
+        "feedback_ids": [
+          "feedback-crop-signature-continuity-20260813",
+          "feedback-graze-disappearance-sync-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "sheep travel timing, grazing hold, final UFO laser pass, built-in SEONARU grass signature, flower clear, and deterministic SVG checks",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 9,
+        "cause": "Per-cell easing restarts and level-dependent two-to-five-tick grazing holds repeatedly killed velocity, while the ending had no final setpiece or personal image to retain after the actors left.",
+        "candidate_change": "Use linear root travel with a 240ms cell pace; complete 60ms anticipation, 120ms impact, and every grass level by 230ms inside one grazing hold; then execute the user's selected 3.00-second left-to-right laser pass with one schedule for UFO X, laser endpoint, and cell paint, followed by a clean exit and 1.20-second final hold.",
+        "discovery_evidence": "Project-specific research and source tracing identify trajectory continuity, distance-paced movement, a one-more-thing reveal, sound-off readability, and a 5x7 bitmap floor as the smallest coherent correction; no new library or asset is required.",
+        "reproduction": "Run npm run visual:fixture; inspect 700px frames across one walk-bite-walk sequence and at 34.30, 34.64, 35.35, 36.14, 36.88, 37.64, 37.96, and 39.20 seconds, then run npm run check.",
+        "primary_metric": "A fresh visual Gate reads continuous purposeful sheep travel and one causal beam-written SEONARU ending at 700px; runtime stays at or below 40 seconds and npm run check passes.",
+        "prediction": "Removing repeated restarts and spending the final motion budget on one identity reveal will feel faster, more authored, and more memorable without adding visual clutter.",
+        "expected_delta": {
+          "stationary_sheep_tick_share_max": 0.42,
+          "grass_disappearance_before_departure_failures": 0,
+          "representative_runtime_seconds_max": 40,
+          "signature_cells": 123,
+          "signature_grid_columns_min": 47,
+          "final_hold_ms_min": 1200
+        },
+        "falsification_condition": "Reject if sheep still read as stop-start, grass reacts before visible arrival, the UFO sweep outruns or trails the word, SEONARU is unclear at 700px, the final hold is under 1.20 seconds, runtime exceeds 40 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus fixed 700px frames spanning a representative walk-bite-walk sequence and the complete signature ending.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "Exactly six sheep and three staged relay pairs",
+          "All 201 representative grass cells clear before pickup",
+          "No grass reaction before visible sheep arrival",
+          "Exactly 123 signature cells spanning columns 3 through 49",
+          "UFO rail motion, laser endpoint, and signature paint share the same 3.00-second interval for all 123 cells",
+          "At least 1.20 seconds of final signature hold",
+          "No new dependency, asset, HUD, shake, flash, blur, or ambient motion",
+          "Representative runtime no more than 40 seconds",
+          "No permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore v9's 330ms travel, level-dependent grazing holds, radial paint ending, and 80-second runtime guard while retaining the feedback and research record."
+      },
+      {
+        "id": "proposal-scan-and-deploy-v11",
+        "feedback_ids": [
+          "feedback-scan-density-theme-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "opening scan, drop planner, flock sizing, immediate start timing, flower removal, theme tokens, tapered signature laser, and deterministic SVG checks",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 10,
+        "cause": "Deployment showed no observation-to-decision beat, fixed actor and relay rules ignored the source data, decorative flowers competed at README size, and one narrow beam plus fixed colors weakened the ending and GitHub integration.",
+        "candidate_change": "After the 0.80-second entry, scan the complete pasture left-to-right for 0.72 seconds, approach the first drop for 0.24 seconds, place one sheep per 40 active grass cells up to eight across balanced grass-adjacent zones, and start each sheep after its 180ms landing reveal. Remove flowers, use standard GitHub light and dark palette variables, and render the signature beam as tapered outer energy, body, hot core, and one diamond impact.",
+        "discovery_evidence": "The user requested a causal scan and optimized deployment. Project-specific motion rules favor anticipation-observation-action, clean silhouettes, and one supporting reaction; VFX references consistently use a readable beam core, body, outer energy, and explicit impact rather than added particle noise.",
+        "reproduction": "Run npm run visual:fixture; inspect 700px light and dark frames at 0.90, 1.15, 1.48, 2.05, 4.75, 34.55, and 35.50 seconds; then run npm run check.",
+        "primary_metric": "A fresh visual Gate reads scan-to-placement causality, immediate flock motion, a non-thread-like laser, and coherent GitHub light and dark palettes at 700px; npm run check passes.",
+        "prediction": "One explicit observation pass plus data-scaled balanced drops will make deployment feel intentional, while deletion of flowers and a stronger beam silhouette will improve clarity without adding an effect system.",
+        "expected_delta": {
+          "scan_duration_ms": 720,
+          "grass_cells_per_sheep": 40,
+          "sheep_count_max": 8,
+          "post_landing_wait_ms": 0,
+          "flower_glyphs": 0,
+          "representative_runtime_seconds_max": 40
+        },
+        "falsification_condition": "Reject if the scan does not cross the full pasture, drops cluster outside their balanced bands, sheep wait after landing, flowers remain, light or dark colors diverge from the standard GitHub contribution palettes, the laser still reads as a thread at 700px, runtime exceeds 40 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus fixed 700px light and dark frames spanning scan, all drops, representative movement, laser writing, and final hold.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "One sheep per 40 active grass cells, capped at eight",
+          "Full-width 0.72-second scan before the first drop",
+          "Every sheep move start equals its landing-ready timestamp",
+          "No flower output",
+          "Standard GitHub light and dark contribution palette tokens",
+          "Exactly 123 signature cells with shared UFO, laser, and paint timestamps",
+          "No new dependency, filter, blur, lightning, particle field, or ambient motion",
+          "Representative runtime no more than 40 seconds",
+          "No permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the v10 fixed flock, relay timing, flowers, single-line beam, and fixed palette while retaining the feedback and measured evidence."
+      },
+      {
+        "id": "proposal-cinematic-field-v12",
+        "feedback_ids": [
+          "feedback-directing-reset-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "opening scene grammar, scan decision handoff, signature reveal grammar, deterministic SVG checks, and durable directing study",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 11,
+        "cause": "V11 exposed implementation rather than intention: the scan did not leave readable decisions and the finale made the UFO execute every cell, so both beats lacked hierarchy, closure, and a single causal image.",
+        "candidate_change": "Enter to field centre in 0.64 seconds, charge for 0.16 seconds, scan all seven rows top-to-bottom in 0.62 seconds, reveal each optimized lock only after its row is crossed, hold the decision for 0.26 seconds, and approach the first drop in 0.24 seconds. Preserve the causal sheep system. After a 0.28-second empty-field pause, converge on [26,3] and use one 1.08-second elliptical wave plus eight normalized distance phases to reveal all 123 SEONARU cells; confirm, exit upward, and hold for 1.40 seconds.",
+        "discovery_evidence": "The project study in docs/nulnul/directing-study-v12.md maps Miyazaki's quiet interval, Kon's single intended transition, Kurosawa's meaningful movement, Fortiche's storyboard-first eye flow, game-VFX readability, comics closure, and Saul Bass title restraint to a measurable fixed-camera shot contract.",
+        "reproduction": "Run npm run visual:fixture and inspect fixed 700px light and dark frames at 0.82, 1.20, 1.62, 8, 16, 24, 31.98, 32.28, 32.56, 32.84, 33.45, and 34.50 seconds; then run npm run check and the NULNUL validators.",
+        "primary_metric": "A fresh visual Gate reads observe-decide-deploy without explanation and reads the ending as one field transformation rather than cell plotting; runtime stays at or below 40 seconds and npm run check passes.",
+        "prediction": "One dominant line per act, a persistent scan-to-lock handoff, one quiet interval, and audience-completed distance reveal will feel more authored while deleting laser, rail, impact-tracking, and per-cell actor choreography.",
+        "expected_delta": {
+          "entry_ms": 640,
+          "scan_charge_ms": 160,
+          "scan_ms": 620,
+          "scan_lock_ms": 260,
+          "signature_reveal_ms": 1080,
+          "signature_distance_phases": 8,
+          "final_hold_ms_min": 1400,
+          "representative_runtime_seconds_max": 40
+        },
+        "falsification_condition": "Reject if the scan bar does not cross every row, any lock appears before its row is scanned, the first deployment does not follow the lock beat, a rail or laser remains, the wave front outruns or trails the cell phases, SEONARU is unclear at 700px, the hold is under 1.40 seconds, runtime exceeds 40 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus fixed 700px light and dark frames across scan, locks, flock progression, complete wave reveal, actor exit, and final hold.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "One sheep per 40 active grass cells, capped at eight",
+          "Seven-row scan with one post-scan lock per planned sheep",
+          "Every sheep move start equals its landing-ready timestamp",
+          "No flower output",
+          "No spotlight cone, top rail, laser, plotter, filter, blur, lightning, particle field, shake, or ambient motion",
+          "Exactly 123 signature cells in eight normalized elliptical distance phases",
+          "At least 1.40 seconds of final signature hold",
+          "Standard GitHub light and dark contribution palette tokens",
+          "Representative runtime no more than 40 seconds",
+          "No new dependency or permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore v11 only for visual comparison; do not reactivate its spotlight scan or top-rail plotter after the recorded user rejection."
+      },
+      {
+        "id": "proposal-silent-observation-v13",
+        "feedback_ids": [
+          "feedback-scan-marker-drop-layout-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "opening effects, observation timing, deployment target scoring, landing light, deterministic checks, and durable guidance",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 12,
+        "cause": "The scan bar and crosshairs explained internal planning instead of serving the pasture, while target selection optimized horizontal band centres but always preferred the smallest row, clustering paired drops.",
+        "candidate_change": "Delete scan and lock renderers. After the 0.64-second entry, hold centre for 0.28 seconds with only restrained hull light, turn toward the first drop for 0.12 seconds, and approach in 0.22 seconds. Within each horizontal band, alternate paired row targets between top and bottom and penalize nearby chosen drops. Reduce landing-light radius and opacity.",
+        "discovery_evidence": "Direct 700px review showed the overlays dominated the art direction and exposed the target planner's [9,5]/[7,5] cluster. The smallest coherent correction is removal plus one planner scoring change, without another effect system or dependency.",
+        "reproduction": "Run npm run visual:fixture and inspect fixed 700px light and dark frames at 0.64, 0.76, 0.92, 1.04, 1.16, 1.48, 1.82, 2.54, 3.26, and 4.10 seconds; then run npm run check and NULNUL validators.",
+        "primary_metric": "No viewer-visible scan/HUD remains and the representative six drops read as balanced left-centre-right top-bottom coverage; npm run check passes and runtime remains below 40 seconds.",
+        "prediction": "Letting stop-turn-travel communicate the decision and distributing paired drops vertically will feel more cinematic and less synthetic while deleting code and visual noise.",
+        "expected_delta": {
+          "scan_renderers": 0,
+          "drop_marker_renderers": 0,
+          "observe_ms": 280,
+          "decision_turn_ms": 120,
+          "first_approach_ms": 220,
+          "minimum_pair_row_separation": 4,
+          "representative_runtime_seconds_max": 40
+        },
+        "falsification_condition": "Reject if any sweep line, crosshair, or marker remains; if a representative band pair spans fewer than four rows; if landing light reads as a target circle; if sheep wait after landing; or if npm run check fails or runtime exceeds 40 seconds.",
+        "regression_check": "npm run check plus fixed 700px light and dark frames covering observation, turn, all six deployments, and flock handoff.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "No scan line, crosshair, drop marker, spotlight cone, top rail, laser, plotter, filter, blur, lightning, particle field, shake, or ambient motion",
+          "Each populated horizontal band separates paired drops by at least four rows",
+          "One sheep per 40 active grass cells, capped at eight",
+          "Every sheep move start equals its landing-ready timestamp",
+          "No flower output",
+          "Exactly 123 signature cells in eight normalized elliptical distance phases",
+          "At least 1.40 seconds of final signature hold",
+          "Representative runtime no more than 40 seconds",
+          "No new dependency or permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore v12 only for comparison; do not reactivate its scan bar, crosshairs, or clustered drop scoring after recorded rejection."
+      },
+      {
+        "id": "proposal-continuous-flight-grid-wave-v14",
+        "feedback_ids": [
+          "feedback-flight-continuity-grid-wave-20260813",
+          "feedback-dynamic-signature-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "deployment path scoring, UFO travel interpolation and timing, dynamic signature text and glyphs, grid-wave rendering, checks, and durable guidance",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 13,
+        "cause": "A pre-arrival correction, horizontally reversing targets, repeated travel streaks, an idle centre beat, and Euclidean finale distance made otherwise valid motion read as mechanical and circular.",
+        "candidate_change": "Remove the correction keyframe, distribute six targets into increasing horizontal slots with alternating rows, use 0.40-second travel and no internal streaks, reduce the centre beat to a 0.10-second turn, synchronize the name with an eight-phase square-distance wave, and pass the configured GitHub username through a complete A-Z/0-9/hyphen pixel font without silent truncation.",
+        "discovery_evidence": "Source tracing identified the exact 3px/70ms snap and route reversals. Fixed 700px light/dark frames verify the route [5,1]→[14,5]→[22,2]→[31,6]→[39,2]→[47,5] and the rectangular front crossing all 371 cells.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect fixed 700px opening frames from 0.64 through 5.14 seconds and finale frames from 30.60 through 32.02 seconds in light and dark palettes.",
+        "primary_metric": "The UFO never doubles back during deployment, no last-moment positional snap is generated, and the finale reads as a rectangular grid front rather than an ellipse at 700px; runtime remains below 40 seconds.",
+        "prediction": "Fewer direction changes, slightly longer flights, and a theme-visible square-distance front will make both acts more legible without adding a new effect or character system.",
+        "expected_delta": {
+          "internal_flight_streaks": 0,
+          "horizontal_route_reversals": 0,
+          "inter_drop_flight_ms": 400,
+          "centre_turn_ms": 100,
+          "grid_wave_cells": 371,
+          "grid_wave_phases": 8,
+          "dynamic_signature_characters_max": 13,
+          "representative_runtime_seconds_max": 40
+        },
+        "falsification_condition": "Reject if any deployment x coordinate fails to increase, if a final correction keyframe returns, if the centre hold exceeds the turn beat, if the wave reads circular or disappears on either theme, if sheep behavior changes, or if npm run check fails.",
+        "regression_check": "npm run check plus fixed 700px light/dark opening and finale frames.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "No scan, HUD, flower, leader sheep, mixed species, filter, blur, laser, plotter, or ambient motion",
+          "Production signature uses the configured GitHub username and rejects unsupported or overlong text",
+          "No horizontal deployment reversal or pre-arrival correction",
+          "One sheep per 40 active grass cells, capped at eight",
+          "Every sheep move start equals its landing-ready timestamp",
+          "Exactly 371 grid-wave cells and 123 signature cells in eight square-distance phases",
+          "At least 1.40 seconds of final signature hold",
+          "Representative runtime no more than 40 seconds",
+          "No new dependency or permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore v13 only for comparison; do not restore its centre hold, route reversals, pre-arrival correction, or elliptical wave after recorded rejection."
+      },
+      {
+        "id": "proposal-direct-drop-v15",
+        "feedback_ids": [
+          "feedback-direct-drop-middle-act-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "opening timeline, entry flight keyframes, deterministic checks, and middle-act motion diagnosis",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 14,
+        "cause": "The centre remained an implementation waypoint with no story job, while grazing holds duplicate 36–49% of sheep position frames and create the perceived middle-act stutter.",
+        "candidate_change": "Start the UFO directly above the first planned drop and reach it at 0.64 seconds, deleting observation/decision/approach states. Preserve the rest of v14. Separately propose, but do not yet implement, continuous pass-by bites that omit repeated visual holds while retaining simulation and grass timing.",
+        "discovery_evidence": "Fixed 700px frames confirm the direct entry. Generated keyframe counts show 31–42 repeated stops per sheep, making motion continuity a stronger intervention target than particles, extra characters, or ambient effects.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect fixed 700px frames at 0 through 1.04 seconds and recount repeated sheep position frames before any middle-act implementation.",
+        "primary_metric": "The opening contains no centre coordinate before deployment, first drop is reached at 0.64 seconds, runtime stays below 40 seconds, and no unapproved middle-act effect is introduced.",
+        "prediction": "Removing the last explanatory waypoint will make the opening immediate; treating repeated grazing holds as the next root cause will improve the middle act more than adding decoration.",
+        "expected_delta": {
+          "pre_drop_centre_waypoints": 0,
+          "first_drop_arrival_ms": 640,
+          "representative_runtime_seconds_max": 40,
+          "new_middle_act_effect_layers": 0
+        },
+        "falsification_condition": "Reject if the UFO visits centre before first deployment, reaches a point other than the first planned drop at 0.64 seconds, changes the existing sheep behavior without approval, or npm run check fails.",
+        "regression_check": "npm run check plus fixed 700px direct-entry frames.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "No centre waypoint before first drop",
+          "No scan, HUD, flower, leader sheep, mixed species, filter, blur, laser, plotter, or ambient motion",
+          "Preserve dynamic username, rectangular finale, theme palettes, and grass timing",
+          "No new dependency or permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore only the v14 centre-to-first-drop states for comparison; do not restore them after the direct-entry user correction."
+      },
+      {
+        "id": "proposal-causal-bite-fixed-flock-v16",
+        "feedback_ids": [
+          "feedback-causal-bite-fixed-flock-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "flock cap, arrival ownership metadata, sheep bite keyframes, deterministic synchronization checks, and durable guidance",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 15,
+        "cause": "Density scaling changed the cast without a scene reason, while generic stationary-run acting could falsely communicate eating during a collision wait and made the grass relationship unreliable.",
+        "candidate_change": "Use a fixed six-sheep cap for every non-empty grid and let target feasibility be the only reduction. Preserve sheepIndex on each visual grass arrival and use those records to schedule a 60ms pre-arrival brace, synchronized 120ms head/body/grass/crumb impact, 230ms release, and 240ms departure. Leave non-eating waits neutral.",
+        "discovery_evidence": "The build used ceil(grassCount/40), and sheepKeyframes inferred a bite from the first frame of every stationary run. The corrected fixture maps all 201 grass arrivals to an owner and produces matching impact timestamps; 1, 40, 41, 201, 241, and 351 active-cell contexts all report the same cap of six.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect fixed 700px frames from 5.56 through 6.10 seconds and compare every arrival's first grass step with its owner sheep's head and pose keyframes.",
+        "primary_metric": "All non-empty density probes use a six-sheep cap, every grass arrival has exactly synchronized responsible-sheep impact acting, collision holds do not create bite acting, and runtime remains below 40 seconds.",
+        "prediction": "A stable cast and arrival-owned bite beats will make the middle act read as purposeful eating rather than density-driven spawning or unexplained waiting, without adding a new visual layer.",
+        "expected_delta": {
+          "non_empty_flock_cap": 6,
+          "density_based_cap_rules": 0,
+          "bite_anticipation_ms": 60,
+          "bite_impact_ms": 120,
+          "bite_release_ms": 230,
+          "bite_departure_ms": 240,
+          "unowned_bite_poses": 0
+        },
+        "falsification_condition": "Reject if any non-empty density probe changes the cap, if a grass first step lacks matching owner head/body impact, if a collision wait triggers bite acting, if grass completes after departure, or if npm run check fails.",
+        "regression_check": "npm run check plus fixed 700px grazing frames without UFO occlusion.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "Six-sheep cap independent of grass density, reduced only by distinct reachable assignment feasibility",
+          "Grass, head, body, and crumb share the 120ms impact timestamp",
+          "Grass reaches empty by 230ms before 240ms departure",
+          "Collision waits remain neutral",
+          "No new effect layer, dependency, character species, or permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore v15 bite inference and density cap only for comparison; do not retain either after the causal and fixed-cast correction."
+      },
+      {
+        "id": "proposal-euclidean-cell-wave-v17",
+        "feedback_ids": [
+          "feedback-physical-wave-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "shared field-wave distance model, username reveal timing, deterministic checks, and durable guidance",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 17,
+        "cause": "Axis-normalized Chebyshev distance made horizontal propagation roughly 7.7 times faster than vertical propagation and kept peak amplitude constant, so the result behaved as a rectangular wipe instead of a point wave.",
+        "candidate_change": "Use Math.hypot from field centre for both all-cell crest timing and username reveal, quantized to half-cell phases over the existing 1.08 seconds. Keep a thin crest and short wake, attenuate opacity with inverse-square-root-style distance, and render only contribution rectangles without an outline circle or ellipse.",
+        "discovery_evidence": "Source tracing found the anisotropic divisor pair 23 and 3. The corrected 53x7 fixture produces 53 phases from centre to corner; fixed 700px light/dark frames show a local centre start, boundary-clipped left/right propagation, synchronized letter reveal, and a visible but weaker outer edge.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect fixed 700px light/dark frames at 30.18, 30.28, 30.42, 30.60, 30.80, 31.00, 31.20, and 31.38 seconds.",
+        "primary_metric": "Every field and username cell uses the shared Euclidean arrival phase, all phases 0 through 52 are emitted, the front remains readable on both themes without circle or ellipse geometry, and runtime remains below 40 seconds.",
+        "prediction": "Equal-speed distance timing plus a small physically motivated amplitude falloff will read as one authored impact wave rather than a generic growing ring or rectangular wipe, without adding another effect layer.",
+        "expected_delta": {
+          "grid_wave_cells": 371,
+          "grid_wave_phases": 53,
+          "wave_duration_ms": 1080,
+          "origin_peak_opacity": 0.5,
+          "edge_peak_opacity": 0.157,
+          "new_effect_layers": 0
+        },
+        "falsification_condition": "Reject if opposite equal-distance cells receive different phases, any username cell differs from its field-front phase, the edge disappears in either theme, an explicit circle or ellipse is rendered, runtime exceeds 40 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus fixed 700px light and dark finale frames.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "One shared Euclidean distance model for field and username cells",
+          "Exactly 371 wave cells and phases 0 through 52",
+          "No circle, ellipse, laser, plotter, filter, blur, or secondary ripple layer",
+          "Preserve dynamic username, theme palettes, fixed flock, and causal bite timing",
+          "No new dependency or permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the square-distance phase function only for comparison; do not retain it after the recorded physical-wave correction."
+      },
+      {
+        "id": "proposal-middle-act-escalation-v18",
+        "feedback_ids": [
+          "feedback-middle-act-escalation-20260813",
+          "feedback-middle-act-airlift-pacing-20260813",
+          "feedback-long-username-signature-20260813"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "spawn schedule, one simulation-backed airlift, bite-driven sheep state, long-username signature layout, deterministic checks, and durable guidance",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 1,
+        "to_version": 18,
+        "cause": "Deploying the full cast at one intensity left the longest act without a state change, while bite progress disappeared immediately instead of accumulating toward the pickup and finale.",
+        "candidate_change": "Deploy four advance sheep, spend exactly 2.40 visible seconds relocating one working sheep, then add two reinforcements only after release. Drive restrained body growth and green wool marks from recorded bites. Preserve large one-line signatures through 13 characters and use two centred 3x3 lines for 14-26 characters.",
+        "discovery_evidence": "The selected scene grammar creates one setup, incident, escalation, and resolution from the existing cast and UFO. The fixture records a real [17,5] to [30,1] relocation, delays all dependent grass and pickup timing by the same operation duration, and preserves all 201 causal arrivals.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect the fixed 2.40-second airlift frames and a 700px VERY-LONG-GITHUB-USERNAME final frame.",
+        "primary_metric": "The fixture reads as four workers, one 2.40-second causal airlift, and two delayed reinforcements; all 201 arrivals remain owner-synchronized; 14-26-character signatures use two full-height centred lines; runtime stays below 40 seconds.",
+        "prediction": "One state-changing incident and visible accumulated progress will break grazing repetition while preserving the miniature-pasture style and fixed six-sheep budget.",
+        "expected_delta": {
+          "advance_flock": 4,
+          "reinforcement_flock": 2,
+          "relocation_events": 1,
+          "relocation_duration_ms": 2400,
+          "reinforcement_first_visible_ms": 7540,
+          "signature_max_characters": 26,
+          "signature_long_lines": 2,
+          "growth_max_scale": 1.15,
+          "energy_max_opacity": 0.48,
+          "fixture_arrivals": 201,
+          "new_effect_layers": 0
+        },
+        "falsification_condition": "Reject if the visible airlift is not exactly 2.40 seconds, reinforcement begins before release, grass timing loses owner synchronization, a 14-26-character signature is truncated or leaves the grid, runtime exceeds 40 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus fixed 700px light and dark middle-act frames.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "Fixed maximum of six sheep, independent of grass density",
+          "Exactly one simulation-backed relocation and no continuous UFO following",
+          "Visible relocation totals 2.40 seconds and reinforcement starts after release",
+          "All 201 grass arrivals remain owner-synchronized",
+          "No silent username truncation; two centred lines through 26 characters",
+          "Runtime at or below 40 seconds",
+          "No new effect layer, dependency, or permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the v17 simultaneous six-sheep middle act while retaining causal bites and the Euclidean finale."
+      },
+      {
+        "id": "proposal-fullness-turnover-panel-v19",
+        "feedback_ids": [
+          "feedback-fullness-turnover-panel-20260814"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "field staffing, logical flock turnover, command panel, deterministic checks, workflow gate, and durable guidance",
+        "change_level": "task",
+        "status": "accepted",
+        "from_version": 1,
+        "to_version": 19,
+        "cause": "The fixed cast hid contribution scale and deferred every pickup to the ending, leaving full sheep visually idle and making substantially different contribution histories feel too similar.",
+        "candidate_change": "Use total contribution energy to choose 1/2/4/6 simultaneous field sheep. Give each logical sheep 20 energy of capacity, serialize an immediate pickup and hungry replacement in the same working slot, and render the selected sheep plus the uncapped complete roster in a two-row command panel.",
+        "discovery_evidence": "The representative grid contains 201 causal arrivals and partitions into 28 logical sheep across six physical working slots. The corrected 700px dark fixture shows all 28 slots, 22 immediate exchanges, selected DEPLOYING/GRAZING/EXTRACTING states, and FIELD/FLOCK/GRASS counters. Deterministic 100- and 300-cell probes produce 22 and 62 roster sheep.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect 700px light/dark frames at 4.84, 5.08, 5.18, 15.00, 28.00, and 35.50 seconds.",
+        "primary_metric": "The complete roster remains readable in two rows, each full sheep is exchanged before its route resumes, field staffing follows 0/1/2/4/6 energy thresholds, all 201 arrivals remain synchronized, and runtime stays below 40 seconds.",
+        "prediction": "Visible per-sheep completion and an uncapped roster will turn contribution volume into a legible achievement while UFO exchanges replace idle waiting with causal motion.",
+        "expected_delta": {
+          "representative_field_sheep": 6,
+          "representative_roster_sheep": 28,
+          "representative_turnovers": 22,
+          "fullness_capacity": 20,
+          "roster_rows": 2,
+          "roster_cap": 0,
+          "fixture_arrivals": 201,
+          "runtime_max_seconds": 40
+        },
+        "falsification_condition": "Reject if any full sheep waits for the final group pickup, a replacement creates a field-idle gap, the roster truncates or exceeds two rows, 100- and 300-scale histories collapse to the same visible flock, any causal arrival is lost, runtime exceeds 40 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus fixed 700px light and dark turnover and finale frames.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "Simultaneous field staffing uses only 0, 1, 2, 4, or 6 sheep",
+          "Every full sheep receives one serialized pickup and hungry replacement",
+          "Every logical sheep appears in exactly one of two roster rows",
+          "All 201 grass arrivals remain owner-synchronized",
+          "Runtime at or below 40 seconds",
+          "No new dependency, effect layer, or permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore v18 only for comparison; retain the Euclidean finale and causal bite timing either way."
+      },
+      {
+        "id": "proposal-command-panel-readability-v20",
+        "feedback_ids": [
+          "feedback-command-panel-readability-20260814"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "command-panel selected card, typography hierarchy, numbered two-row selection grid, and deterministic SVG assertions",
+        "change_level": "task",
+        "status": "accepted",
+        "from_version": 19,
+        "to_version": 20,
+        "cause": "The panel reused a tiny top-down field sprite outside its readable scale, fixed every roster slot at 16px instead of using available width, and assigned equal low-contrast weight to small monospaced labels and values.",
+        "candidate_change": "Keep the original sheep artwork at 28x23 only in the selected card, split header keys from bold values at 8.5px, and replace repeated miniature sheep with row-major numbered tiles, individual green progress bars, and one active green outline across the full responsive two-row roster width.",
+        "discovery_evidence": "The reported frame and source measurements reproduce the white-blob portrait, tiny header, left-clustered 28-member roster, and unused right space. Corrected 700px frames show the original sheep without distortion and a scan-friendly 01-14/15-28 grid; a 62-member probe remains legible as 01-31/32-62 with no overlap.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect 700px light/dark frames at 5.08, 15.00, and 35.50 seconds plus the 300-cell 62-member probe at 20.00 and 57.50 seconds.",
+        "primary_metric": "A fresh Gate rates README readability and visual cohesion at least 3/4, recognizes the selected portrait as the original sheep, reads the roster as a game selection grid, and finds no clipping, overlap, left clustering, or unreadable header at 28 and 62 members.",
+        "prediction": "One familiar selected portrait, stronger type hierarchy, numbered row-major tiles, and width-aware spacing will make the HUD feel authored instead of debug-like without changing the accepted motion or adding another effect layer.",
+        "expected_delta": {
+          "selected_glyph_width_px": 28,
+          "representative_slot_width_px": 27,
+          "header_font_px": 8.5,
+          "roster_rows": 2,
+          "repeated_roster_sheep_glyphs": 0,
+          "representative_roster_sheep": 28,
+          "dense_probe_roster_sheep": 62,
+          "fixture_bytes_max": 1111928
+        },
+        "falsification_condition": "Reject if either theme makes the header hard to read, the selected original sheep still looks distorted, tile order is not row-major, 28 slots leave a large unused right area, 62 numbered slots overlap or become unreadable, current selection is not linked by one green outline, any accepted motion behavior changes, fixture growth exceeds 15 percent without benefit, or npm run check fails.",
+        "regression_check": "npm run check plus fixed 700px light/dark panel frames for representative and dense rosters.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "No motion, simulation, turnover, finale, or field-art changes",
+          "Exactly two complete roster rows with no 12-sheep cap",
+          "No new dependency, filter, blur, effect layer, or permission expansion",
+          "Generated fixture growth remains below 15 percent"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore only the v19 flockPanelLayer markup and matching assertions; retain all accepted turnover, motion, and finale behavior."
+      },
+      {
+        "id": "proposal-turnover-identity-early-pickup-v21",
+        "feedback_ids": [
+          "feedback-turnover-identity-final-pickup-20260814"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "turnover opacity timing, final pickup scheduling, FIELD lifecycle counter, and deterministic assertions",
+        "change_level": "task",
+        "status": "accepted",
+        "from_version": 20,
+        "to_version": 21,
+        "cause": "The same physical sheep group reused one cell and crossed directly from full to empty without a visible absence, while final pickup order was blocked by the maximum finish time of all six workers.",
+        "candidate_change": "Hide the outgoing sheep completely for 80ms before the hungry replacement descends, expose the brief 5/6 service state in FIELD, and greedily route the single UFO to the earliest physically reachable finished sheep without waiting for the whole field.",
+        "discovery_evidence": "Measured frames reproduce the old same-sheep crossfade and all-done barrier. Candidate frames show SHEEP 01 EXTRACTING, one empty service beat, SHEEP 07 DEPLOYING, and a first final pickup at 90 percent grass followed by continuous collection through zero field sheep.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect 700px dark frames at 4.84, 5.04, 5.17, 5.27, 27.10, 27.84, 28.76, and 31.16 seconds.",
+        "primary_metric": "A fresh Gate reads each turnover as two sheep and sees no dead all-finished wait before final pickup; FIELD remains within 0/6 through 6/6, all 201 causal arrivals remain synchronized, and runtime stays below 40 seconds.",
+        "prediction": "A tiny absence plus ID handoff will separate identities without another art variant, while finish-aware routing will replace the final idle tableau with continuous causal UFO work.",
+        "expected_delta": {
+          "turnover_empty_gap_ms": 80,
+          "first_final_pickup_seconds": 27.1,
+          "last_sheep_finish_seconds": 28.54,
+          "field_count_min": 0,
+          "field_count_max": 6,
+          "new_effect_layers": 0,
+          "runtime_max_seconds": 40
+        },
+        "falsification_condition": "Reject if the handoff still reads as the same sheep, FIELD leaves the 0-6 range, final pickup waits until every sheep finishes, the UFO reaches a sheep before its final route completes, runtime exceeds 40 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus fixed 700px dark turnover and early-final-pickup frames.",
+        "transfer_check": "Not applicable; this is a project-scoped visual candidate.",
+        "guardrails": [
+          "npm run check",
+          "One physical UFO and no overlapping service visits",
+          "Every pickup occurs at or after that sheep's visual finish",
+          "No new glyph, dependency, filter, blur, or effect layer",
+          "All 201 grass arrivals remain owner-synchronized",
+          "Runtime at or below 40 seconds",
+          "No permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore v20 turnover crossfade and all-done final pickup barrier while retaining the accepted panel and flock model."
+      },
+      {
+        "id": "proposal-profile-theme-panel-sections-v22",
+        "feedback_ids": [
+          "feedback-profile-theme-panel-deployment-20260814"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "theme tokens, generated SVG variants, profile publishing workflow, README embed, command-panel section framing, and deterministic assertions",
+        "change_level": "task",
+        "status": "accepted",
+        "from_version": 21,
+        "to_version": 22,
+        "cause": "One self-theming external SVG cannot observe a GitHub-only theme override, the scheduled profile deployment has not run since the panel shipped, and the panel body relies on subtle rules instead of framed functional regions.",
+        "candidate_change": "Generate one animation once and derive explicit light and dark SVG variants, publish both plus the complete fallback asset, update the profile README image line to GitHub's theme-context fragments, give the light theme a real light HUD palette, and frame the selected-unit and flock-roster bodies independently.",
+        "discovery_evidence": "GitHub's documented gh-light-mode-only and gh-dark-mode-only URL fragments select images from the viewer's GitHub theme. The existing generator and profile workflow already own the SVG and destination asset path, so no dependency or new service is required.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect forced 700px light/dark frames at 5.27, 15.00, and 27.84 seconds, verify three synchronized assets, then inspect the published profile README and asset dimensions after workflow dispatch.",
+        "primary_metric": "The public profile README loads a 700x206-or-taller asset with the full panel, GitHub light and dark themes select their matching forced variant, and both selected-unit and flock-roster regions read as separate panels without losing the 28-member grid.",
+        "prediction": "Explicit variants remove the cross-document theme ambiguity, while two inset section frames will improve scan order more than adding labels or another information layer.",
+        "expected_delta": {
+          "published_theme_variants": 2,
+          "profile_panel_present": 1,
+          "panel_body_sections": 2,
+          "new_dependencies": 0,
+          "runtime_max_seconds": 40
+        },
+        "falsification_condition": "Reject if GitHub theme selection can still show the opposite palette, the published SVG omits the panel, either section is ambiguous or cramped at 700px, the roster clips, runtime exceeds 40 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus forced-theme 700px panel frames and a local profile README rewrite fixture.",
+        "transfer_check": "Not applicable; this is a project-scoped publishing and panel candidate.",
+        "guardrails": [
+          "npm run check",
+          "No motion, simulation, sheep, UFO, or finale timing changes",
+          "One generated animation shared byte-for-byte across theme variants except the root theme attribute",
+          "Exactly two framed panel body sections",
+          "No new dependency, effect layer, credential, or permission expansion",
+          "Runtime at or below 40 seconds"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the v21 auto-theme asset and separator-only panel while retaining all accepted turnover and pickup behavior."
+      },
+      {
+        "id": "proposal-github-pasture-panel-v23",
+        "feedback_ids": [
+          "feedback-github-pasture-panel-cohesion-20260814"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "command-panel surface, sparse roster distribution, roster lifecycle states, selected identity, FIELD timing, theme tokens, and deterministic assertions",
+        "change_level": "task",
+        "status": "accepted",
+        "from_version": 22,
+        "to_version": 23,
+        "cause": "Nested framed regions introduced a second visual language below the pasture, the 33px pitch cap centred sparse rosters inside unused space, and panel state was driven by pickup arrival rather than each sheep's visual hide time.",
+        "candidate_change": "Use one flat GitHub-style card with only header and body dividers, retain the original sheep at natural panel scale, distribute two-row roster slots across the full body width, tint collected slots with contribution green and mark wide ones with checks, outline active and extracting slots, decrement FIELD only when a sheep visually disappears, and immediately select another visible sheep or a completed pasture summary.",
+        "discovery_evidence": "The project already carries standard GitHub contribution palettes, the original sheep symbol, exact spawn, pickup, turnover-hide, and final-pickup fade timings, and two-row uncapped roster metadata, so the correction needs no new asset, dependency, effect, or simulation change.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect forced 700px light and dark frames for the representative 28-member fixture plus a deterministic 10-member probe at grazing, extraction, FIELD 0, and complete states.",
+        "primary_metric": "At 700px, the panel and pasture read as one GitHub contribution system, 10- and 28-member rosters use the full available width without clipping, selected identity matches a visually present sheep through extraction, and FIELD reaches zero only after the last sheep disappears.",
+        "prediction": "Removing inset boxes and reusing contribution cells for roster state will improve cohesion and achievement readability while corrected hide-time state transitions eliminate the apparent frozen or contradictory ending.",
+        "expected_delta": {
+          "nested_body_frames": -2,
+          "roster_lifecycle_states": 3,
+          "sparse_roster_full_width": 1,
+          "new_dependencies": 0,
+          "runtime_delta_seconds": 0
+        },
+        "falsification_condition": "Reject if the panel still reads as a separate game skin, sparse slots float in unused space, collected and active sheep are ambiguous, FIELD changes before visual disappearance, selected identity points to a removed sheep, any roster clips, the benchmark falls below 16/20, or npm run check fails.",
+        "regression_check": "npm run check plus exact-time 700px light and dark captures for 10- and 28-member rosters.",
+        "transfer_check": "Not applicable; this is a project-scoped panel and state correction.",
+        "guardrails": [
+          "npm run check",
+          "No motion, simulation, sheep, UFO, contribution staffing, or finale timing changes",
+          "Keep the original sheep and GitHub contribution palettes",
+          "Keep every logical sheep in exactly two uncapped roster rows",
+          "No nested body cards, new dependency, asset, filter, blur, or effect layer",
+          "Runtime at or below 40 seconds"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore only the v22 panel markup, palette tokens, and pickup-arrival panel events while retaining profile theme variants and publishing."
+      },
+      {
+        "id": "proposal-complete-panel-ufo-v24",
+        "feedback_ids": [
+          "feedback-complete-panel-ufo-20260814"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "completed-state selected region and deterministic SVG assertion",
+        "change_level": "task",
+        "status": "accepted",
+        "from_version": 23,
+        "to_version": 24,
+        "cause": "The completed panel replaced the selected sheep with a generic contribution square, leaving the character-oriented left region visually under-specified after the flock departed.",
+        "candidate_change": "Reuse the exact inline UFO constant as a 30x30 completion icon in the left region, align the existing completion copy with the normal selected-sheep text column, and assert the panel symbol remains present.",
+        "discovery_evidence": "The original UFO constant and field glyph already exist and are synchronized with assets/ufo.svg, so the completion state needs only one reused symbol and no new asset, dependency, animation, or effect.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect exact 700px light and dark frames at the representative complete state and final username reveal plus the 10-member complete probe.",
+        "primary_metric": "The completed left region remains occupied and reads as the UFO that collected the flock without competing with PASTURE CLEAR, the roster, or the final username at 700px.",
+        "prediction": "Replacing the generic square with the familiar UFO will close the character handoff and keep the left region balanced without changing panel structure or pacing.",
+        "expected_delta": {
+          "reused_ufo_symbols": 1,
+          "generic_completion_squares": -1,
+          "new_assets": 0,
+          "runtime_delta_seconds": 0
+        },
+        "falsification_condition": "Reject if the UFO is unreadable at 700px, looks like a second active field UFO, crowds the completion copy, competes with the username finale, changes motion timing, or npm run check fails.",
+        "regression_check": "npm run check plus exact complete-state light/dark frames for the 10- and 28-member fixtures.",
+        "transfer_check": "Not applicable; this is a project-scoped completion-panel detail.",
+        "guardrails": [
+          "Reuse the exact original UFO constant",
+          "No new asset, dependency, animation, filter, blur, or effect",
+          "No panel layout, roster, simulation, motion, or finale timing change",
+          "Runtime at or below 40 seconds"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the v23 green completion square and remove only the panel UFO symbol."
+      },
+      {
+        "id": "proposal-remote-turnover-terminal-panel-v25",
+        "feedback_ids": [
+          "feedback-remote-turnover-terminal-panel-20260814"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "turnover route planning, serialized UFO service stops, replacement sheep bridge keyframes, terminal panel visibility, discrete ten-cell fullness meters, shared playback pacing, pasture-linked panel lines, README behavior description, and deterministic assertions",
+        "change_level": "task",
+        "status": "accepted",
+        "from_version": 24,
+        "to_version": 25,
+        "cause": "Turnover was modeled as an opacity handoff at one nominal grass cell instead of a spatial service journey, and the shared interval helper treated terminal visibility like a temporary state.",
+        "candidate_change": "Resolve each outgoing sheep's actual route position, choose a cleared deployment point at least three Manhattan cells away and connected to the next recorded bite, serialize pickup and drop as two UFO stops, bridge the replacement directly into its existing causal route, keep every interval that reaches the total duration visible at 100 percent, clip level-weighted progress through ten fixed GitHub-style cells that hold between bites, stretch every motion track by one shared 1.3 factor, and reuse the existing fence color for only the panel perimeter and major dividers.",
+        "discovery_evidence": "The representative 22 turnovers exposed one-stop pickup/drop reuse and occasional one-cell disagreement between UFO and sheep positions. Candidate measurements show 50 ordered UFO stops, all 22 pickup-to-drop distances at three cells or more, a visible 6/6 to 5/6 to deploying to 6/6 handoff, identical exact-end and post-end panels, bite-only meter jumps, and a 48.087-second runtime with no actor or motion reduction.",
+        "reproduction": "Run npm run check and npm run visual:fixture; inspect forced 700px frames at 6.34, 6.60, 6.77, 7.02, 7.31, 17.94, 37.18, 44.85, 48.09, and 49.00 seconds in dark plus the post-end light frame and a sparse 10-member meter frame.",
+        "primary_metric": "Every turnover visibly separates pickup and deployment by at least three cells while preserving all 201 causal grass arrivals, serialized UFO service, final pickup before all sheep finish, terminal HUD persistence, bite-only fullness changes, and a 1.3x runtime below 50 seconds.",
+        "prediction": "Making the UFO perform a real transport between two meaningful positions will distinguish identities more clearly than a longer same-cell absence, while one terminal-aware visibility rule fixes all disappearing completion states at their shared root.",
+        "expected_delta": {
+          "remote_turnovers": 22,
+          "minimum_pickup_drop_manhattan_cells": 3,
+          "terminal_panel_states_preserved": 4,
+          "fullness_cells_per_sheep": 10,
+          "new_assets": 0,
+          "motion_time_scale": 1.3,
+          "runtime_max_seconds": 50
+        },
+        "falsification_condition": "Reject if any replacement lands within two cells of its pickup, the UFO and sheep disagree on pickup position, a replacement crosses an uncleared grass cell before its recorded bite, the exchange loses a readable field vacancy, the terminal panel disappears, fullness drifts between bites, panel grid or fence lines compete with its data, runtime exceeds 50 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus exact-time 700px turnover, early-final-pickup, finale, exact-end, and post-end frames in both themes.",
+        "transfer_check": "Not applicable; this is a project-scoped motion and terminal-state correction.",
+        "guardrails": [
+          "npm run check",
+          "One physical UFO and strictly serialized pickup and deployment stops",
+          "All 201 grass arrivals remain owner-synchronized",
+          "No new glyph, dependency, filter, blur, or effect layer",
+          "Keep the original UFO and sheep art",
+          "One shared 1.3x motion scale and runtime at or below 50 seconds",
+          "No permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the v24 one-stop turnover timing and nonterminal visibility helper while retaining the accepted GitHub-style panel and completed UFO icon."
+      },
+      {
+        "id": "proposal-stronger-bite-energy-v26",
+        "feedback_ids": [
+          "feedback-stronger-bite-energy-20260814",
+          "feedback-turnover-screen-position-20260814"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "selected-sheep energy readout, existing ten-cell meter response, rendered turnover separation, landing bridge pace, reduced-motion suppression, README description, and deterministic assertions",
+        "change_level": "task",
+        "status": "accepted",
+        "from_version": 25,
+        "to_version": 26,
+        "cause": "The accepted bite-driven meter does not explicitly reinforce exact energy or bite impact, while the accepted Manhattan-only turnover distance ignores the rendered UFO footprint and compresses multi-cell landing bridges into the old logical bite window.",
+        "candidate_change": "Reuse the existing selected meter and bite records for ENERGY n/20 plus a brief bite-only overlay; select the nearest safe drop whose rendered centre clears one UFO width plus one grass cell, then extend only that sheep's downstream delay so every landing bridge edge keeps SHEEP_CELL_TIME. Remove the invisible drop and release gaps to retain the shared runtime ceiling, and hide only the meter pulse under reduced motion.",
+        "discovery_evidence": "The first representative bite changes 0/20 to 4/20 and fills two of ten cells at the same impact. Rendered-distance tracing reproduced a 26.8px diagonal overlap under the old 32px UFO, and bridge tracing found five-cell paths compressed into 0.325 playback seconds. The accepted candidate clears 42px, gives each edge 0.312 seconds, and closes every edge pose at neutral without a new asset, dependency, filter, or effect layer.",
+        "reproduction": "Run npm run check and npm run visual:fixture; compare exact 700px forced-theme frames at 1.740, 1.755, and 1.840 seconds, inspect a middle frame and the terminal panel, then verify reduced-motion pulse suppression and 10/28/62-member layouts.",
+        "primary_metric": "At 700px, a selected bite produces one readable numerical and cellular reward; every pickup/drop pair has non-overlapping rendered footprints; every incoming sheep lands under the stopped UFO and crosses adjacent safe cells at the established speed; runtime remains at or below 50 seconds.",
+        "prediction": "Combining exact energy with a short causal response on the existing cells will make grass value feel substantially stronger without making the panel busier or adding an unrelated effect language.",
+        "expected_delta": {
+          "selected_energy_readout": 1,
+          "bite_synchronized_pulse_playback_seconds": 0.182,
+          "minimum_pickup_drop_rendered_pixels": 42,
+          "landing_bridge_seconds_per_cell": 0.312,
+          "new_effect_layers": 0,
+          "runtime_max_seconds": 50
+        },
+        "falsification_condition": "Reject if energy changes without a recorded bite, the pulse persists between bites, pickup/drop footprints overlap, the sheep is not under the UFO at either stop, a landing bridge moves faster than SHEEP_CELL_TIME, any route crosses uncleared grass, the panel clips, runtime exceeds 50 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus exact before/impact/after energy frames and pickup/vacancy/drop/walk frames at 700px in both themes, reduced-motion inspection, and sparse/representative/dense roster probes.",
+        "transfer_check": "Not applicable; this is a project-scoped selected-panel feedback correction.",
+        "guardrails": [
+          "Reuse the existing ten-cell meter and bite records",
+          "No simulation ownership, staffing, motion-scale, asset, dependency, filter, blur, or new effect layer",
+          "Energy and meter change only at recorded bite impact",
+          "Rendered pickup and drop centres remain at least one UFO width plus one grass cell apart",
+          "Every cleared landing bridge edge keeps SHEEP_CELL_TIME",
+          "Hide the bite pulse under prefers-reduced-motion",
+          "Preserve accepted light/dark, 10/28/62 roster, terminal panel, 201 arrivals, and 53 finale phases",
+          "No permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the v25 Manhattan drop selection and logical-window bridge timing, remove the selected numerical states and meter pulse, and retain the accepted v25 panel layout."
+      }
+    ],
+    "promotions": [
+      {
+        "id": "promotion-fullness-turnover-panel-v19-20260814",
+        "proposal_id": "proposal-fullness-turnover-panel-v19",
+        "gate_agent": "gate",
+        "before": "The unpromoted v18 candidate used one fixed six-sheep cast, one delayed relocation, two reinforcements, no persistent flock overview, and a final group pickup.",
+        "after": "The accepted v19 candidate scales field staffing through 1/2/4/6 sheep, immediately exchanges full sheep, and shows the complete uncapped flock in a two-row command panel while preserving the causal pasture and finale.",
+        "regressions_passed": true,
+        "decision": "accepted",
+        "live_cycle": {
+          "status": "observed",
+          "metric": "Frozen 700px visual benchmark plus deterministic product checks",
+          "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, the complete roster truncates, an exchange creates a visible idle gap, or npm run check fails.",
+          "evidence": "A fresh Gate that did not author v19 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Both themes preserved the 4.84 extraction, 5.08 deployment, 5.18 grazing handoff, 28-sheep two-row roster, 201 causal arrivals, and 53-phase finale; npm run check passed at 966,894 bytes and 36.44 seconds."
+        }
+      },
+      {
+        "id": "promotion-command-panel-readability-v20-20260814",
+        "proposal_id": "proposal-command-panel-readability-v20",
+        "gate_agent": "gate",
+        "before": "The accepted v19 panel enlarged the small field sheep into a distorted selected portrait, repeated miniature sheep in fixed-width slots, clustered the 28-member roster on the left, and used tiny undifferentiated header type.",
+        "after": "The accepted v20 panel keeps the original sheep at normal scale only in the selected card and presents the flock as a row-major numbered selection grid with individual progress bars, one active outline, stronger header hierarchy, and density-aware spacing.",
+        "regressions_passed": true,
+        "decision": "accepted",
+        "live_cycle": {
+          "status": "observed",
+          "metric": "Frozen 700px visual benchmark across light/dark and 1/2/9/28/62-member selection grids",
+          "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, the original selected sheep distorts, numbered tiles overlap or lose row-major order, active selection becomes unclear, or npm run check fails.",
+          "evidence": "A fresh Gate that did not author v20 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Both themes and 1, 2, 9, 28, and 62-member layouts passed with no blocker; npm run check passed at 981,652 bytes and all 413 non-panel v19 motion keyframes remained unchanged."
+        }
+      },
+      {
+        "id": "promotion-turnover-identity-early-pickup-v21-20260814",
+        "proposal_id": "proposal-turnover-identity-early-pickup-v21",
+        "gate_agent": "gate",
+        "before": "The accepted v20 turnover crossfaded a full and hungry sheep in the same slot without a visible absence, and final pickup waited for the latest of all six sheep finishes.",
+        "after": "The accepted v21 turnover exposes an 80ms empty service beat between distinct roster IDs, and the single UFO collects final sheep in earliest physically reachable finish order while others keep grazing.",
+        "regressions_passed": true,
+        "decision": "accepted",
+        "live_cycle": {
+          "status": "observed",
+          "metric": "Frozen 700px visual benchmark plus deterministic turnover, FIELD lifecycle, and pickup-order assertions",
+          "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, turnover reads as one sheep redropped, FIELD leaves 0-6, final pickup waits for every sheep, or npm run check fails.",
+          "evidence": "A fresh Gate that did not author v21 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. The 991,057-byte, 35.68-second fixture shows SHEEP 01 extraction, an empty slot, SHEEP 07 deployment, and final pickup beginning at 90 percent grass. All 201 arrivals, 53 finale phases, serialized pickup visits, themes, and banned-effect checks passed with no blocker."
+        }
+      },
+      {
+        "id": "promotion-profile-theme-panel-sections-v22-20260814",
+        "proposal_id": "proposal-profile-theme-panel-sections-v22",
+        "gate_agent": "gate",
+        "before": "The public profile still served a 700x115 pre-panel asset, the SVG could only read the operating-system theme, the light palette retained a dark HUD, and panel jobs were divided by subtle rules.",
+        "after": "The accepted v22 candidate derives forced light and dark 700x206 assets from one animation, publishes them with GitHub theme-context URLs, and frames selected-unit and complete-roster bodies as two distinct sections with matching theme palettes.",
+        "regressions_passed": true,
+        "decision": "accepted",
+        "live_cycle": {
+          "status": "observed",
+          "metric": "Forced-theme 700px visual benchmark plus deterministic asset identity and profile workflow assertions",
+          "rollback_threshold": "Roll back if either GitHub theme selects the opposite palette, the public asset loses the panel, either body section becomes ambiguous or clipped, the benchmark falls below 16/20, or npm run check fails.",
+          "evidence": "A fresh Gate that did not author v22 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Corrected CDP frames at 5.27, 15.00, and 27.84 seconds show matching forced palettes, two unmistakable body frames, and all 28 roster slots in both themes. The 991,941-byte, 35.68-second fixture, root-only variant comparison, profile README rewrite, main-push trigger, 201 arrivals, 53 finale phases, and banned-effect checks passed with no blocker. Main commit f688c3a triggered successful workflow run 31762203574; the public profile now serves both GitHub theme-context README URLs and three 700x206 SVGs containing the panel and both section frames."
+        }
+      },
+      {
+        "id": "promotion-github-pasture-panel-v23-20260814",
+        "proposal_id": "proposal-github-pasture-panel-v23",
+        "gate_agent": "gate",
+        "before": "The accepted v22 panel used nested sci-fi body frames, centred sparse roster tiles inside large empty margins, did not distinguish collected sheep, decremented FIELD at pickup arrival, and could keep a removed sheep selected.",
+        "after": "The accepted v23 panel is one flat GitHub contribution surface with full-width two-row roster distribution, contribution-green collected states, active and extracting outlines, original sheep art, visual-hide FIELD timing, and selection that always resolves to a present sheep or PASTURE CLEAR.",
+        "regressions_passed": true,
+        "decision": "accepted",
+        "live_cycle": {
+          "status": "observed",
+          "metric": "Forced-theme 700px visual benchmark across representative 28-member and sparse 10-member roster lifecycle frames",
+          "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, the panel diverges from the pasture palette, sparse rosters float or clip, collected and active sheep are ambiguous, selected identity disagrees with visual presence, FIELD changes before hide, or npm run check fails.",
+          "evidence": "A fresh Gate that did not author v23 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Exact current-source light/dark captures show 28 sheep at 5.04, 15.00, and 28.20 seconds plus 10 sheep at 6.00, 11.70, and 12.10 seconds. The 10-member roster fills 5x2 across the body; its final state moves from Field 1/4 and SHEEP 08 EXTRACTING to Field 0/4 and PASTURE CLEAR only after visual disappearance. The 1,032,013-byte, 35.68-second fixture, 201 arrivals, 53 finale phases, themes, roster checks, and banned-effect assertions pass with no blocker. Main commit 34e58b0 and cache-safe workflow run 31764748585 published the live result; the public README pins both GitHub theme images to profile asset commit 1b674b3, whose 700x206 SVGs contain v23 and no nested v22 frames."
+        }
+      },
+      {
+        "id": "promotion-complete-panel-ufo-v24-20260814",
+        "proposal_id": "proposal-complete-panel-ufo-v24",
+        "gate_agent": "gate",
+        "before": "The accepted v23 complete state removed the selected sheep but left a generic green square beside PASTURE CLEAR, weakening the character handoff after collection.",
+        "after": "The accepted v24 complete state reuses the exact original UFO as a static 30px panel icon, keeping the left region occupied and aligning completion copy with the selected-sheep text column.",
+        "regressions_passed": true,
+        "decision": "accepted",
+        "live_cycle": {
+          "status": "observed",
+          "metric": "Forced-theme 700px complete-state frames for representative 28-member and sparse 10-member rosters",
+          "rollback_threshold": "Roll back if the completion UFO becomes unreadable, crowds the copy, reads as a second active action, competes with the username finale, diverges from the original glyph, changes timing, or npm run check fails.",
+          "evidence": "A fresh Gate that did not author v24 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Exact current-source light/dark frames at 33.4 seconds for 28 roster sheep and 12.1 seconds for 10 show the static original UFO balancing PASTURE CLEAR without crowding copy or competing with the glowing field UFO and SEONARU. The 1,034,299-byte, 35.68-second fixture and 419,181-byte sparse probe pass all v23 state, roster, motion, timing, theme, and banned-effect checks with no blocker. Main commit c23eeb8 and workflow run 31765183005 published v24; the public README pins both theme images to profile asset commit 40f72b8, whose 700x206 files contain the panel UFO and no nested v22 frames."
+        }
+      },
+      {
+        "id": "promotion-remote-turnover-pixel-panel-v25-20260814",
+        "proposal_id": "proposal-remote-turnover-terminal-panel-v25",
+        "gate_agent": "gate",
+        "before": "The accepted v24 turnover collected and deployed at one nominal cell, continuous bars could look time-driven, the final panel states vanished at the exact animation end, the flat panel lacked a clear pixel-pasture frame, and the full sequence felt rushed.",
+        "after": "The accepted v25 turnover collects at the sheep's actual location and deploys a new identity 3–7 cells away through a safe causal bridge; ten fixed contribution cells jump only on bites; a stepped brown-fence panel persists through the terminal state; and one 1.3x scale gives every motion track more time.",
+        "regressions_passed": true,
+        "decision": "accepted",
+        "live_cycle": {
+          "status": "observed",
+          "metric": "Forced-theme 700px benchmark plus deterministic route, energy, pacing, density, terminal, publication, and public-asset identity checks",
+          "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, pickup and drop are fewer than three cells apart, a bridge uses a nonadjacent or uncleared pre-bite cell, fullness changes between bites, the terminal panel disappears, either two-row roster clips, runtime exceeds 50 seconds, or npm run check fails.",
+          "evidence": "A fresh Gate that did not author v25 scored it 20/20 with no blocker: hierarchy 4, acting 4, pacing/easing 4, cohesion 4, readability 4. The 1,117,182-byte, 48.087-second fixture preserves all 201 arrivals, 22 remote turnovers, 50 serialized UFO stops, 3–7-cell separation, safe adjacent bridges, final pickup before grass completion, ten-cell bite-only energy, both themes, 10/28/62-member grids, terminal persistence, and 53 finale phases. Feature commit 64bae81 and official Actions v7 run 31769972977 published project asset commit 32770de plus profile asset commit fba394f and README commit 4e5881a. Downloaded project/profile light and dark SVG pairs are byte-identical, 700x206, and contain the v25 panel, ten meters, and terminal keyframes; the public 10-member data scene runs 34.216 seconds."
+        }
+      },
+      {
+        "id": "promotion-stronger-energy-turnover-position-v26-20260814",
+        "proposal_id": "proposal-stronger-bite-energy-v26",
+        "gate_agent": "gate",
+        "before": "The accepted v25 panel hid exact energy behind ten cells, and its three-cell Manhattan turnover rule could overlap 32px UFO footprints diagonally while compressing several landing edges into one logical movement window.",
+        "after": "The accepted v26 panel shows exact ENERGY n/20 and one bite-only meter response; turnover endpoints clear the rendered UFO footprint plus one grass cell, every cleared adjacent landing edge takes exactly 0.312 playback seconds, and early arrivals wait in a neutral pose.",
+        "regressions_passed": true,
+        "decision": "accepted",
+        "live_cycle": {
+          "status": "observed",
+          "metric": "Fresh forced-theme 700px energy, turnover, reduced-motion, roster-density, terminal, and deterministic causal checks",
+          "rollback_threshold": "Roll back if the benchmark falls below 16/20, any dimension falls below 3, a meter response lacks a recorded bite, pickup/drop centres are below 42px, a bridge edge differs from 0.312 playback seconds, a long hold is not neutral, runtime exceeds 50 seconds, or npm run check fails.",
+          "evidence": "A fresh Gate that did not author v26 scored it 20/20 with no blocker: hierarchy 4, acting 4, pacing/easing 4, cohesion 4, readability 4. The 1,223,216-byte, 49.868-second fixture matches 201 arrivals to 201 pulses, preserves 22 turnovers and 50 serialized stops, measures 43.267–49.477px endpoint separation, reports zero pickup mismatch, broken edge, or uncleared crossing, and gives all 22 bridges exactly 0.312 seconds per edge. Former long holds #9 and #17 remain neutral for 0.949 and 1.261 seconds. Forced light/dark and reduced-motion energy frames, 10/28/62 rosters, early final pickup, identical terminal frames, and 53 finale phases all pass. Feature 6555cdf and workflow 31777271690 published project asset 4b7521e plus profile asset d8f7d4c and README 16f60a7; downloaded theme pairs are byte-identical, 700x206, and the public 10-member scene runs 34.775 seconds."
+        }
+      }
+    ],
+    "autonomous_episodes": []
+  }
+}
