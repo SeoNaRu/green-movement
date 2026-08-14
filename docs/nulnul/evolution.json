@@ -6,8 +6,8 @@
     "milestone": "The accepted v24 champion joins the pasture and uncapped roster into one flat GitHub contribution surface, then hands the completed selected region from the departed sheep to the original UFO while preserving explicit light/dark publishing, readable turnover, and finish-aware pickup.",
     "completion_check": "npm run check",
     "status": "active",
-    "last_verified": "2026-08-14: npm run check passed with a 1,034,299-byte, 35.68-second fixture. Exact current-source 700px light/dark complete frames for 10 and 28 roster sheep show the original static 30px UFO balancing PASTURE CLEAR without competing with the field UFO or username finale. A fresh independent Gate scored v24 19/20 with no blocker; all v23 panel state, accepted motion, 201 arrivals, and 53 finale phases remain green.",
-    "next_action": "Publish accepted v24 to main, observe the cache-safe profile workflow, and verify the pinned public light and dark SVGs contain the completed-state panel UFO.",
+    "last_verified": "2026-08-14: accepted v24 was published to main at c23eeb8 and cache-safe profile workflow run 31765183005 succeeded. The public profile README pins both 700x206 theme assets to commit 40f72b8; each contains the original completed-state panel UFO, PASTURE CLEAR, the flat full-width 10-member roster, and no nested v22 frames. npm run check passed with a 1,034,299-byte, 35.68-second fixture and a fresh independent Gate scored v24 19/20 with no blocker.",
+    "next_action": "Keep accepted v24 stable pending new user feedback; open another bounded candidate only for a reproduced defect.",
     "blockers": [],
     "approved_permissions": [
       "Read and write files inside this repository",
@@ -1467,7 +1467,7 @@
         "status": "observed",
         "metric": "Forced-theme 700px complete-state frames for representative 28-member and sparse 10-member rosters",
         "rollback_threshold": "Roll back if the completion UFO becomes unreadable, crowds the copy, reads as a second active action, competes with the username finale, diverges from the original glyph, changes timing, or npm run check fails.",
-        "evidence": "A fresh Gate that did not author v24 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Exact current-source light/dark frames at 33.4 seconds for 28 roster sheep and 12.1 seconds for 10 show the static original UFO balancing PASTURE CLEAR without crowding copy or competing with the glowing field UFO and SEONARU. The 1,034,299-byte, 35.68-second fixture and 419,181-byte sparse probe pass all v23 state, roster, motion, timing, theme, and banned-effect checks with no blocker."
+        "evidence": "A fresh Gate that did not author v24 scored it 19/20: hierarchy 4, acting 4, pacing/easing 3, cohesion 4, readability 4. Exact current-source light/dark frames at 33.4 seconds for 28 roster sheep and 12.1 seconds for 10 show the static original UFO balancing PASTURE CLEAR without crowding copy or competing with the glowing field UFO and SEONARU. The 1,034,299-byte, 35.68-second fixture and 419,181-byte sparse probe pass all v23 state, roster, motion, timing, theme, and banned-effect checks with no blocker. Main commit c23eeb8 and workflow run 31765183005 published v24; the public README pins both theme images to profile asset commit 40f72b8, whose 700x206 files contain the panel UFO and no nested v22 frames."
       }
     }
   ],
