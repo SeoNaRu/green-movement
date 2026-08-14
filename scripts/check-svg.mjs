@@ -3,10 +3,12 @@ import { buildContext } from "../dist/svg/buildContext.js";
 import {
   GRASS_STEP_TIMES_S,
   SHEEP_CELL_TIME,
+  SHEEP_FULLNESS_CAPACITY,
   SHEEP_GRAZE_HOLD_TICKS,
   SHEEP_VIEWBOX_W,
   SHEEP_WIDTH_PX,
   MAX_SHEEP,
+  MOTION_TIME_SCALE,
   UFO_ENTRY_S,
   UFO_WIDTH_PX,
 } from "../dist/svg/constants.js";
@@ -108,11 +110,18 @@ for (const required of [
   'class="flock-panel"',
   'class="flock-panel-surface"',
   'class="flock-panel-divider"',
+  'class="flock-panel-surface" d="M6',
+  'stroke="var(--gm-fence)" stroke-opacity=".78"',
   'class="flock-selected-region"',
   'class="flock-roster-region"',
   'font-size:9px',
-  'width="26.71" height="18"',
+  'height="18" rx=".8"',
   'class="flock-slot-index"',
+  'id="flock-meter-selected"',
+  'id="flock-meter-compact"',
+  'class="flock-meter-track"',
+  'class="flock-meter-fill"',
+  'id="flock-progress-27"',
   'href="#flock-sheep-icon" x="13"',
   'href="#flock-ufo-icon" x="12"',
   '<tspan class="flock-meta-key">Flock</tspan><tspan dx="5" class="flock-meta-value">28</tspan>',
@@ -124,6 +133,35 @@ for (const required of [
   '<tspan class="flock-meta-key">Grass</tspan><tspan dx="5" class="flock-meta-value">100%</tspan>',
 ]) {
   if (!svg.includes(required)) throw new Error(`SVG fixture missing ${required}`);
+}
+if (
+  (svg.match(/class="flock-meter-track"/g) ?? []).length !== 28 * 2 ||
+  (svg.match(/class="flock-meter-fill"/g) ?? []).length !== 28 * 2 ||
+  (svg.match(/<clipPath id="flock-progress-/g) ?? []).length !== 28
+) {
+  throw new Error("fullness is not rendered as ten contribution-style cells");
+}
+for (const id of ["flock-meter-selected", "flock-meter-compact"]) {
+  const symbol = svg.match(new RegExp(`<symbol id="${id}"[^>]*>([\\s\\S]*?)</symbol>`))?.[1] ?? "";
+  if ((symbol.match(/<rect /g) ?? []).length !== 10) {
+    throw new Error(`${id} does not contain exactly ten fixed cells`);
+  }
+}
+if (!svg.includes("animation:grass-crumb 0.416s")) {
+  throw new Error("grass crumbs do not share the 1.3x motion scale");
+}
+for (const name of [
+  "flock-complete",
+  "flock-field-0",
+  "flock-grass-100",
+  "flock-collected-27",
+]) {
+  const keyframes = svg.match(
+    new RegExp(`@keyframes ${name} \\{([\\s\\S]*?)\\n  \\}`),
+  )?.[1] ?? "";
+  if (!keyframes.includes("100.0000% { opacity:1; }")) {
+    throw new Error(`${name} disappears after the animation ends`);
+  }
 }
 const workflow = readFileSync(".github/workflows/update-profile-readme.yml", "utf8");
 for (const required of [
@@ -137,6 +175,10 @@ for (const required of [
   "assets/live-light\\.svg[^)]*",
   "assets/live-dark\\.svg[^)]*",
   "branches: [main]",
+  "permissions:",
+  "contents: write",
+  "Refresh project README preview",
+  "chore: refresh project preview [auto]",
   "git add assets/live.svg assets/live-light.svg assets/live-dark.svg",
   "git add README.md",
 ]) {
@@ -177,8 +219,15 @@ if (/filter\s*[:=]/.test(svg)) {
   throw new Error("SVG fixture contains a blur/filter effect");
 }
 const runtime = Number(svg.match(/animation:ufo-move ([\d.]+)s/)?.[1]);
-if (!Number.isFinite(runtime) || runtime > 40) {
-  throw new Error(`expected the speed-pass runtime at or below 40s, got ${runtime}`);
+const timelineRuntime = runtime / MOTION_TIME_SCALE;
+if (!Number.isFinite(runtime) || runtime > 50 || MOTION_TIME_SCALE !== 1.3) {
+  throw new Error(`expected the relaxed 1.3x runtime at or below 50s, got ${runtime}`);
+}
+const mismatchedDurations = [...svg.matchAll(/animation:\s*(?!grass-crumb)([\w-]+)\s+([\d.]+)s/g)]
+  .map((match) => ({ name: match[1], duration: Number(match[2]) }))
+  .filter(({ duration }) => Math.abs(duration - runtime) > 0.001);
+if (mismatchedDurations.length) {
+  throw new Error(`full-scene motion tracks do not share the 1.3x runtime: ${JSON.stringify(mismatchedDurations.slice(0, 5))}`);
 }
 const deploymentTimes = Array.from({ length: sheepCount }, (_, i) => {
   const move = svg.match(new RegExp(`@keyframes sheep-${i}-move \\{([\\s\\S]*?)\\n  \\}`))?.[1];
@@ -186,9 +235,7 @@ const deploymentTimes = Array.from({ length: sheepCount }, (_, i) => {
   return (visiblePct / 100) * runtime;
 });
 const deploymentSeconds = deploymentTimes.at(-1);
-if (
-  deploymentTimes.some((time) => !Number.isFinite(time) || time > 4.5)
-) {
+if (deploymentTimes.some((time) => !Number.isFinite(time) || time > 6)) {
   throw new Error(`expected the full field flock to deploy immediately: ${deploymentTimes}`);
 }
 if (!svg.includes("@keyframes sheep-0-growth") || !svg.includes("class=\"sheep-energy\"")) {
@@ -234,22 +281,32 @@ for (const [activeGrass, expected] of [
     throw new Error(`expected ${expected} sheep for ${activeGrass} grass cells, got ${actual}`);
   }
 }
-const rosterSizeFor = (activeGrass) =>
-  (
-    renderGridSvg(
-      timingGrid.map((cell, index) => ({
-        ...cell,
-        count: index < activeGrass ? 1 : 0,
-      })),
-      { targetWidth: 0 },
-    ).match(/class="flock-slot /g) ?? []
-  ).length;
-const hundredRoster = rosterSizeFor(100);
-const threeHundredRoster = rosterSizeFor(300);
+const rosterSvgFor = (activeGrass) =>
+  renderGridSvg(
+    timingGrid.map((cell, index) => ({
+      ...cell,
+      count: index < activeGrass ? 1 : 0,
+    })),
+    { targetWidth: 0 },
+  );
+const hundredRoster = (rosterSvgFor(100).match(/class="flock-slot /g) ?? []).length;
+const denseRosterSvg = rosterSvgFor(300);
+const threeHundredRoster = (denseRosterSvg.match(/class="flock-slot /g) ?? []).length;
 if (threeHundredRoster <= hundredRoster || threeHundredRoster <= 12) {
   throw new Error(
     `full roster hides contribution scale: 100=${hundredRoster}, 300=${threeHundredRoster}`,
   );
+}
+const denseSlots = [...denseRosterSvg.matchAll(
+  /<g class="flock-slot flock-slot-\d+">\s*<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)"/g,
+)].map((match) => ({ x: Number(match[1]), y: Number(match[2]), width: Number(match[3]) }));
+if (
+  denseSlots.length !== threeHundredRoster ||
+  new Set(denseSlots.map(({ y }) => y)).size !== 2 ||
+  Math.min(...denseSlots.map(({ x }) => x)) < 198 ||
+  Math.max(...denseSlots.map(({ x, width }) => x + width)) > 652
+) {
+  throw new Error("high-density two-row flock grid overlaps or clips");
 }
 const oneCellSvg = renderGridSvg(
   timingGrid.map((cell, index) => ({ ...cell, count: index === 0 ? 1 : 0 })),
@@ -274,6 +331,12 @@ if (
   Math.max(...tenSheepSlots.map(({ x, width }) => x + width)) <= 630
 ) {
   throw new Error("ten-sheep roster does not use the full GitHub-style panel width");
+}
+if (
+  (tenSheepSvg.match(/class="flock-meter-track"/g) ?? []).length !== 20 ||
+  (tenSheepSvg.match(/<clipPath id="flock-progress-/g) ?? []).length !== 10
+) {
+  throw new Error("sparse roster loses the ten-cell fullness meter");
 }
 if (
   svg.includes('class="flock-selected-section"') ||
@@ -333,22 +396,84 @@ const timingSimulation = simulateGrid({
 });
 const flock = buildFlockPlan(timingPlan, timingSimulation);
 const timing = buildTimeline(timingContext, timingPlan, timingSimulation, flock);
+if (Math.abs(runtime - timing.maxTotalTimeWithEntryExit * MOTION_TIME_SCALE) > 0.001) {
+  throw new Error(`visual runtime does not apply the 1.3x motion scale: ${runtime}`);
+}
+for (const sheep of timing.flock.sheep) {
+  let energy = 0;
+  let priorProgress = 0;
+  const fill = svg.match(
+    new RegExp(`@keyframes flock-fill-${sheep.rosterIndex} \\{([^\\n]*)`),
+  )?.[1] ?? "";
+  for (const bite of sheep.bites) {
+    energy += bite.level;
+    const expected = Math.min(1, energy / SHEEP_FULLNESS_CAPACITY);
+    if (Math.abs(bite.progress - expected) > 0.001) {
+      throw new Error(`sheep ${sheep.rosterIndex} fullness does not follow grass level energy`);
+    }
+    const atS = bite.atS + 0.23;
+    const beforePct = (((atS - 0.001) / timing.maxTotalTimeWithEntryExit) * 100).toFixed(4);
+    const bitePct = ((atS / timing.maxTotalTimeWithEntryExit) * 100).toFixed(4);
+    if (
+      !fill.includes(`${beforePct}% { transform:scaleX(${priorProgress.toFixed(3)}); }`) ||
+      !fill.includes(`${bitePct}% { transform:scaleX(${bite.progress.toFixed(3)}); }`)
+    ) {
+      throw new Error(`sheep ${sheep.rosterIndex} fullness drifts between bites`);
+    }
+    priorProgress = bite.progress;
+  }
+}
+const turnoverPathProblems = timing.turnovers.flatMap((turnover, index) => {
+  const unsafe = turnover.dropPath.slice(0, -1).filter((cell) => {
+    const arrival = timingSimulation.targetCellArrivals.get(cell.join(","))?.[0];
+    return arrival != null && arrival.arrivalTime > flock.turnovers[index].baseTime;
+  });
+  const broken = turnover.dropPath.filter(
+    (cell, pathIndex, path) =>
+      pathIndex > 0 &&
+      Math.abs(cell[0] - path[pathIndex - 1][0]) +
+        Math.abs(cell[1] - path[pathIndex - 1][1]) !==
+        1,
+  );
+  return unsafe.length || broken.length
+    ? [{ index, path: turnover.dropPath, unsafe, broken }]
+    : [];
+});
+if (turnoverPathProblems.length) {
+  throw new Error(`remote replacement paths are not causally walkable: ${JSON.stringify(turnoverPathProblems)}`);
+}
+const turnoverDistanceProblems = timing.turnovers.flatMap((turnover, index) => {
+  const distance =
+    Math.abs(turnover.pickupCell[0] - turnover.dropCell[0]) +
+    Math.abs(turnover.pickupCell[1] - turnover.dropCell[1]);
+  return distance < 3
+    ? [{ index, pickup: turnover.pickupCell, drop: turnover.dropCell, path: turnover.dropPath, distance }]
+    : [];
+});
+if (turnoverDistanceProblems.length) {
+  throw new Error(`remote replacement drops are too close: ${JSON.stringify(turnoverDistanceProblems)}`);
+}
 if (
   flock.fieldCount !== 6 ||
   flock.rosterSize !== 28 ||
   timing.turnovers.length !== 22 ||
-  timing.ufoStopCells.length !== flock.rosterSize ||
+  timing.ufoStopCells.length !== flock.fieldCount + timing.turnovers.length * 2 ||
   timing.turnovers.some(
-    (turnover) =>
+    (turnover, index) =>
       turnover.pickupArriveAbsS >= turnover.incomingSpawnAbsS ||
       turnover.pickupArriveAbsS >= turnover.outgoingHiddenAbsS ||
-      turnover.outgoingHiddenAbsS >= turnover.incomingSpawnAbsS ||
-      turnover.incomingSpawnAbsS - turnover.outgoingHiddenAbsS < 0.079 ||
+      turnover.outgoingHiddenAbsS >= turnover.dropArriveAbsS ||
+      turnover.dropArriveAbsS >= turnover.incomingSpawnAbsS ||
       turnover.incomingSpawnAbsS >= turnover.incomingReadyAbsS ||
-      turnover.addedDelay <= 0,
+      turnover.addedDelay <= 0 ||
+      turnover.dropPath[0].join(",") !== turnover.dropCell.join(",") ||
+      timing.ufoStopCells[flock.fieldCount + index * 2].join(",") !==
+        turnover.pickupCell.join(",") ||
+      timing.ufoStopCells[flock.fieldCount + index * 2 + 1].join(",") !==
+        turnover.dropCell.join(","),
   )
 ) {
-  throw new Error(`full sheep do not receive immediate serialized replacements`);
+  throw new Error(`full sheep do not receive serialized remote replacements`);
 }
 if (
   timing.flock.sheep.some(
@@ -413,7 +538,7 @@ const firstDrop = getCellCenterPx(
 );
 const firstDropTx = firstDrop.x - UFO_WIDTH_PX / 2;
 const firstDropTy = firstDrop.y - UFO_WIDTH_PX / 2;
-const entryPct = ((UFO_ENTRY_S / runtime) * 100).toFixed(4);
+const entryPct = ((UFO_ENTRY_S / timelineRuntime) * 100).toFixed(4);
 if (!ufoMove.includes(`${entryPct}% { transform: translate(${firstDropTx}px, ${firstDropTy}px)`)) {
   throw new Error("UFO entry still stops somewhere other than the first drop");
 }
@@ -499,7 +624,7 @@ const phaseStep = timing.paintSweepDuration / waveMetrics.maxPhase;
 for (const cell of signatureCells) {
   const [x, y] = cell.key.split(",").map(Number);
   const paintPct =
-    (((timing.paintSweepStartAbsSOffset + cell.phase * phaseStep) / runtime) * 100);
+    (((timing.paintSweepStartAbsSOffset + cell.phase * phaseStep) / timelineRuntime) * 100);
   const keyframe =
     svg.match(new RegExp(`@keyframes grass-(?:loop|paint)-${x * 7 + y} \\{([\\s\\S]*?)\\n  \\}`))?.[1] ?? "";
   if (!keyframe.includes(`${(paintPct + 0.01).toFixed(4)}% { fill: var(--gm-level-4); }`)) {
@@ -524,7 +649,7 @@ if (timing.firstArrivals.size !== expectedGrassCount) {
 for (const arrival of timing.firstArrivals.values()) {
   const impactPct =
     ((timing.timelineOffset + arrival.arrivalTime + GRASS_STEP_TIMES_S[0]) /
-      runtime) *
+      timelineRuntime) *
     100;
   const head =
     svg.match(

@@ -14,6 +14,9 @@ on:
     - cron: "0 13 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   generate-and-push:
     runs-on: ubuntu-latest
@@ -38,6 +41,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_USERNAME: ${{ secrets.GITHUB_USERNAME || github.repository_owner }}
+
+      - name: Refresh project README preview
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/live.svg assets/live-light.svg assets/live-dark.svg
+          if git diff --staged --quiet; then
+            echo "No project preview changes to commit"
+          else
+            git commit -m "chore: refresh project preview [auto]"
+            git push
+          fi
 
       - name: Push SVG to profile repository
         run: |

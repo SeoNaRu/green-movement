@@ -5,6 +5,7 @@ import {
   BORDER_RADIUS,
   COLORS,
   GRASS_STEP_TIMES_S,
+  MOTION_TIME_SCALE,
 } from "../../constants.js";
 import { getContributionLevel, getColor } from "../../contribution.js";
 
@@ -32,6 +33,7 @@ export function buildGrassLayer(params: {
     paintColors = {},
     paintTimes = {},
   } = params;
+  const animationDuration = (maxTotalTime * MOTION_TIME_SCALE).toFixed(3);
 
   const grassLoopKeyframes: string[] = [];
   const rects = grid
@@ -86,7 +88,7 @@ export function buildGrassLayer(params: {
     ${entries.join("\n    ")}
   }`);
         }
-        const anim = `animation: ${kfName} ${maxTotalTime}s linear 0s 1 both`;
+        const anim = `animation: ${kfName} ${animationDuration}s linear 0s 1 both`;
         return `<rect x="${px}" y="${py}" width="${CELL_SIZE}" height="${CELL_SIZE}" fill="${fill}" rx="${BORDER_RADIUS}" style="${anim}"/>`;
       }
 
@@ -100,7 +102,7 @@ export function buildGrassLayer(params: {
     ${(pct + 0.01).toFixed(4)}% { fill: ${paintColor}; }
     100% { fill: ${paintColor}; }
   }`);
-        const anim = `animation: ${kfName} ${maxTotalTime}s linear 0s 1 both`;
+        const anim = `animation: ${kfName} ${animationDuration}s linear 0s 1 both`;
         return `<rect x="${px}" y="${py}" width="${CELL_SIZE}" height="${CELL_SIZE}" fill="${initialColor}" rx="${BORDER_RADIUS}" style="${anim}"/>`;
       }
       return `<rect x="${px}" y="${py}" width="${CELL_SIZE}" height="${CELL_SIZE}" fill="${initialColor}" rx="${BORDER_RADIUS}"/>`;

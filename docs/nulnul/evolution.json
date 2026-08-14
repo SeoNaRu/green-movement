@@ -392,6 +392,18 @@
       "scope": "project",
       "status": "converted",
       "rejected_proposals": []
+    },
+    {
+      "id": "feedback-remote-turnover-terminal-panel-20260814",
+      "target_agent": "worker",
+      "source": "user",
+      "observed": "The replacement sheep was deployed where the full sheep had just been collected, so the exchange still looked like one sheep being lifted and returned. At the exact end of the animation, the completed left panel UFO, FIELD 0, GRASS 100%, completion copy, and collected roster states disappeared. Continuous fullness bars suggested time-based charging, the panel lacked the pasture's grid-and-fence language, and the full eating-flight sequence felt about 30 percent too fast.",
+      "expected": "Treat a turnover as one complete spatial story: collect the full sheep at its real location, fly to a visibly different work area, deploy a new hungry sheep there, resume causal grazing immediately, preserve the full completed panel after the animation ends, show fullness as ten contribution cells that jump only on bites, connect the panel with the existing brown fence color, and give the whole sequence 30 percent more time without reducing actors or motion.",
+      "evidence": "Source tracing found that the UFO stop used the last grass cell while the sheep keyframe used a later route position, and both pickup and deployment shared one service stop. The shared panel visibility helper forced every interval back to opacity zero at 100 percent. The fullness renderer scaled one continuous rectangle with linear interpolation despite already having level-weighted bite progress, and every full-timeline SVG animation exposed one shared duration that could be stretched without changing event ownership.",
+      "reproduction": "Run npm run visual:fixture; inspect 700px light and dark frames from 6.34 through 7.31 seconds, the middle act at 17.94 seconds, the first final pickup at 37.18 seconds, and exact plus post-end frames at 48.09 and 49.00 seconds.",
+      "scope": "project",
+      "status": "converted",
+      "rejected_proposals": []
     }
   ],
   "proposals": [
@@ -1343,6 +1355,48 @@
       ],
       "permission_delta": [],
       "rollback": "Restore the v23 green completion square and remove only the panel UFO symbol."
+    },
+    {
+      "id": "proposal-remote-turnover-terminal-panel-v25",
+      "feedback_ids": [
+        "feedback-remote-turnover-terminal-panel-20260814"
+      ],
+      "target_agent": "worker",
+      "author_agent": "coach",
+      "change_target": "turnover route planning, serialized UFO service stops, replacement sheep bridge keyframes, terminal panel visibility, discrete ten-cell fullness meters, shared playback pacing, pasture-linked panel lines, README behavior description, and deterministic assertions",
+      "change_level": "task",
+      "status": "proposed",
+      "from_version": 24,
+      "to_version": 25,
+      "cause": "Turnover was modeled as an opacity handoff at one nominal grass cell instead of a spatial service journey, and the shared interval helper treated terminal visibility like a temporary state.",
+      "candidate_change": "Resolve each outgoing sheep's actual route position, choose a cleared deployment point at least three Manhattan cells away and connected to the next recorded bite, serialize pickup and drop as two UFO stops, bridge the replacement directly into its existing causal route, keep every interval that reaches the total duration visible at 100 percent, clip level-weighted progress through ten fixed GitHub-style cells that hold between bites, stretch every motion track by one shared 1.3 factor, and reuse the existing fence color for only the panel perimeter and major dividers.",
+      "discovery_evidence": "The representative 22 turnovers exposed one-stop pickup/drop reuse and occasional one-cell disagreement between UFO and sheep positions. Candidate measurements show 50 ordered UFO stops, all 22 pickup-to-drop distances at three cells or more, a visible 6/6 to 5/6 to deploying to 6/6 handoff, identical exact-end and post-end panels, bite-only meter jumps, and a 48.087-second runtime with no actor or motion reduction.",
+      "reproduction": "Run npm run check and npm run visual:fixture; inspect forced 700px frames at 6.34, 6.60, 6.77, 7.02, 7.31, 17.94, 37.18, 44.85, 48.09, and 49.00 seconds in dark plus the post-end light frame and a sparse 10-member meter frame.",
+      "primary_metric": "Every turnover visibly separates pickup and deployment by at least three cells while preserving all 201 causal grass arrivals, serialized UFO service, final pickup before all sheep finish, terminal HUD persistence, bite-only fullness changes, and a 1.3x runtime below 50 seconds.",
+      "prediction": "Making the UFO perform a real transport between two meaningful positions will distinguish identities more clearly than a longer same-cell absence, while one terminal-aware visibility rule fixes all disappearing completion states at their shared root.",
+      "expected_delta": {
+        "remote_turnovers": 22,
+        "minimum_pickup_drop_manhattan_cells": 3,
+        "terminal_panel_states_preserved": 4,
+        "fullness_cells_per_sheep": 10,
+        "new_assets": 0,
+        "motion_time_scale": 1.3,
+        "runtime_max_seconds": 50
+      },
+      "falsification_condition": "Reject if any replacement lands within two cells of its pickup, the UFO and sheep disagree on pickup position, a replacement crosses an uncleared grass cell before its recorded bite, the exchange loses a readable field vacancy, the terminal panel disappears, fullness drifts between bites, panel grid or fence lines compete with its data, runtime exceeds 50 seconds, or npm run check fails.",
+      "regression_check": "npm run check plus exact-time 700px turnover, early-final-pickup, finale, exact-end, and post-end frames in both themes.",
+      "transfer_check": "Not applicable; this is a project-scoped motion and terminal-state correction.",
+      "guardrails": [
+        "npm run check",
+        "One physical UFO and strictly serialized pickup and deployment stops",
+        "All 201 grass arrivals remain owner-synchronized",
+        "No new glyph, dependency, filter, blur, or effect layer",
+        "Keep the original UFO and sheep art",
+        "One shared 1.3x motion scale and runtime at or below 50 seconds",
+        "No permission expansion"
+      ],
+      "permission_delta": [],
+      "rollback": "Restore the v24 one-stop turnover timing and nonterminal visibility helper while retaining the accepted GitHub-style panel and completed UFO icon."
     },
     {
       "id": "proposal-project-motion-routing-v3",

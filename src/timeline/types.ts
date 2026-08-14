@@ -33,8 +33,14 @@ export type TimelineResult = {
     outgoingRosterIndex: number;
     incomingRosterIndex: number;
     historyIndex: number;
+    resumeHistoryIndex: number;
+    pickupCell: [number, number];
+    dropCell: [number, number];
+    dropPath: [number, number][];
+    bridgeDuration: number;
     pickupArriveAbsS: number;
     outgoingHiddenAbsS: number;
+    dropArriveAbsS: number;
     incomingSpawnAbsS: number;
     incomingReadyAbsS: number;
     addedDelay: number;

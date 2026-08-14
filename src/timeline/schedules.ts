@@ -29,8 +29,12 @@ const SIGNATURE_CONFIRM_S = 0.28;
 const SIGNATURE_EXIT_S = 0.36;
 const SIGNATURE_HOLD_S = 1.4;
 const TURNOVER_PICKUP_S = 0.16;
-const TURNOVER_EMPTY_GAP_S = 0.08;
+const TURNOVER_FLIGHT_MIN_S = 0.18;
+const TURNOVER_FLIGHT_MAX_S = 0.24;
+const TURNOVER_FLIGHT_CELL_S = 0.06;
+const TURNOVER_DROP_WAIT_S = 0.02;
 const TURNOVER_DROP_S = LIGHT_RAMP_S + SHEEP_FADE_S;
+const TURNOVER_RELEASE_S = 0.04;
 
 export function buildTimeline(
   ctx: GridContext,
@@ -138,10 +142,15 @@ export function buildTimeline(
     outgoingRosterIndex: number;
     incomingRosterIndex: number;
     historyIndex: number;
+    resumeHistoryIndex: number;
     baseTime: number;
-    cell: [number, number];
+    pickupCell: [number, number];
+    dropCell: [number, number];
+    dropPath: [number, number][];
+    bridgeDuration: number;
     pickupArriveAbsS: number;
     outgoingHiddenAbsS: number;
+    dropArriveAbsS: number;
     incomingSpawnAbsS: number;
     incomingReadyAbsS: number;
     leaveAbsS: number;
@@ -156,31 +165,44 @@ export function buildTimeline(
       slotDelays[turnover.slotIndex];
     const arrive = Math.max(
       requested,
-      serviceCursor + travelSCells(serviceCell, turnover.cell),
+      serviceCursor + travelSCells(serviceCell, turnover.pickupCell),
     );
     const outgoingHidden = arrive + TURNOVER_PICKUP_S;
-    const incomingSpawn = outgoingHidden + TURNOVER_EMPTY_GAP_S;
+    const pickupToDropCells =
+      Math.abs(turnover.dropCell[0] - turnover.pickupCell[0]) +
+      Math.abs(turnover.dropCell[1] - turnover.pickupCell[1]);
+    const dropArrive =
+      outgoingHidden +
+      Math.min(
+        TURNOVER_FLIGHT_MAX_S,
+        Math.max(
+          TURNOVER_FLIGHT_MIN_S,
+          pickupToDropCells * TURNOVER_FLIGHT_CELL_S,
+        ),
+      );
+    const incomingSpawn = dropArrive + TURNOVER_DROP_WAIT_S;
     const incomingReady = incomingSpawn + TURNOVER_DROP_S;
-    const leave = incomingReady + UFO_RELEASE_S;
+    const leave = incomingReady + TURNOVER_RELEASE_S;
     const addedDelay = Math.max(0, incomingReady - requested);
     slotDelays[turnover.slotIndex] += addedDelay;
     scheduledTurnovers.push({
       ...turnover,
       pickupArriveAbsS: arrive,
       outgoingHiddenAbsS: outgoingHidden,
+      dropArriveAbsS: dropArrive,
       incomingSpawnAbsS: incomingSpawn,
       incomingReadyAbsS: incomingReady,
       leaveAbsS: leave,
       addedDelay,
     });
-    ufoStopCells.push(turnover.cell);
-    ufoArriveAbsS.push(arrive);
-    visualSpawnAbsS.push(incomingSpawn);
-    readyAbsS.push(incomingReady);
-    visualMoveStartAbsS.push(incomingReady);
-    ufoLeaveAbsS.push(leave);
+    ufoStopCells.push(turnover.pickupCell, turnover.dropCell);
+    ufoArriveAbsS.push(arrive, dropArrive);
+    visualSpawnAbsS.push(arrive, incomingSpawn);
+    readyAbsS.push(outgoingHidden, incomingReady);
+    visualMoveStartAbsS.push(outgoingHidden, incomingReady);
+    ufoLeaveAbsS.push(outgoingHidden, leave);
     serviceCursor = leave;
-    serviceCell = turnover.cell;
+    serviceCell = turnover.dropCell;
   }
 
   const delayAt = (slotIndex: number, baseTime: number) =>
@@ -330,8 +352,14 @@ export function buildTimeline(
     outgoingRosterIndex: turnover.outgoingRosterIndex,
     incomingRosterIndex: turnover.incomingRosterIndex,
     historyIndex: turnover.historyIndex,
+    resumeHistoryIndex: turnover.resumeHistoryIndex,
+    pickupCell: turnover.pickupCell,
+    dropCell: turnover.dropCell,
+    dropPath: turnover.dropPath,
+    bridgeDuration: turnover.bridgeDuration,
     pickupArriveAbsS: turnover.pickupArriveAbsS + timelineOffset,
     outgoingHiddenAbsS: turnover.outgoingHiddenAbsS + timelineOffset,
+    dropArriveAbsS: turnover.dropArriveAbsS + timelineOffset,
     incomingSpawnAbsS: turnover.incomingSpawnAbsS + timelineOffset,
     incomingReadyAbsS: turnover.incomingReadyAbsS + timelineOffset,
     addedDelay: turnover.addedDelay,

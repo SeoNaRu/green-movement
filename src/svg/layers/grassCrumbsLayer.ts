@@ -1,6 +1,6 @@
 import { getCellCenterPx } from "../layout/gridLayout.js";
 import { getColor } from "../contribution.js";
-import { GRASS_STEP_TIMES_S } from "../constants.js";
+import { GRASS_STEP_TIMES_S, MOTION_TIME_SCALE } from "../constants.js";
 
 /** 첫 물기 한 번에만 반응을 모아 작은 README에서도 시작점이 읽히게 함. */
 const BITE_IMPACT_S = GRASS_STEP_TIMES_S[0];
@@ -87,7 +87,10 @@ export function buildGrassCrumbsLayer(params: {
 
       const jitter = (seededRandom(burstIndex * 41 + i * 53) - 0.5) * 0.04;
       const delayS = Math.max(0, BITE_IMPACT_S + jitter);
-      const particleStartTime = eatingStartTime + delayS;
+      const particleStartTime = (
+        (eatingStartTime + delayS) *
+        MOTION_TIME_SCALE
+      ).toFixed(4);
 
       /* 네모(80%) + 잎 조각(20%). 개별 좌표만 CSS 변수로 넘기고 모션은 공유한다. */
       const isLeaf = seededRandom(burstIndex * 333 + i * 77) < 0.2;
@@ -100,7 +103,7 @@ export function buildGrassCrumbsLayer(params: {
       const y = (-h / 2).toFixed(2);
 
       particles.push(
-        `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="0.6" ry="0.6" fill="${grassColor}" style="--crumb-x:${dx.toFixed(2)}px; --crumb-y:${dy.toFixed(2)}px; --crumb-mid-x:${(dx * 0.55).toFixed(2)}px; --crumb-mid-y:${(dy * 0.55).toFixed(2)}px; --crumb-rot:${rot}deg; opacity:0; visibility:hidden; transform-box:fill-box; transform-origin:center; animation:grass-crumb ${CRUMB_DURATION_S}s cubic-bezier(.2,.75,.25,1) ${particleStartTime}s 1 forwards; pointer-events:none;" aria-hidden="true"/>`,
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="0.6" ry="0.6" fill="${grassColor}" style="--crumb-x:${dx.toFixed(2)}px; --crumb-y:${dy.toFixed(2)}px; --crumb-mid-x:${(dx * 0.55).toFixed(2)}px; --crumb-mid-y:${(dy * 0.55).toFixed(2)}px; --crumb-rot:${rot}deg; opacity:0; visibility:hidden; transform-box:fill-box; transform-origin:center; animation:grass-crumb ${(CRUMB_DURATION_S * MOTION_TIME_SCALE).toFixed(3)}s cubic-bezier(.2,.75,.25,1) ${particleStartTime}s 1 forwards; pointer-events:none;" aria-hidden="true"/>`,
       );
     }
 

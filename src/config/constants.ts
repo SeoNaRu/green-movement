@@ -10,6 +10,8 @@ export const GAP = 2;
 export const README_TARGET_WIDTH = 700;
 export const BORDER_RADIUS = 2;
 export const BACKGROUND_COLOR = "var(--gm-background)";
+/** 전체 장면을 기존 타임라인보다 30% 여유 있게 재생한다. */
+export const MOTION_TIME_SCALE = 1.3;
 
 /** GitHub 기본 기여 그래프의 light/dark 팔레트. data-theme은 README용 강제 변형에 쓴다. */
 export const GITHUB_THEME_CSS = `

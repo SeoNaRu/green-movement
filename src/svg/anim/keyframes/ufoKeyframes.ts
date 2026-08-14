@@ -8,6 +8,7 @@ import {
   UFO_VIEWBOX,
   UFO_WIDTH_PX,
   UFO_CONTENT,
+  MOTION_TIME_SCALE,
 } from "../../constants.js";
 import { getCellCenterPx } from "../../layout/gridLayout.js";
 import {
@@ -120,6 +121,7 @@ export function buildUfoLayer(params: {
     exitEndAbsS,
     relocation,
   } = params;
+  const animationDuration = (maxTotalTime * MOTION_TIME_SCALE).toFixed(3);
 
   const pickupCellsArr = pickupCells ?? [];
   const pickupArriveArr = pickupArriveAbsS ?? [];
@@ -724,19 +726,19 @@ export function buildUfoLayer(params: {
           const px = gridLeftX + x * (CELL_SIZE + GAP);
           const py = gridTopY + y * (CELL_SIZE + GAP);
           const phase = gridWavePhase(x, y);
-          return `<rect class="signature-grid-wave-cell" x="${px}" y="${py}" width="${CELL_SIZE}" height="${CELL_SIZE}" rx="2" fill="var(--gm-level-3)" style="opacity:0; animation:signature-grid-wave-${phase} ${maxTotalTime}s linear 0s 1 both;"/>`;
+          return `<rect class="signature-grid-wave-cell" x="${px}" y="${py}" width="${CELL_SIZE}" height="${CELL_SIZE}" rx="2" fill="var(--gm-level-3)" style="opacity:0; animation:signature-grid-wave-${phase} ${animationDuration}s linear 0s 1 both;"/>`;
         }).join(""),
       ).join("")
     : "";
   const signatureGroupStr = signaturePulse
-    ? `<g class="signature-reveal" aria-hidden="true" pointer-events="none"><g class="signature-grid-wave">${gridWaveCells}</g><g class="signature-core" style="opacity:0; transform-box:view-box; transform-origin:0 0; animation:signature-core ${maxTotalTime}s cubic-bezier(.2,.8,.2,1) 0s 1 both;"><rect x="-5" y="-5" width="10" height="10" rx="2" fill="var(--gm-beam-core)" opacity=".75"/><path d="M0-3L3 0 0 3-3 0Z" fill="var(--gm-level-4)"/></g></g>`
+    ? `<g class="signature-reveal" aria-hidden="true" pointer-events="none"><g class="signature-grid-wave">${gridWaveCells}</g><g class="signature-core" style="opacity:0; transform-box:view-box; transform-origin:0 0; animation:signature-core ${animationDuration}s cubic-bezier(.2,.8,.2,1) 0s 1 both;"><rect x="-5" y="-5" width="10" height="10" rx="2" fill="var(--gm-beam-core)" opacity=".75"/><path d="M0-3L3 0 0 3-3 0Z" fill="var(--gm-level-4)"/></g></g>`
     : "";
   const ufoGroupStr = hasUfo
-    ? `${signatureGroupStr}<g class="ufo-move" style="transform:translate(${firstPosPx.x - UFO_WIDTH_PX / 2}px, ${entryY}px); animation:ufo-move ${maxTotalTime}s cubic-bezier(.12,.72,.2,1) 0s 1 both;">
-        <g class="ufo-rot" style="transform-box:fill-box; transform-origin:center; animation:ufo-rot ${maxTotalTime}s cubic-bezier(.12,.72,.2,1) 0s 1 both;">
-          <path class="ufo-streak" d="M12 11 Q16 -20 20 11 Q16 7 12 11Z" fill="var(--gm-level-3)" style="opacity:0; transform-origin:16px 11px; animation:ufo-streak ${maxTotalTime}s linear 0s 1 both; pointer-events:none;"/>
+    ? `${signatureGroupStr}<g class="ufo-move" style="transform:translate(${firstPosPx.x - UFO_WIDTH_PX / 2}px, ${entryY}px); animation:ufo-move ${animationDuration}s cubic-bezier(.12,.72,.2,1) 0s 1 both;">
+        <g class="ufo-rot" style="transform-box:fill-box; transform-origin:center; animation:ufo-rot ${animationDuration}s cubic-bezier(.12,.72,.2,1) 0s 1 both;">
+          <path class="ufo-streak" d="M12 11 Q16 -20 20 11 Q16 7 12 11Z" fill="var(--gm-level-3)" style="opacity:0; transform-origin:16px 11px; animation:ufo-streak ${animationDuration}s linear 0s 1 both; pointer-events:none;"/>
           <svg width="${UFO_WIDTH_PX}" height="${UFO_WIDTH_PX}" viewBox="${UFO_VIEWBOX}" x="0" y="0">${UFO_CONTENT}</svg>
-          <circle cx="${ufoCenter}" cy="${ufoCenter}" r="${glowR}" fill="var(--gm-level-3)" style="opacity:0; animation:ufo-light ${maxTotalTime}s ease-out 0s 1 both; pointer-events:none;"/>
+          <circle cx="${ufoCenter}" cy="${ufoCenter}" r="${glowR}" fill="var(--gm-level-3)" style="opacity:0; animation:ufo-light ${animationDuration}s ease-out 0s 1 both; pointer-events:none;"/>
         </g>
       </g>`
     : "";
@@ -810,7 +812,7 @@ export function buildUfoLayer(params: {
           const px = gridLeftX + c * (CELL_SIZE + GAP);
           const py = gridTopY + row * (CELL_SIZE + GAP);
           rippleRects.push(
-            `<rect x="${px}" y="${py}" width="${CELL_SIZE}" height="${CELL_SIZE}" fill="#a8e6cf" style="opacity:0; animation: ${name} ${maxTotalTime}s linear 0s 1 both; pointer-events: none;"/>`,
+            `<rect x="${px}" y="${py}" width="${CELL_SIZE}" height="${CELL_SIZE}" fill="#a8e6cf" style="opacity:0; animation: ${name} ${animationDuration}s linear 0s 1 both; pointer-events: none;"/>`,
           );
         }
       }

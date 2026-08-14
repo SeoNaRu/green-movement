@@ -1,4 +1,5 @@
 import type { PlanResult } from "../planning/types.js";
+import { pathBetweenCells } from "./pathUtils.js";
 import type { SimulationResult } from "./sim/simulate.js";
 import {
   GRASS_STEP_TIMES_S,
@@ -21,7 +22,11 @@ export type FlockTurnover = {
   incomingRosterIndex: number;
   baseTime: number;
   historyIndex: number;
-  cell: [number, number];
+  pickupCell: [number, number];
+  dropCell: [number, number];
+  dropPath: [number, number][];
+  resumeHistoryIndex: number;
+  bridgeDuration: number;
 };
 
 export type FlockPlan = {
@@ -55,6 +60,68 @@ export function buildFlockPlan(
     bites.sort((a, b) => a.arrivalTime - b.arrivalTime);
   }
 
+  const firstArrivalByCell = new Map(
+    [...sim.targetCellArrivals].flatMap(([cell, arrivals]) =>
+      arrivals[0] ? [[cell, arrivals[0].arrivalTime] as const] : [],
+    ),
+  );
+  const gridKeys = [
+    ...plan.targetBfsLen.keys(),
+    ...firstArrivalByCell.keys(),
+    ...sim.positionsHistory.flat().map(([x, y]) => `${x},${y}`),
+  ];
+  const gridPoints = gridKeys.map((key) => key.split(",").map(Number));
+  const maxX = Math.max(0, ...gridPoints.map(([x]) => x));
+  const maxY = Math.max(0, ...gridPoints.map(([, y]) => y));
+  const remoteDropPath = (
+    pickup: [number, number],
+    target: [number, number],
+    clearedAt: number,
+  ): [number, number][] => {
+    const targetKey = `${target[0]},${target[1]}`;
+    const allowed = new Set<string>();
+    for (let x = 0; x <= maxX; x++) {
+      for (let y = 0; y <= maxY; y++) {
+        const key = `${x},${y}`;
+        const firstArrival = firstArrivalByCell.get(key);
+        if (key === targetKey || firstArrival == null || firstArrival <= clearedAt)
+          allowed.add(key);
+      }
+    }
+    const candidates = [...allowed]
+      .map((key) => key.split(",").map(Number) as [number, number])
+      .filter(
+        ([x, y]) =>
+          `${x},${y}` !== targetKey &&
+          Math.abs(x - pickup[0]) + Math.abs(y - pickup[1]) >= 3,
+      )
+      .map((cell) => ({
+        pickupDistance:
+          Math.abs(cell[0] - pickup[0]) + Math.abs(cell[1] - pickup[1]),
+        path: pathBetweenCells(
+          cell[0],
+          cell[1],
+          target[0],
+          target[1],
+          allowed,
+          maxX,
+          maxY,
+        ),
+      }))
+      .filter(({ path }) => path.length >= 1);
+    candidates.sort(
+      (a, b) =>
+        Number(!(a.path.length >= 3 && a.path.length <= 4)) -
+          Number(!(b.path.length >= 3 && b.path.length <= 4)) ||
+        a.path.length - b.path.length ||
+        b.pickupDistance - a.pickupDistance ||
+        a.path[0][0] - b.path[0][0] ||
+        a.path[0][1] - b.path[0][1],
+    );
+    if (candidates[0]) return candidates[0].path;
+    return [target];
+  };
+
   const segmentByBite = bySlot.map((slotBites) => {
     let segment = 0;
     let energy = 0;
@@ -82,7 +149,7 @@ export function buildFlockPlan(
     for (let index = 0; index < slotBites.length - 1; index++) {
       if (segments[index + 1].segment === segments[index].segment) continue;
       const bite = slotBites[index];
-      const [x, y] = bite.cell.split(",").map(Number);
+      const nextBite = slotBites[index + 1];
       const historyIndex = Math.max(
         1,
         Math.round(
@@ -92,11 +159,34 @@ export function buildFlockPlan(
             SHEEP_CELL_TIME,
         ) + 1,
       );
+      const history = sim.positionsHistory[slotIndex] ?? [];
+      const pickupCell = (history[Math.min(historyIndex, history.length - 1)] ??
+        bite.cell.split(",").map(Number)) as [number, number];
+      const nextCell = nextBite.cell.split(",").map(Number) as [number, number];
+      const resumeHistoryIndex = history.findIndex(
+        ([x, y], candidateIndex) =>
+          candidateIndex > historyIndex &&
+          x === nextCell[0] &&
+          y === nextCell[1] &&
+          (candidateIndex === 0 ||
+            history[candidateIndex - 1][0] !== x ||
+            history[candidateIndex - 1][1] !== y),
+      );
+      const dropPath = remoteDropPath(pickupCell, nextCell, bite.arrivalTime);
       boundaryDrafts.push({
         slotIndex,
         baseTime: bite.arrivalTime + GRASS_STEP_TIMES_S.at(-1)!,
         historyIndex,
-        cell: [x, y],
+        pickupCell,
+        dropCell: dropPath[0],
+        dropPath,
+        resumeHistoryIndex:
+          resumeHistoryIndex >= 0 ? resumeHistoryIndex : historyIndex + 1,
+        bridgeDuration: Math.max(
+          SHEEP_CELL_TIME,
+          nextBite.arrivalTime -
+            (bite.arrivalTime + GRASS_STEP_TIMES_S.at(-1)!),
+        ),
       });
     }
   }
