@@ -3,11 +3,11 @@
   "personal_evolution_home": null,
   "checkpoint": {
     "goal": "Make the animated contribution pasture feel cohesive, premium, and clearly readable in a GitHub profile README.",
-    "milestone": "The accepted v27 champion distance-paces opening deliveries and visibly ends each collection before a front-facing hungry replacement enters remotely, while preserving exact bridge speed and bite-driven ENERGY n/20.",
+    "milestone": "The accepted v28 champion keeps distance-paced opening deliveries, replaces the teleport-like service cut with one visible continuous UFO flight, and identifies the incoming hungry sheep in the panel before landing.",
     "completion_check": "npm run check",
     "status": "active",
-    "last_verified": "2026-08-15: npm run check and npm run visual:fixture passed with a 1,231,302-byte, 49.686-second deterministic fixture, and a fresh independent Gate scored v27 20/20 with no blocker. All 22 exchanges contain a 0.234-second hidden service cut, every incoming sheep lands front-facing, and distance-paced opening legs remove the long-leg rush while preserving 201 arrivals, 83 exact-speed bridge edges, 50 stops, and 53 finale phases. Feature ae9068f and workflow 31814164239 published project asset 7d59690 and profile asset 2e64956; profile README 41b81f1 describes the pixel pasture. Project/profile theme assets are byte-identical by theme, and the public 10-member scene runs 35.165 seconds with six service cuts.",
-    "next_action": "Keep accepted and published v27 stable pending new user feedback; for identity or handoff reports, trace actor lifecycle and adjacent frames before proposing another coordinate metric.",
+    "last_verified": "2026-08-18: npm run check and npm run visual:fixture passed with a 1,226,463-byte, 49.686-second deterministic fixture, and a fresh independent Gate scored v28 20/20 with no blocker. Opening sheep 3 and 4 move monotonically at distance pace; all 22 turnovers keep one visible continuous UFO path, switch to the incoming INBOUND 0/20 identity before flight, reveal no sheep in transit, and hold the landed replacement under the stopped UFO for 0.078 playback seconds. All 201 arrivals/pulses, 83 exact 0.312-second bridge edges, 50 stops, 10/28/62 rosters, both themes, reduced motion, early final pickup, terminal panel, and 53 finale phases remain green. Publication is pending.",
+    "next_action": "Publish accepted v28 to main, verify the workflow and both project/profile theme assets, update the profile README prose, then record live commit evidence.",
     "blockers": [],
     "approved_permissions": [
       "Read and write files inside this repository",
@@ -23,10 +23,10 @@
       "last_promotion_id": null
     },
     "worker": {
-      "version": 27,
+      "version": 28,
       "job": "Implement one bounded motion or rendering change and report its mechanical and visual evidence.",
       "profile_path": "AGENTS.md",
-      "last_promotion_id": "promotion-distance-paced-service-cut-v27-20260815"
+      "last_promotion_id": "promotion-continuous-inbound-handoff-v28-20260818"
     },
     "coach": {
       "version": 2,
@@ -77,6 +77,18 @@
       "scope": "project",
       "status": "converted",
       "rejected_proposals": []
+    },
+    {
+      "id": "feedback-service-cut-teleport-20260818",
+      "target_agent": "worker",
+      "source": "user",
+      "observed": "The accepted v27 opacity cut made the UFO vanish at the pickup and reappear at the remote drop, so it read as a teleport. The replacement reveal ended on the same frame as UFO departure, making later deliveries look as if a sheep flew in or was immediately carried away despite passing sampled still-frame checks.",
+      "expected": "Keep the original UFO visibly continuous from pickup to remote drop, announce the new hungry roster identity before travel, land it close to the ground, and hold the landed sheep with the stopped UFO briefly before departure without lengthening the total scene.",
+      "evidence": "Source tracing found the v27 ufo-visibility opacity-zero interval between two in-field coordinates and no post-landing shared hold. Exact candidate frames now show the first turnover at playback 7.020, 7.140, and 7.254 seconds moving monotonically from pickup through the field to the drop; the panel lifecycle changes to the incoming ID at 7.020, and the final 0.078 playback seconds of the existing landing window are fully landed and stationary.",
+      "reproduction": "Run npm run visual:fixture and npm run check, inspect exact 700px opening sheep 3 and 4 plus adjacent first and later turnover frames, and reject any UFO opacity cut, intermediate position jump, incoming identity delay, airborne cross-field sheep transform, or zero-duration landing/departure boundary.",
+      "scope": "project",
+      "status": "converted",
+      "rejected_proposals": []
     }
   ],
   "proposals": [
@@ -121,6 +133,48 @@
       ],
       "permission_delta": [],
       "rollback": "Restore the v26 capped opening flights, direct visible turnover transport, and inherited incoming heading while keeping the accepted v26 energy, bridge, panel, and finale behavior."
+    },
+    {
+      "id": "proposal-continuous-inbound-handoff-v28",
+      "feedback_ids": [
+        "feedback-service-cut-teleport-20260818"
+      ],
+      "target_agent": "worker",
+      "author_agent": "coach",
+      "change_target": "turnover UFO continuity, incoming roster lifecycle, landing release timing, deterministic trajectory checks, README behavior description, and durable motion guardrails",
+      "change_level": "task",
+      "status": "accepted",
+      "from_version": 27,
+      "to_version": 28,
+      "cause": "V27 replaced the ambiguous carrier path with an opacity cut between two visible field coordinates, which changed the ambiguity into a UFO teleport; it also finished the replacement reveal exactly when the UFO departed.",
+      "candidate_change": "Remove the UFO visibility cut and use the existing direct continuous pickup-to-drop interpolation. At outgoing hide time, select the incoming roster ID as INBOUND with zero energy; reveal the sheep only at the drop, complete its close-to-ground landing before the end of the existing 180ms logical window, and use the final 60ms as a shared stopped hold before UFO departure.",
+      "discovery_evidence": "The rejected v27 first exchange hid the UFO for 0.234 playback seconds. The v28 source has no ufo-visibility animation, identifies every incoming roster sheep at outgoingHiddenAbsS before spawnAbsS, and generates one pickup transform plus one drop transform with no intermediate move keyframe for each of 22 exchange flights. Exact first-exchange frames at 7.020, 7.140, and 7.254 seconds remain spatially continuous, and the 7.410–7.488 landing interval settles under the stopped UFO.",
+      "reproduction": "Run npm run visual:fixture and npm run check; inspect exact 700px forced-theme opening flights through sheep 4, first and representative later pickup-to-drop paths, INBOUND panel state, grounded landing, shared stop, bridge, reduced-motion, finale, terminal, and 10/28/62-roster frames.",
+      "primary_metric": "All 22 exchange flights remain visible and continuous with zero opacity cuts or intermediate teleport frames; every incoming sheep is identified before travel, appears only at its drop, and completes a short shared stop before departure while all accepted checks pass.",
+      "prediction": "A visible carrier plus explicit panel identity will read as one UFO fetching a different sheep rather than teleporting or moving the collected animal, and an in-window shared stop will remove the rushed landing without increasing runtime.",
+      "expected_delta": {
+        "turnover_opacity_cuts": 0,
+        "continuous_exchange_flights": 22,
+        "inbound_identity_handoffs": 22,
+        "shared_landing_hold_playback_seconds": 0.078,
+        "runtime_delta_seconds": 0,
+        "new_assets": 0
+      },
+      "falsification_condition": "Reject if sheep 3 or 4 still appears to rush in, any exchange UFO vanishes or jumps between field coordinates, the panel keeps the outgoing ID during travel, an incoming sheep crosses the field before landing, the UFO departs before the landing settles, any accepted causal or layout check regresses, runtime exceeds 50 seconds, or npm run check fails.",
+      "regression_check": "npm run check plus a fresh continuous-playback and exact-time 700px Gate across opening, multiple exchanges, landing, bridge, finale, terminal, reduced-motion, and roster densities in both themes.",
+      "transfer_check": "Not applicable; this is a project-scoped motion correction.",
+      "guardrails": [
+        "One original UFO and the existing sheep art only",
+        "No opacity cut, offstage jump, new dependency, glyph, filter, blur, scan, marker, or effect layer",
+        "All 201 grass arrivals remain bite- and owner-synchronized",
+        "All 22 replacement bridges keep exact 0.312-second playback edges and cleared adjacent paths",
+        "Pickup/drop centres remain at least 42 rendered pixels apart",
+        "Preserve accepted themes, panel lifecycle, 10/28/62 rosters, early pickup, terminal state, and 53 finale phases",
+        "Runtime at or below 50 seconds and fixture growth below the frozen 15 percent budget",
+        "No permission expansion"
+      ],
+      "permission_delta": [],
+      "rollback": "Restore the published v27 service-cut candidate while retaining distance-paced opening, exact bridge speed, panel energy, themes, and finale behavior."
     },
     {
       "id": "proposal-semantic-motion-diagnosis-v2",
@@ -194,6 +248,21 @@
     }
   ],
   "promotions": [
+    {
+      "id": "promotion-continuous-inbound-handoff-v28-20260818",
+      "proposal_id": "proposal-continuous-inbound-handoff-v28",
+      "gate_agent": "gate",
+      "before": "The accepted v27 exchange hid the UFO between two in-field coordinates and completed replacement reveal exactly at departure, so playback read as a teleport followed by a rushed sheep arrival despite passing sampled-frame checks.",
+      "after": "The accepted v28 exchange keeps the original UFO visible along one continuous pickup-to-drop path, changes the panel to the incoming INBOUND 0/20 identity before travel, reveals the hungry sheep only beneath the stopped UFO, and settles it before departure inside the existing runtime.",
+      "regressions_passed": true,
+      "decision": "accepted",
+      "live_cycle": {
+        "status": "observed",
+        "metric": "Fresh 700px continuous-playback frames plus deterministic trajectory, lifecycle, landing-hold, causal, roster, theme, reduced-motion, finale, size, and runtime checks",
+        "rollback_threshold": "Roll back if any opening leg rushes, an exchange UFO vanishes or jumps, the incoming ID is absent before travel, a replacement appears away from its drop, the landing does not settle before departure, the benchmark falls below 16/20, any dimension falls below 3, runtime exceeds 50 seconds, or npm run check fails.",
+        "evidence": "A fresh Gate that did not author v28 scored it 20/20 with no blocker. The 1,226,463-byte, 49.686-second fixture contains 22 continuous exchange flights, 22 preflight INBOUND handoffs, zero UFO opacity cuts or intermediate teleport frames, and a 0.078-second playback landing hold. Opening sheep 3 and 4 are monotonic and distance-paced; 201 arrivals/pulses, 83 exact 0.312-second bridge edges, 50 stops, 43.267–49.477px endpoint separation, early final pickup, 10/28/62 rosters, both themes, reduced motion, terminal state, and 53 finale phases pass. Publication is pending."
+      }
+    },
     {
       "id": "promotion-distance-paced-service-cut-v27-20260815",
       "proposal_id": "proposal-distance-paced-service-cut-v27",

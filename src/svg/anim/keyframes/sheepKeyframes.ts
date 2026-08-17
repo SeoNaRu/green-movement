@@ -400,11 +400,16 @@ export function buildSheepLayer(params: {
       };
       let bridgeAngle = 180;
       const dropTransform = transformAt(turnover.dropCell, bridgeAngle);
+      const landingAbsS = Math.max(
+        turnover.incomingSpawnAbsS,
+        turnover.incomingReadyAbsS - 0.06,
+      );
       for (const [atS, transform, opacity] of [
         [turnover.pickupArriveAbsS, sourceTransform, 1],
         [turnover.outgoingHiddenAbsS, sourceTransform, 0],
         [turnover.dropArriveAbsS, dropTransform, 0],
         [turnover.incomingSpawnAbsS, dropTransform, 0],
+        [landingAbsS, dropTransform, 1],
         [turnover.incomingReadyAbsS, dropTransform, 1],
       ] as const) {
         const pct = Math.min(99.9999, (atS * 100) / maxTotalTime);
@@ -438,9 +443,9 @@ export function buildSheepLayer(params: {
       }
       addPose(turnover.pickupArriveAbsS, "translateY(0) scale(1, 1)");
       addPose(turnover.outgoingHiddenAbsS, "translateY(-6px) scale(.86, 1.1)");
-      addPose(turnover.incomingSpawnAbsS, "translateY(-7px) scale(.9, 1.06)");
-      addPose(turnover.incomingReadyAbsS, "translateY(.8px) scale(1.08, .9)");
-      addPose(turnover.incomingReadyAbsS + 0.12, "translateY(0) scale(1, 1)");
+      addPose(turnover.incomingSpawnAbsS, "translateY(-3px) scale(.94, 1.04)");
+      addPose(landingAbsS, "translateY(.8px) scale(1.08, .9)");
+      addPose(turnover.incomingReadyAbsS, "translateY(0) scale(1, 1)");
       addProgress(turnover.outgoingHiddenAbsS, 1);
       addProgress(turnover.incomingSpawnAbsS, 0);
     }

@@ -52,6 +52,7 @@ export type TimelineResult = {
     sheep: {
       rosterIndex: number;
       slotIndex: number;
+      inboundAbsS: number | null;
       spawnAbsS: number;
       pickupAbsS: number | null;
       hiddenAbsS: number | null;

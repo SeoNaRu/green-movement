@@ -134,6 +134,7 @@ for (const required of [
   ">0/20</text>",
   ">20/20</text>",
   "GRAZING",
+  "INBOUND",
   "PASTURE CLEAR",
   "ALL SHEEP COLLECTED",
   "@keyframes flock-collected-27",
@@ -426,10 +427,69 @@ if (deploymentFlightProblems.length) {
     `long deployment flights are still compressed: ${JSON.stringify(deploymentFlightProblems)}`,
   );
 }
-const ufoVisibility =
-  svg.match(/@keyframes ufo-visibility \{([\s\S]*?)\n  \}/)?.[1] ?? "";
-if ((ufoVisibility.match(/opacity: 0/g) ?? []).length !== timing.turnovers.length * 2) {
-  throw new Error("turnover does not visibly cut from pickup to a new delivery");
+if (svg.includes("ufo-visibility")) {
+  throw new Error("turnover still teleports the UFO with an opacity cut");
+}
+const ufoMovePcts = [...ufoMove.matchAll(/([\d.]+)% \{ transform: translate/g)].map(
+  (match) => Number(match[1]),
+);
+const turnoverFlightProblems = timing.turnovers.flatMap((turnover, index) => {
+  const departPct = (turnover.outgoingHiddenAbsS * 100) / timing.maxTotalTimeWithEntryExit;
+  const arrivePct = (turnover.dropArriveAbsS * 100) / timing.maxTotalTimeWithEntryExit;
+  const pickup = getCellCenterPx(
+    timingContext.gridLeftX,
+    timingContext.gridTopY,
+    turnover.pickupCell[0],
+    turnover.pickupCell[1],
+  );
+  const drop = getCellCenterPx(
+    timingContext.gridLeftX,
+    timingContext.gridTopY,
+    turnover.dropCell[0],
+    turnover.dropCell[1],
+  );
+  const departFrame = `${departPct.toFixed(4)}% { transform: translate(${pickup.x - UFO_WIDTH_PX / 2}px, ${pickup.y - UFO_WIDTH_PX / 2}px);`;
+  const arriveFrame = `${arrivePct.toFixed(4)}% { transform: translate(${drop.x - UFO_WIDTH_PX / 2}px, ${drop.y - UFO_WIDTH_PX / 2}px);`;
+  const intermediate = ufoMovePcts.filter(
+    (pct) => pct > departPct + 0.0001 && pct < arrivePct - 0.0001,
+  );
+  return !ufoMove.includes(departFrame) || !ufoMove.includes(arriveFrame) || intermediate.length
+    ? [{ index, departFrame, arriveFrame, intermediate }]
+    : [];
+});
+if (turnoverFlightProblems.length) {
+  throw new Error(`turnover UFO path is not one continuous on-field flight: ${JSON.stringify(turnoverFlightProblems)}`);
+}
+const inboundHandoffProblems = timing.turnovers.flatMap((turnover, index) => {
+  const incoming = timing.flock.sheep[turnover.incomingRosterIndex];
+  return incoming?.inboundAbsS !== turnover.outgoingHiddenAbsS ||
+    !(turnover.outgoingHiddenAbsS < incoming.spawnAbsS)
+    ? [{ index, incoming: incoming?.rosterIndex, inbound: incoming?.inboundAbsS, spawn: incoming?.spawnAbsS }]
+    : [];
+});
+if (inboundHandoffProblems.length) {
+  throw new Error(`panel does not identify the hungry replacement before UFO travel: ${JSON.stringify(inboundHandoffProblems)}`);
+}
+if ((svg.match(/>INBOUND<\/text>/g) ?? []).length !== timing.turnovers.length) {
+  throw new Error("panel does not render one INBOUND handoff for every replacement");
+}
+const landingHoldProblems = timing.turnovers.flatMap((turnover, index) => {
+  const move = svg.match(
+    new RegExp(`@keyframes sheep-${turnover.slotIndex}-move \\{([\\s\\S]*?)\\n  \\}`),
+  )?.[1] ?? "";
+  const frameAt = (time) => {
+    const pct = ((time * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
+    return [...move.matchAll(new RegExp(`${pct}% \\{ transform: ([^;]+); opacity: 1;`, "g"))].at(-1)?.[1];
+  };
+  const landing = frameAt(turnover.incomingReadyAbsS - 0.06);
+  const ready = frameAt(turnover.incomingReadyAbsS);
+  const leave = timing.ufoLeaveAbsSOffset[flock.fieldCount + index * 2 + 1];
+  return landing == null || ready == null || landing !== ready || Math.abs(leave - turnover.incomingReadyAbsS) > 0.001
+    ? [{ index, landing, ready, leave, expectedLeave: turnover.incomingReadyAbsS }]
+    : [];
+});
+if (landingHoldProblems.length) {
+  throw new Error(`replacement does not settle under the stopped UFO before departure: ${JSON.stringify(landingHoldProblems)}`);
 }
 if (Math.abs(runtime - timing.maxTotalTimeWithEntryExit * MOTION_TIME_SCALE) > 0.001) {
   throw new Error(`visual runtime does not apply the 1.3x motion scale: ${runtime}`);

@@ -8,7 +8,7 @@ import {
 } from "../constants.js";
 
 type PanelFlock = TimelineResult["flock"];
-type SelectedState = "DEPLOYING" | "GRAZING" | "EXTRACTING";
+type SelectedState = "INBOUND" | "DEPLOYING" | "GRAZING" | "EXTRACTING";
 
 const pctAt = (time: number, total: number) =>
   Math.min(100, Math.max(0, total > 0 ? (time * 100) / total : 0));
@@ -79,10 +79,12 @@ export function buildFlockPanelLayer(params: {
     sheep: PanelFlock["sheep"][number],
     time: number,
   ): SelectedState | null => {
-    if (
-      time < sheep.spawnAbsS ||
-      (sheep.hiddenAbsS != null && time >= sheep.hiddenAbsS)
-    ) {
+    if (time < sheep.spawnAbsS) {
+      return sheep.inboundAbsS != null && time >= sheep.inboundAbsS
+        ? "INBOUND"
+        : null;
+    }
+    if (sheep.hiddenAbsS != null && time >= sheep.hiddenAbsS) {
       return null;
     }
     if (time < sheep.spawnAbsS + 0.18) return "DEPLOYING";
@@ -94,6 +96,7 @@ export function buildFlockPanelLayer(params: {
 
   const boundaries = new Set<number>([0, maxTotalTime]);
   for (const sheep of flock.sheep) {
+    if (sheep.inboundAbsS != null) boundaries.add(sheep.inboundAbsS);
     boundaries.add(sheep.spawnAbsS);
     boundaries.add(Math.min(maxTotalTime, sheep.spawnAbsS + 0.18));
     if (sheep.pickupAbsS != null) boundaries.add(sheep.pickupAbsS);
@@ -119,13 +122,18 @@ export function buildFlockPanelLayer(params: {
           entry.status != null,
       );
     const priority = available.filter(({ status }) => status === "EXTRACTING");
+    const inbound = available.filter(({ status }) => status === "INBOUND");
     const deploying = available.filter(({ status }) => status === "DEPLOYING");
     const grazing = available.filter(({ status }) => status === "GRAZING");
     const preferred = grazing.find(
       ({ sheep }) => sheep.rosterIndex === priorRosterIndex,
     );
     const selected =
-      priority.at(-1) ?? deploying.at(-1) ?? preferred ?? grazing.at(-1);
+      priority.at(-1) ??
+      inbound.at(-1) ??
+      deploying.at(-1) ??
+      preferred ??
+      grazing.at(-1);
     if (!selected) {
       priorRosterIndex = null;
       continue;
@@ -249,7 +257,7 @@ export function buildFlockPanelLayer(params: {
       );
     }
     let energy = 0;
-    let energyStart = sheep.spawnAbsS;
+    let energyStart = sheep.inboundAbsS ?? sheep.spawnAbsS;
     const energyGroups: string[] = [];
     for (const [index, bite] of [...sheep.bites, null].entries()) {
       const energyEnd = bite == null ? maxTotalTime : bite.atS + 0.23;

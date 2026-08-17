@@ -374,6 +374,7 @@ export function buildTimeline(
     return {
       rosterIndex,
       slotIndex,
+      inboundAbsS: incoming?.outgoingHiddenAbsS ?? null,
       spawnAbsS:
         incoming?.incomingSpawnAbsS ?? spawnAbsSOffset[slotIndex] ?? timelineOffset,
       pickupAbsS,
