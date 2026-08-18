@@ -11,9 +11,8 @@ import {
   SHEEP_WIDTH_PX,
   MAX_SHEEP,
   MOTION_TIME_SCALE,
-  UFO_CELL_TIME,
+  UFO_BLINK_TRAVEL_S,
   UFO_ENTRY_S,
-  UFO_MOVE_MIN_S,
   UFO_WIDTH_PX,
 } from "../dist/svg/constants.js";
 import { planTargets } from "../dist/planning/targetPlanner.js";
@@ -412,11 +411,10 @@ const deploymentFlightProblems = Array.from(
   (_, index) => {
     const from = timing.ufoStopCells[index];
     const to = timing.ufoStopCells[index + 1];
-    const cells = Math.abs(to[0] - from[0]) + Math.abs(to[1] - from[1]);
     const actual =
       timing.ufoArriveAbsSOffset[index + 1] -
       timing.ufoLeaveAbsSOffset[index];
-    const expected = Math.max(UFO_MOVE_MIN_S, cells * UFO_CELL_TIME);
+    const expected = UFO_BLINK_TRAVEL_S;
     return Math.abs(actual - expected) > 0.001
       ? { index, from, to, actual, expected }
       : null;
@@ -431,27 +429,61 @@ const ufoVisibility =
   svg.match(/@keyframes ufo-visibility \{([\s\S]*?)\n  \}/)?.[1] ?? "";
 const ufoLight =
   svg.match(/@keyframes ufo-light \{([\s\S]*?)\n  \}/)?.[1] ?? "";
-const ufoMovePcts = [...ufoMove.matchAll(/([\d.]+)% \{ transform: translate/g)].map(
-  (match) => Number(match[1]),
-);
 const visibilityFrame = (time, opacity) =>
   `${((time * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4)}% { opacity: ${opacity}; }`;
+const ufoPositionAt = (time) => {
+  const pct = ((time * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
+  const matches = [...ufoMove.matchAll(
+    new RegExp(`(?:^|\\n\\s*)${pct}% \\{ transform: translate\\(([-\\d.]+)px, ([-\\d.]+)px\\);`, "g"),
+  )];
+  const match = matches.at(-1);
+  return match ? { x: Number(match[1]) + UFO_WIDTH_PX / 2, y: Number(match[2]) + UFO_WIDTH_PX / 2 } : null;
+};
+const blinkProblem = (from, to, depart, arrive) => {
+  const duration = arrive - depart;
+  const edgeDuration = duration * 0.24;
+  const edgeOut = depart + edgeDuration;
+  const edgeIn = arrive - edgeDuration;
+  const fade = Math.min(0.008, edgeDuration / 3);
+  const distance = Math.hypot(to.x - from.x, to.y - from.y);
+  const edgeRatio = distance > 0 ? Math.min(0.32, 12 / distance) : 0;
+  const expected = [
+    [depart, from],
+    [edgeOut, { x: from.x + (to.x - from.x) * edgeRatio, y: from.y + (to.y - from.y) * edgeRatio }],
+    [edgeIn, { x: from.x + (to.x - from.x) * (1 - edgeRatio), y: from.y + (to.y - from.y) * (1 - edgeRatio) }],
+    [arrive, to],
+  ];
+  const badPosition = expected.find(([time, point]) => {
+    const actual = ufoPositionAt(time);
+    return actual == null || Math.hypot(actual.x - point.x, actual.y - point.y) > 0.001;
+  });
+  const visibility = [
+    visibilityFrame(depart, 1),
+    visibilityFrame(edgeOut, 1),
+    visibilityFrame(edgeOut + fade, 0),
+    visibilityFrame(edgeIn - fade, 0),
+    visibilityFrame(edgeIn, 1),
+    visibilityFrame(arrive, 1),
+  ];
+  return badPosition || visibility.some((frame) => !ufoVisibility.includes(frame))
+    ? { depart, arrive, badPosition, visibility }
+    : null;
+};
 const firstDeployPx = getCellCenterPx(
   timingContext.gridLeftX,
   timingContext.gridTopY,
   timing.ufoStopCells[0][0],
   timing.ufoStopCells[0][1],
 );
-const firstMoveFrame = `0% { transform: translate(${firstDeployPx.x - UFO_WIDTH_PX / 2}px, ${firstDeployPx.y - UFO_WIDTH_PX / 2}px); }`;
+const firstEntryPx = { x: firstDeployPx.x, y: firstDeployPx.y - 30 };
 const firstArrival = timing.ufoArriveAbsSOffset[0];
 const firstArrivalFlash = `${((firstArrival * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4)}% { opacity: 0.38; }`;
 if (
-  !ufoMove.includes(firstMoveFrame) ||
-  !ufoVisibility.includes("0.0000% { opacity: 0; }") ||
-  !ufoVisibility.includes(visibilityFrame(firstArrival, 1)) ||
+  blinkProblem(firstEntryPx, firstDeployPx, 0, firstArrival) ||
+  !svg.includes('class="ufo-body" style="animation:ufo-visibility') ||
   !ufoLight.includes(firstArrivalFlash)
 ) {
-  throw new Error("first deployment still slides in from outside instead of flashing at its drop");
+  throw new Error("first deployment loses the visible-edge green blink arrival grammar");
 }
 const deploymentJumpProblems = Array.from(
   { length: Math.max(0, sheepCount - 1) },
@@ -469,27 +501,19 @@ const deploymentJumpProblems = Array.from(
       timing.ufoStopCells[index + 1][1],
     );
     const arrive = timing.ufoArriveAbsSOffset[index + 1];
-    const depart = Math.max(timing.ufoLeaveAbsSOffset[index], arrive - 0.04);
-    const departPct = ((depart * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
+    const depart = timing.ufoLeaveAbsSOffset[index];
     const arrivePct = ((arrive * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
-    const departFrame = `${departPct}% { transform: translate(${from.x - UFO_WIDTH_PX / 2}px, ${from.y - UFO_WIDTH_PX / 2}px);`;
-    const arriveFrame = `${arrivePct}% { transform: translate(${to.x - UFO_WIDTH_PX / 2}px, ${to.y - UFO_WIDTH_PX / 2}px);`;
     const flash = `${arrivePct}% { opacity: 0.38; }`;
-    return !ufoMove.includes(departFrame) ||
-      !ufoMove.includes(arriveFrame) ||
-      !ufoVisibility.includes(visibilityFrame(depart + 0.008, 0)) ||
-      !ufoVisibility.includes(visibilityFrame(arrive - 0.008, 0)) ||
-      !ufoVisibility.includes(visibilityFrame(arrive, 1)) ||
+    return blinkProblem(from, to, depart, arrive) ||
       !ufoLight.includes(flash)
-      ? { index, departFrame, arriveFrame }
+      ? { index, depart, arrive }
       : null;
   },
 ).filter(Boolean);
 if (deploymentJumpProblems.length) {
-  throw new Error(`opening deployment is not one hidden 0.052-second flash jump: ${JSON.stringify(deploymentJumpProblems)}`);
+  throw new Error(`opening deployment loses the shared visible-edge blink flight: ${JSON.stringify(deploymentJumpProblems)}`);
 }
 const turnoverFlightProblems = timing.turnovers.flatMap((turnover, index) => {
-  const departPct = (turnover.outgoingHiddenAbsS * 100) / timing.maxTotalTimeWithEntryExit;
   const arrivePct = (turnover.dropArriveAbsS * 100) / timing.maxTotalTimeWithEntryExit;
   const pickup = getCellCenterPx(
     timingContext.gridLeftX,
@@ -503,27 +527,92 @@ const turnoverFlightProblems = timing.turnovers.flatMap((turnover, index) => {
     turnover.dropCell[0],
     turnover.dropCell[1],
   );
-  const departFrame = `${departPct.toFixed(4)}% { transform: translate(${pickup.x - UFO_WIDTH_PX / 2}px, ${pickup.y - UFO_WIDTH_PX / 2}px);`;
-  const arriveFrame = `${arrivePct.toFixed(4)}% { transform: translate(${drop.x - UFO_WIDTH_PX / 2}px, ${drop.y - UFO_WIDTH_PX / 2}px);`;
-  const intermediate = ufoMovePcts.filter(
-    (pct) => pct > departPct + 0.0001 && pct < arrivePct - 0.0001,
-  );
   const arriveFlash = `${arrivePct.toFixed(4)}% { opacity: 0.38; }`;
   const playbackDuration =
     (turnover.dropArriveAbsS - turnover.outgoingHiddenAbsS) * MOTION_TIME_SCALE;
-  return !ufoMove.includes(departFrame) ||
-    !ufoMove.includes(arriveFrame) ||
-    intermediate.length ||
-    !ufoVisibility.includes(visibilityFrame(turnover.outgoingHiddenAbsS + 0.008, 0)) ||
-    !ufoVisibility.includes(visibilityFrame(turnover.dropArriveAbsS - 0.008, 0)) ||
-    !ufoVisibility.includes(visibilityFrame(turnover.dropArriveAbsS, 1)) ||
+  return blinkProblem(pickup, drop, turnover.outgoingHiddenAbsS, turnover.dropArriveAbsS) ||
     !ufoLight.includes(arriveFlash) ||
     Math.abs(playbackDuration - 0.104) > 0.001
-    ? [{ index, departFrame, arriveFrame, intermediate, playbackDuration }]
+    ? [{ index, playbackDuration }]
     : [];
 });
 if (turnoverFlightProblems.length) {
-  throw new Error(`turnover is not one hidden 0.104-second flash jump: ${JSON.stringify(turnoverFlightProblems)}`);
+  throw new Error(`turnover loses its 0.104-second visible-edge blink flight: ${JSON.stringify(turnoverFlightProblems)}`);
+}
+const offstageCenterY =
+  getCellCenterPx(timingContext.gridLeftX, timingContext.gridTopY, 0, 0).y - 60;
+const lastStopIndex = timing.ufoStopCells.length - 1;
+const lastStopCell = timing.ufoStopCells[lastStopIndex];
+const lastStopPx = getCellCenterPx(
+  timingContext.gridLeftX,
+  timingContext.gridTopY,
+  lastStopCell[0],
+  lastStopCell[1],
+);
+const stageExitDepart = timing.ufoLeaveAbsSOffset[lastStopIndex];
+const serviceBlinkProblems = [
+  blinkProblem(
+    lastStopPx,
+    { x: lastStopPx.x, y: offstageCenterY },
+    stageExitDepart,
+    stageExitDepart + UFO_BLINK_TRAVEL_S,
+  ),
+  ...timing.pickupArriveAbsSOffsetForUfo.map((arrive, index) => {
+    const cell = timing.pickupCells[index];
+    const to = getCellCenterPx(
+      timingContext.gridLeftX,
+      timingContext.gridTopY,
+      cell[0],
+      cell[1],
+    );
+    const from = index === 0
+      ? { x: to.x, y: offstageCenterY }
+      : getCellCenterPx(
+          timingContext.gridLeftX,
+          timingContext.gridTopY,
+          timing.pickupCells[index - 1][0],
+          timing.pickupCells[index - 1][1],
+        );
+    return blinkProblem(from, to, arrive - UFO_BLINK_TRAVEL_S, arrive);
+  }),
+  (() => {
+    const lastPickup = timing.pickupCells.at(-1);
+    const centre = timing.sweepPositions[0];
+    return blinkProblem(
+      getCellCenterPx(
+        timingContext.gridLeftX,
+        timingContext.gridTopY,
+        lastPickup[0],
+        lastPickup[1],
+      ),
+      getCellCenterPx(
+        timingContext.gridLeftX,
+        timingContext.gridTopY,
+        centre[0],
+        centre[1],
+      ),
+      timing.sweepArriveAbsSOffset[0] - 0.3,
+      timing.sweepArriveAbsSOffset[0],
+    );
+  })(),
+  (() => {
+    const cell = timing.sweepPositions[0];
+    const from = getCellCenterPx(
+      timingContext.gridLeftX,
+      timingContext.gridTopY,
+      cell[0],
+      cell[1],
+    );
+    return blinkProblem(
+      from,
+      { x: from.x, y: offstageCenterY },
+      timing.ufoExitStartAbsSOffset,
+      timing.ufoExitEndAbsSOffset,
+    );
+  })(),
+].filter(Boolean);
+if (serviceBlinkProblems.length) {
+  throw new Error(`collection or offstage service loses the shared blink flight: ${JSON.stringify(serviceBlinkProblems)}`);
 }
 const inboundHandoffProblems = timing.turnovers.flatMap((turnover, index) => {
   const incoming = timing.flock.sheep[turnover.incomingRosterIndex];
@@ -889,8 +978,8 @@ for (const arrival of timing.firstArrivals.values()) {
   }
 }
 for (let i = 0; i < timingPlan.sheepCount; i++) {
-  if (Math.abs(timing.moveStartAbsSOffset[i] - timing.readyAbsSOffset[i]) > 0.001) {
-    throw new Error(`sheep ${i} waits after landing instead of moving immediately`);
+  if (Math.abs(timing.moveStartAbsSOffset[i] - timing.ufoLeaveAbsSOffset[i]) > 0.001) {
+    throw new Error(`sheep ${i} slides away before its deployment UFO leaves`);
   }
 }
 const visualFinishBySheep = [];

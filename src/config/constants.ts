@@ -100,6 +100,8 @@ export const LIGHT_FADE_OUT_S = 0.28;
 export const UFO_CELL_TIME = 0.04;
 export const UFO_MOVE_MIN_S = 0.22;
 export const UFO_MOVE_MAX_S = 0.4;
+/** 짧은 출발/도착 움직임 사이를 점멸로 잇는 실제 고속 이동 시간. */
+export const UFO_BLINK_TRAVEL_S = 0.12;
 // 중간 공중 재배치: 접근 0.30 + 탑승 0.45 + 운반 1.20 + 착지 0.45 = 2.40초.
 export const UFO_RELOCATION_TOTAL_S = 2.4;
 export const UFO_RELOCATION_APPROACH_S = 0.3;

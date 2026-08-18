@@ -6,9 +6,7 @@ import type { FlockPlan } from "../svg/flock.js";
 import {
   SHEEP_CELL_TIME,
   UFO_ENTRY_S,
-  UFO_CELL_TIME,
-  UFO_MOVE_MIN_S,
-  UFO_MOVE_MAX_S,
+  UFO_BLINK_TRAVEL_S,
 } from "../svg/constants.js";
 
 const LIGHT_RAMP_S = 0.04;
@@ -86,11 +84,7 @@ export function buildTimeline(
     const prevLeave = i === 0 ? 0 : ufoLeaveAbsS[i - 1];
     let arrive = prevLeave;
     if (i >= 1 && funnelPositionsEarly[i] && funnelPositionsEarly[i - 1]) {
-      const distCells =
-        Math.abs(funnelPositionsEarly[i][0] - funnelPositionsEarly[i - 1][0]) +
-        Math.abs(funnelPositionsEarly[i][1] - funnelPositionsEarly[i - 1][1]);
-      const travelS = Math.max(UFO_MOVE_MIN_S, distCells * UFO_CELL_TIME);
-      arrive = prevLeave + travelS;
+      arrive = prevLeave + UFO_BLINK_TRAVEL_S;
     }
     const earliestArrival = Math.max(
       0,
@@ -101,21 +95,15 @@ export function buildTimeline(
     const baseSpawn = arrive + DROP_WAIT_S;
     visualSpawnAbsS[i] = Math.max(simSpawnAbsS[i] ?? 0, baseSpawn);
     readyAbsS[i] = visualSpawnAbsS[i] + (LIGHT_RAMP_S + SHEEP_FADE_S);
+    ufoLeaveAbsS[i] = (readyAbsS[i] ?? 0) + UFO_RELEASE_S;
     const simOffset = (moveStartAbsS[i] ?? 0) - (simSpawnAbsS[i] ?? 0);
     visualMoveStartAbsS[i] = Math.max(
-      readyAbsS[i],
+      ufoLeaveAbsS[i],
       visualSpawnAbsS[i] + Math.max(0, simOffset),
     );
-    ufoLeaveAbsS[i] = (readyAbsS[i] ?? 0) + UFO_RELEASE_S;
   }
 
-  const travelSCells = (from: [number, number], to: [number, number]) => {
-    const dist = Math.abs(to[0] - from[0]) + Math.abs(to[1] - from[1]);
-    return Math.min(
-      UFO_MOVE_MAX_S,
-      Math.max(UFO_MOVE_MIN_S, dist * UFO_CELL_TIME),
-    );
-  };
+  const travelSCells = () => UFO_BLINK_TRAVEL_S;
   const visualBaseTime = (slotIndex: number, baseTime: number) => {
     const simFirstMoveArrival =
       (spawnTick[slotIndex] ?? 0) * SHEEP_CELL_TIME +
@@ -153,14 +141,13 @@ export function buildTimeline(
   }[] = [];
   const ufoStopCells = funnelPositionsEarly.slice();
   let serviceCursor = ufoLeaveAbsS.at(-1) ?? 0;
-  let serviceCell = funnelPositionsEarly.at(-1) ?? [0, 0];
   for (const turnover of flock.turnovers) {
     const requested =
       visualBaseTime(turnover.slotIndex, turnover.baseTime) +
       slotDelays[turnover.slotIndex];
     const arrive = Math.max(
       requested,
-      serviceCursor + travelSCells(serviceCell, turnover.pickupCell),
+      serviceCursor + travelSCells(),
     );
     const outgoingHidden = arrive + TURNOVER_PICKUP_S;
     const dropArrive = outgoingHidden + TURNOVER_EXCHANGE_S;
@@ -186,7 +173,6 @@ export function buildTimeline(
     visualMoveStartAbsS.push(outgoingHidden, incomingReady);
     ufoLeaveAbsS.push(outgoingHidden, leave);
     serviceCursor = leave;
-    serviceCell = turnover.dropCell;
   }
 
   const delayAt = (slotIndex: number, baseTime: number) =>
@@ -225,17 +211,15 @@ export function buildTimeline(
   const pickupCells: [number, number][] = [];
   const pickupVisitSheep: number[] = [];
   const pending = [...activeSheepIndices];
-  let tCursor = serviceCursor + UFO_MOVE_MAX_S;
-  let prevCell: [number, number] = serviceCell;
+  let tCursor = serviceCursor + UFO_BLINK_TRAVEL_S;
   while (pending.length > 0) {
     let nextPendingIndex = 0;
     let nextArrival = Number.POSITIVE_INFINITY;
     for (let index = 0; index < pending.length; index++) {
       const sheepIndex = pending[index];
-      const nextCell = finalCellBySheep.get(sheepIndex)!;
       const arrival = Math.max(
         finishBySheep.get(sheepIndex) ?? 0,
-        tCursor + travelSCells(prevCell, nextCell),
+        tCursor + travelSCells(),
       );
       if (arrival < nextArrival) {
         nextPendingIndex = index;
@@ -250,7 +234,6 @@ export function buildTimeline(
     pickupArriveBySheep[sheepIndex] = nextArrival;
     tCursor += PICKUP_WAIT_S;
     tCursor += PICKUP_LIGHT_S + PICKUP_FADE_S;
-    prevCell = nextCell;
   }
   const pickupEndAbsS = tCursor;
 

@@ -1,9 +1,7 @@
 import {
   CELL_SIZE,
   GAP,
-  UFO_CELL_TIME,
-  UFO_MOVE_MAX_S,
-  UFO_MOVE_MIN_S,
+  UFO_BLINK_TRAVEL_S,
   UFO_RELOCATION_APPROACH_S,
   UFO_VIEWBOX,
   UFO_WIDTH_PX,
@@ -147,29 +145,29 @@ export function buildUfoLayer(params: {
     while (angle - previous < -180) angle += 360;
     return Number(angle.toFixed(2));
   };
-  const travelSeconds = (
-    from: [number, number],
-    to: [number, number],
-  ) => {
-    const cells = Math.abs(to[0] - from[0]) + Math.abs(to[1] - from[1]);
-    return Math.min(
-      UFO_MOVE_MAX_S,
-      Math.max(UFO_MOVE_MIN_S, cells * UFO_CELL_TIME),
-    );
-  };
   const pctAt = (seconds: number) =>
     maxTotalTime > 0 ? (seconds * 100) / maxTotalTime : 0;
   const TURN_LEAD_S = 0.1;
-  const JUMP_S = 0.04;
-  const JUMP_FADE_S = 0.008;
+  const BLINK_EDGE_SHARE = 0.24;
+  const BLINK_FADE_S = 0.008;
 
   const ufoMoveKeyframePcts: string[] = [];
   const ufoRotKeyframePcts: string[] = [];
   const ufoStreakFrames: { t: number; opacity: number; scale: number }[] = [];
+  const ufoBlinkLightFrames: { t: number; opacity: number }[] = [];
   const ufoVisibilityFrames: { t: number; opacity: number }[] = [
-    { t: 0, opacity: 0 },
+    { t: 0, opacity: 1 },
   ];
   let signaturePulse: { x: number; y: number; start: number; duration: number } | null = null;
+  const addStreak = (departT: number, arriveT: number) => {
+    const ramp = Math.min(0.04, (arriveT - departT) / 4);
+    ufoStreakFrames.push(
+      { t: departT, opacity: 0, scale: 0.2 },
+      { t: departT + ramp, opacity: 0.32, scale: 1 },
+      { t: Math.max(departT + ramp, arriveT - ramp), opacity: 0.18, scale: 0.65 },
+      { t: arriveT, opacity: 0, scale: 0.2 },
+    );
+  };
   const addFlight = (
     fromPx: { x: number; y: number },
     toPx: { x: number; y: number },
@@ -184,29 +182,46 @@ export function buildUfoLayer(params: {
       `${pctAt(arriveT).toFixed(4)}% { transform: translate(${toPx.x - UFO_WIDTH_PX / 2}px, ${toPx.y - UFO_WIDTH_PX / 2}px); }`,
     );
 
-    if (showStreak) {
-      const ramp = Math.min(0.04, (arriveT - departT) / 4);
-      ufoStreakFrames.push(
-        { t: departT, opacity: 0, scale: 0.2 },
-        { t: departT + ramp, opacity: 0.32, scale: 1 },
-        { t: Math.max(departT + ramp, arriveT - ramp), opacity: 0.18, scale: 0.65 },
-        { t: arriveT, opacity: 0, scale: 0.2 },
-      );
-    }
+    if (showStreak) addStreak(departT, arriveT);
   };
-  const addJump = (
+  const addBlinkFlight = (
     fromPx: { x: number; y: number },
     toPx: { x: number; y: number },
     departT: number,
     arriveT: number,
+    showStreak = false,
   ) => {
-    addFlight(fromPx, toPx, departT, arriveT);
-    const fade = Math.min(JUMP_FADE_S, (arriveT - departT) / 3);
+    const duration = Math.max(0.001, arriveT - departT);
+    const edgeDuration = duration * BLINK_EDGE_SHARE;
+    const edgeOutT = departT + edgeDuration;
+    const edgeInT = arriveT - edgeDuration;
+    const distance = Math.hypot(toPx.x - fromPx.x, toPx.y - fromPx.y);
+    const edgeRatio = distance > 0 ? Math.min(0.32, 12 / distance) : 0;
+    const pointAt = (ratio: number) => ({
+      x: fromPx.x + (toPx.x - fromPx.x) * ratio,
+      y: fromPx.y + (toPx.y - fromPx.y) * ratio,
+    });
+    const edgeOutPx = pointAt(edgeRatio);
+    const edgeInPx = pointAt(1 - edgeRatio);
+    const fade = Math.min(BLINK_FADE_S, edgeDuration / 3);
+
+    addFlight(fromPx, edgeOutPx, departT, edgeOutT);
+    addFlight(edgeOutPx, edgeInPx, edgeOutT, edgeInT);
+    addFlight(edgeInPx, toPx, edgeInT, arriveT);
+    if (showStreak) addStreak(departT, arriveT);
     ufoVisibilityFrames.push(
       { t: departT, opacity: 1 },
-      { t: departT + fade, opacity: 0 },
-      { t: arriveT - fade, opacity: 0 },
+      { t: edgeOutT, opacity: 1 },
+      { t: edgeOutT + fade, opacity: 0 },
+      { t: edgeInT - fade, opacity: 0 },
+      { t: edgeInT, opacity: 1 },
       { t: arriveT, opacity: 1 },
+    );
+    ufoBlinkLightFrames.push(
+      { t: edgeOutT, opacity: 0 },
+      { t: edgeOutT + fade, opacity: 0.3 },
+      { t: edgeInT - fade, opacity: 0.3 },
+      { t: edgeInT, opacity: 0 },
     );
   };
   const entryY =
@@ -219,19 +234,14 @@ export function buildUfoLayer(params: {
       funnelPositionsEarly[0][1],
     );
     const entryAngle = 0;
+    const entryStart = { x: pos0.x, y: pos0.y - 30 };
     ufoMoveKeyframePcts.push(
-      `0% { transform: translate(${pos0.x - ufoCenter}px, ${pos0.y - ufoCenter}px); }`,
+      `0% { transform: translate(${entryStart.x - ufoCenter}px, ${entryStart.y - ufoCenter}px); }`,
     );
     ufoRotKeyframePcts.push(`0% { transform: rotate(${entryAngle}deg); }`);
     const arrive0 = arriveAbsS[0] ?? ufoEntryS;
     const pctArrive0 = maxTotalTime > 0 ? (arrive0 * 100) / maxTotalTime : 0;
-    ufoMoveKeyframePcts.push(
-      `${pctAt(arrive0).toFixed(4)}% { transform: translate(${pos0.x - ufoCenter}px, ${pos0.y - ufoCenter}px); }`,
-    );
-    ufoVisibilityFrames.push(
-      { t: Math.max(0, arrive0 - JUMP_FADE_S), opacity: 0 },
-      { t: arrive0, opacity: 1 },
-    );
+    addBlinkFlight(entryStart, pos0, 0, arrive0, true);
     ufoRotKeyframePcts.push(
       `${pctAt(ufoEntryS).toFixed(4)}% { transform: rotate(${entryAngle}deg); }`,
     );
@@ -251,7 +261,7 @@ export function buildUfoLayer(params: {
       const arrive1 = arriveAbsS[1] ?? stayEnd0;
       const pctArrive1 = maxTotalTime > 0 ? (arrive1 * 100) / maxTotalTime : 0;
       const angle1 = headingFor(pos0, nextPos, currentAngle);
-      const jumpStart = Math.max(stayEnd0, arrive1 - JUMP_S);
+      const jumpStart = stayEnd0;
       const turnStartPct = pctAt(Math.max(arrive0, jumpStart - TURN_LEAD_S));
       ufoRotKeyframePcts.push(
         `${turnStartPct.toFixed(4)}% { transform: rotate(${currentAngle}deg); animation-timing-function: cubic-bezier(.2,.8,.2,1); }`,
@@ -262,7 +272,7 @@ export function buildUfoLayer(params: {
       ufoMoveKeyframePcts.push(
         `${pctAt(jumpStart).toFixed(4)}% { transform: translate(${pos0.x - ufoCenter}px, ${pos0.y - ufoCenter}px); }`,
       );
-      addJump(pos0, nextPos, jumpStart, arrive1);
+      addBlinkFlight(pos0, nextPos, jumpStart, arrive1);
       ufoRotKeyframePcts.push(
         `${pctArrive1.toFixed(4)}% { transform: rotate(${angle1}deg); }`,
       );
@@ -298,14 +308,14 @@ export function buildUfoLayer(params: {
             `${pctAt(stayEndI).toFixed(4)}% { transform: rotate(${exitAngle}deg); }`,
             `${pctAt(exitEnd).toFixed(4)}% { transform: rotate(${exitAngle}deg); }`,
           );
-          addFlight(currPos, offstageCurrent, stayEndI, exitEnd, true);
+          addBlinkFlight(currPos, offstageCurrent, stayEndI, exitEnd, true);
           const entryAngle = headingFor(offstageNext, nextPos, exitAngle);
           ufoRotKeyframePcts.push(
             `${pctAt(Math.max(exitEnd, entryStart - TURN_LEAD_S)).toFixed(4)}% { transform: rotate(${exitAngle}deg); animation-timing-function: cubic-bezier(.2,.8,.2,1); }`,
             `${pctAt(entryStart).toFixed(4)}% { transform: rotate(${entryAngle}deg); }`,
             `${pctAt(arriveNext).toFixed(4)}% { transform: rotate(${entryAngle}deg); }`,
           );
-          addFlight(offstageNext, nextPos, entryStart, arriveNext, true);
+          addBlinkFlight(offstageNext, nextPos, entryStart, arriveNext, true);
           currentAngle = entryAngle;
           continue;
         }
@@ -339,7 +349,7 @@ export function buildUfoLayer(params: {
               `${pctAt(depart).toFixed(4)}% { transform: rotate(${angle}deg); }`,
               `${pctAt(arrive).toFixed(4)}% { transform: rotate(${angle}deg); }`,
             );
-            addFlight(from, to, depart, arrive, streak);
+            addBlinkFlight(from, to, depart, arrive, streak);
             currentAngle = angle;
           };
           const stageExitEnd = Math.min(
@@ -384,14 +394,7 @@ export function buildUfoLayer(params: {
           );
           continue;
         }
-        const isDeploymentJump = i < deploymentStopCount - 1;
-        const isTurnoverExchange =
-          i >= deploymentStopCount &&
-          (i - deploymentStopCount) % 2 === 0;
-        const isJump = isDeploymentJump || isTurnoverExchange;
-        const departT = isDeploymentJump
-          ? Math.max(stayEndI, arriveNext - JUMP_S)
-          : stayEndI;
+        const departT = stayEndI;
         const turnStartPct = pctAt(
           Math.max(arriveAbsS[i] ?? 0, departT - TURN_LEAD_S),
         );
@@ -405,8 +408,7 @@ export function buildUfoLayer(params: {
             `${pctAt(departT).toFixed(4)}% { transform: translate(${currPos.x - ufoCenter}px, ${currPos.y - ufoCenter}px); }`,
           );
         }
-        if (isJump) addJump(currPos, nextPos, departT, arriveNext);
-        else addFlight(currPos, nextPos, departT, arriveNext);
+        addBlinkFlight(currPos, nextPos, departT, arriveNext);
         currentAngle = angleNext;
       }
     }
@@ -437,7 +439,7 @@ export function buildUfoLayer(params: {
       pickupArriveArr.length === pickupCellsArr.length
     ) {
       stageExitPx = { x: lastPosPx.x, y: entryY + ufoCenter };
-      const stageExitEndT = lastStayEnd + UFO_MOVE_MAX_S;
+      const stageExitEndT = lastStayEnd + UFO_BLINK_TRAVEL_S;
       const stageExitAngle = headingFor(lastPosPx, stageExitPx, currentAngle);
       ufoRotKeyframePcts.push(
         `${pctAt(Math.max(arriveAbsS[lastIdx] ?? 0, lastStayEnd - TURN_LEAD_S)).toFixed(4)}% { transform: rotate(${currentAngle}deg); animation-timing-function: cubic-bezier(.2,.8,.2,1); }`,
@@ -445,15 +447,13 @@ export function buildUfoLayer(params: {
       ufoRotKeyframePcts.push(
         `${pctLastStay.toFixed(4)}% { transform: rotate(${stageExitAngle}deg); }`,
       );
-      addFlight(lastPosPx, stageExitPx, lastStayEnd, stageExitEndT, true);
+      addBlinkFlight(lastPosPx, stageExitPx, lastStayEnd, stageExitEndT, true);
       ufoRotKeyframePcts.push(
         `${pctAt(stageExitEndT).toFixed(4)}% { transform: rotate(${stageExitAngle}deg); }`,
       );
       currentAngle = stageExitAngle;
       latestHoldEndT = stageExitEndT;
 
-      const lastPosCell = funnelPositionsEarly[lastIdx];
-      let prevCell = lastPosCell;
       let prevPx = stageExitPx;
 
       for (let k = 0; k < pickupCellsArr.length; k++) {
@@ -468,13 +468,12 @@ export function buildUfoLayer(params: {
           k === 0 ? { x: posPx.x, y: stageExitPx.y } : prevPx;
         const departT = Math.max(
           latestHoldEndT,
-          arriveT -
-            (k === 0 ? UFO_MOVE_MAX_S : travelSeconds(prevCell, cell)),
+          arriveT - UFO_BLINK_TRAVEL_S,
         );
         const pctDepart = pctAt(departT);
         const angle = headingFor(flightFromPx, posPx, currentAngle);
 
-        addFlight(flightFromPx, posPx, departT, arriveT);
+        addBlinkFlight(flightFromPx, posPx, departT, arriveT, true);
         ufoRotKeyframePcts.push(
           `${pctAt(Math.max(0, departT - TURN_LEAD_S)).toFixed(4)}% { transform: rotate(${currentAngle}deg); animation-timing-function: cubic-bezier(.2,.8,.2,1); }`,
         );
@@ -498,7 +497,6 @@ export function buildUfoLayer(params: {
         );
 
         currentAngle = angle;
-        prevCell = cell;
         prevPx = posPx;
       }
     }
@@ -552,7 +550,7 @@ export function buildUfoLayer(params: {
         `${pctAt(Math.max(0, approachT - TURN_LEAD_S)).toFixed(4)}% { transform: rotate(${currentAngle}deg); animation-timing-function: cubic-bezier(.2,.8,.2,1); }`,
         `${pctAt(approachT).toFixed(4)}% { transform: rotate(${approachAngle}deg); }`,
       );
-      addFlight(prevPxSweep, centerPx, approachT, firstSweepT, true);
+      addBlinkFlight(prevPxSweep, centerPx, approachT, firstSweepT, true);
       ufoMoveKeyframePcts.push(
         `${pctAt(exitStartAbsS ?? firstSweepT).toFixed(4)}% { transform: translate(${centerPx.x - ufoCenter}px, ${centerPx.y - ufoCenter}px); }`,
       );
@@ -594,8 +592,12 @@ export function buildUfoLayer(params: {
     ufoRotKeyframePcts.push(
       `${exitStartPct.toFixed(4)}% { transform: rotate(${exitAngle}deg); }`,
     );
-    ufoMoveKeyframePcts.push(
-      `${pctAt(exitEndT).toFixed(4)}% { transform: translate(${exitFromTx}px, ${entryY}px); }`,
+    addBlinkFlight(
+      { x: exitFromTx + ufoCenter, y: exitFromTy + ufoCenter },
+      { x: exitFromTx + ufoCenter, y: entryY + ufoCenter },
+      exitStartT,
+      exitEndT,
+      true,
     );
     ufoRotKeyframePcts.push(
       `${pctAt(exitEndT).toFixed(4)}% { transform: rotate(${exitAngle}deg); }`,
@@ -681,7 +683,8 @@ export function buildUfoLayer(params: {
   ${signaturePulseKeyframes}`
     : "";
 
-  const lightKeyframeEntries: { pct: number; opacity: number }[] = [];
+  const lightKeyframeEntries: { pct: number; opacity: number }[] =
+    ufoBlinkLightFrames.map(({ t, opacity }) => ({ pct: pctAt(t), opacity }));
   for (let i = 0; i < funnelPositionsEarly.length; i++) {
     const tArrive = arriveAbsS[i] ?? spawnAbsS[i] ?? 0;
     const tBeamOn = tArrive + beamDelayS;
@@ -784,10 +787,10 @@ export function buildUfoLayer(params: {
     ? `<g class="signature-reveal" aria-hidden="true" pointer-events="none"><g class="signature-grid-wave">${gridWaveCells}</g><g class="signature-core" style="opacity:0; transform-box:view-box; transform-origin:0 0; animation:signature-core ${animationDuration}s cubic-bezier(.2,.8,.2,1) 0s 1 both;"><rect x="-5" y="-5" width="10" height="10" rx="2" fill="var(--gm-beam-core)" opacity=".75"/><path d="M0-3L3 0 0 3-3 0Z" fill="var(--gm-level-4)"/></g></g>`
     : "";
   const ufoGroupStr = hasUfo
-    ? `${signatureGroupStr}<g class="ufo-move" style="transform:translate(${firstPosPx.x - UFO_WIDTH_PX / 2}px, ${firstPosPx.y - UFO_WIDTH_PX / 2}px); animation:ufo-move ${animationDuration}s cubic-bezier(.12,.72,.2,1) 0s 1 both, ufo-visibility ${animationDuration}s linear 0s 1 both;">
+    ? `${signatureGroupStr}<g class="ufo-move" style="transform:translate(${firstPosPx.x - UFO_WIDTH_PX / 2}px, ${firstPosPx.y - UFO_WIDTH_PX / 2}px); animation:ufo-move ${animationDuration}s cubic-bezier(.12,.72,.2,1) 0s 1 both;">
         <g class="ufo-rot" style="transform-box:fill-box; transform-origin:center; animation:ufo-rot ${animationDuration}s cubic-bezier(.12,.72,.2,1) 0s 1 both;">
           <path class="ufo-streak" d="M12 11 Q16 -20 20 11 Q16 7 12 11Z" fill="var(--gm-level-3)" style="opacity:0; transform-origin:16px 11px; animation:ufo-streak ${animationDuration}s linear 0s 1 both; pointer-events:none;"/>
-          <svg width="${UFO_WIDTH_PX}" height="${UFO_WIDTH_PX}" viewBox="${UFO_VIEWBOX}" x="0" y="0">${UFO_CONTENT}</svg>
+          <g class="ufo-body" style="animation:ufo-visibility ${animationDuration}s linear 0s 1 both;"><svg width="${UFO_WIDTH_PX}" height="${UFO_WIDTH_PX}" viewBox="${UFO_VIEWBOX}" x="0" y="0">${UFO_CONTENT}</svg></g>
           <circle cx="${ufoCenter}" cy="${ufoCenter}" r="${glowR}" fill="var(--gm-level-3)" style="opacity:0; animation:ufo-light ${animationDuration}s ease-out 0s 1 both; pointer-events:none;"/>
         </g>
       </g>`
