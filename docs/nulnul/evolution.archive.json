@@ -487,6 +487,46 @@
         "scope": "project",
         "status": "converted",
         "rejected_proposals": []
+      },
+      {
+        "id": "feedback-simple-color-tag-panel-v36-20260818",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The 3x3 sheep mark felt overworked, the selected sheep on the left appeared to fade as time passed, the 방목·양떼·잔디 row occupied only the right side, and the lower sheep, tag, number, and fullness layout did not use its available width cleanly.",
+        "expected": "Use one 1x1 sheep tag with varied contribution colors, switch the selected actor only at exact lifecycle boundaries, span the three status cells across the full panel, and distribute the lower selected detail and square roster with space-between while keeping fullness only in the selected region.",
+        "evidence": "The accepted v35 source rendered ten rectangles per tag, used linear timing on selected visibility, began the status row at x=212, and duplicated a compact ten-cell fullness meter in every roster slot. Fresh v36 700px dark/light frames show one colored square per tag, an equal x=10–650 status row, square roster endpoints at x=212 and x=650, and no compact meter; 1,970 selected-boundary samples contain no intermediate opacity.",
+        "reproduction": "At 700px inspect the representative cue, outgoing, blank, incoming, drop, middle, and terminal frames in both themes plus 10/62 rosters; sample every selected visibility keyframe and reject a non-square tag, fewer than four colors, gradual selected opacity, partial-width status row, duplicated compact fullness meter, uneven roster endpoints, or clipping.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
+      },
+      {
+        "id": "feedback-horizontal-fullness-colored-ear-tags-v38-20260818",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "V37 replaced the prior per-sheep horizontal ten-cell fullness meter with fill inside each numbered square and kept every identity tag within the green contribution palette, even though the requested change was only the roster arrangement.",
+        "expected": "Restore the prior horizontal ten-cell fullness display for every sheep, place its one-square identity tag directly beside those cells, distribute the two-row cards with space-between, and give every reachable sheep a distinct varied-color tag that matches its ear and selected portrait.",
+        "evidence": "V35 source contains flock-meter-compact with ten discrete cells per roster actor, while v37 contains no compact symbol and clips progress into the whole numbered square. The current v38 candidate restores the compact symbol and renders each card as number over tag-plus-ten-cells; fresh 10/28/62 frames show distinct HSL tags beside the meters and the same tags at sheep ears.",
+        "reproduction": "At 700px inspect early and late 10/28/62 dark/light plus reduced-motion frames. Reject whole-square fullness, fewer or more than ten horizontal cells, a tag not adjacent to its meter, repeated tag color among reachable identities, tag mismatch across field/selected/roster, endpoint drift from x=212–650, clipping, or handoff regression.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": [
+          "proposal-horizontal-fullness-colored-ear-tags-v38",
+          "proposal-readable-dense-horizontal-fullness-v39",
+          "proposal-raster-readable-dense-meter-v40"
+        ]
+      },
+      {
+        "id": "feedback-ear-tag-roster-fullness-v37-20260818",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The field identity square read as a sticker attached to the sheep's body, and removing the compact per-roster meters also removed the visible sense that each numbered sheep was filling up.",
+        "expected": "Keep the simple varied-color 1x1 identity mark but hang it at the ear like an earring, and make the numbered roster visibly fill from the same recorded bites as before without undoing the square space-between layout.",
+        "evidence": "The v36 field tag was appended at body coordinates (9, 6.3), while the existing head nod lived in a separate sheep-head track; roster slots had only a static low-opacity fill. Fresh v37 3x and 700px frames place the mark beside the left ear under the same head keyframes and show bite-driven left-to-right fill inside 10/28/62 numbered squares.",
+        "reproduction": "At 700px and 3x inspect field and selected sheep in dark/light plus reduced motion, then compare early and later 10/28/62 roster frames. Reject a mark remaining on wool, a mark detached during a head nod, hidden numbers or identity colors, non-bite-driven fill, restored compact per-slot meters, lost space-between endpoints, or any handoff regression.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
       }
     ],
     "proposals": [
@@ -1893,6 +1933,173 @@
           "Download and vendor the user-requested OFL Galmuri7 asset from official commit 71e1cacf1437a11220307120e63e30bc275312d4"
         ],
         "rollback": "Remove the embedded font and v34 panel/handoff diff, restoring the published v33 panel and turnover endpoint path."
+      },
+      {
+        "id": "proposal-simple-color-tag-panel-v36",
+        "feedback_ids": [
+          "feedback-simple-color-tag-panel-v36-20260818"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "sheep tag simplicity, panel width allocation, and selected visibility",
+        "change_level": "task",
+        "status": "accepted",
+        "from_version": 35,
+        "to_version": 36,
+        "cause": "The 3x3 bit pattern and per-slot fullness bars duplicated the roster number and selected meter, while the right-only header and linear visibility timing weakened the panel hierarchy and made a discrete lifecycle change read like fading.",
+        "candidate_change": "Replace the shared 3x3 mark with one square cycling across the four contribution levels, keep the roster number as identity, remove compact roster meters, equally divide x=10–650 among 방목·양떼·잔디, space the selected sheep/tag/number/fullness and square two-row roster across their available widths, and use step-end for discrete panel visibility while preserving the intentional next-slot cue fade.",
+        "discovery_evidence": "Fresh current-source 700px dark/light frames at the first turnover show the outgoing selected sheep and incoming replacement switching around the same v35 blank beat without an opacity blend. Representative, 10-, and 62-roster frames show square numbered cells reaching both endpoints with four visible palette levels and no compact bars.",
+        "reproduction": "Run npm run visual:fixture and npm run check, render forced dark/light and reduced-motion representative plus 10/62 variants at 700px, inspect cue/outgoing/blank/incoming/drop/middle/terminal frames, sample selected opacity at every keyframe boundary, and rerun 30fps/120fps post-reveal continuity before independent promotion.",
+        "primary_metric": "At 700px, each shared tag is one colored square, the status and lower rows use their full widths without duplicated fullness or clipping, and selected visibility has zero intermediate opacity samples while the accepted v35 handoff remains unchanged.",
+        "prediction": "Removing the internal tag grid and compact meters while allocating the complete panel width will improve immediate readability without changing motion, identity lifecycle, or runtime.",
+        "expected_delta": {
+          "fixture_bytes": 1780059,
+          "fixture_runtime_seconds": 44.863,
+          "tag_rectangles_per_actor": 1,
+          "tag_color_levels": 4,
+          "compact_roster_meters": 0,
+          "status_left_x": 10,
+          "status_right_x": 650,
+          "roster_left_x": 212,
+          "roster_right_x": 650,
+          "intermediate_selected_opacity_samples": 0
+        },
+        "falsification_condition": "Reject if any tag is not square or loses its shared color across field, selected, and roster; fewer than four contribution colors render; the selected actor fades; compact roster fullness returns; the three status cells do not span x=10–650 equally; square roster endpoints drift from x=212–650; cue or blank handoff timing changes; dense cells clip; incoming continuity fails; runtime exceeds 50 seconds; the size guardrail fails; or npm run check fails.",
+        "regression_check": "npm run check plus a fresh independent visual Gate over dark/light, reduced motion, 10/28/62 panels, adjacent turnover frames, terminal state, selected opacity boundaries, and 30fps/120fps incoming-actor continuity.",
+        "transfer_check": "Not applicable; this is a project-specific 700px pasture panel correction.",
+        "guardrails": [
+          "Keep published v35 as the external rollback until the existing workflow publishes v36",
+          "Preserve the v35 next-slot cue, blank handoff, exact-drop field actor, fixed UFO rhythm, causal bites, themes, reduced motion, and finale",
+          "Use only existing contribution colors, sheep art, panel cells, and number labels",
+          "Do not add another identity shape, effect layer, dependency, text card, or timeline delay",
+          "No publication or profile write without explicit approval"
+        ],
+        "permission_delta": [],
+        "rollback": "Revert the v36 tag and panel-layout diff to the published v35 3x3-tag panel while retaining all v35 motion and continuity behavior."
+      },
+      {
+        "id": "proposal-readable-dense-horizontal-fullness-v39",
+        "feedback_ids": [
+          "feedback-horizontal-fullness-colored-ear-tags-v38-20260818"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "make the restored ten-cell meter readable in the dense 62-roster layout",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 37,
+        "to_version": 39,
+        "cause": "The rejected v38 mechanism restored the correct meter but spent over half of each 11.13px dense card on padding and a 1.8px tag, leaving only 5.33px for ten cells and a 3.61px number at 700px.",
+        "candidate_change": "Keep the same restored compact meter and identity mapping, but allocate each dense card almost its complete column pitch, reduce only its internal edge/gap budget, use a 1.4px tag, reserve at least about 11.8px for the ten-cell meter in the 62-roster fixture, and raise the two-digit label floor to 4.5px. Sparse cards retain their larger sizes.",
+        "discovery_evidence": "The independent v38 Gate measured the 62-roster meter at 5.33 logical px with 0.41px cells and the label at 3.61px, while the same 10/28 mechanism passed. The width loss is therefore card geometry, not the meter, tag mapping, or motion lifecycle.",
+        "reproduction": "Render fresh 700px and 3x dark/light 62-roster early, middle, and terminal frames, measure dense card, tag, meter, cell, gap, and label widths, then rerun the complete v38 check, reduced motion, selected opacity, and 30fps/120fps continuity under a fresh independent Gate.",
+        "primary_metric": "In the 62-roster 700px frame, every two-digit label is readable and each adjacent tag-plus-meter row exposes ten visually separated horizontal cells, while the cards still span x=212–650 in two rows without overlap or clipping.",
+        "prediction": "Recovering the card's wasted horizontal space will more than double dense meter width and clear the only v38 blocker without changing the accepted 10/28 result or any timeline.",
+        "expected_delta": {
+          "fixture_bytes": 1800202,
+          "fixture_runtime_seconds": 44.863,
+          "dense_meter_min_width_px": 11.5,
+          "dense_label_min_font_px": 4.5,
+          "horizontal_fullness_cells_per_roster_actor": 10,
+          "representative_unique_tag_colors": 28,
+          "roster_left_x": 212,
+          "roster_right_x": 650
+        },
+        "falsification_condition": "Reject if the 62-roster ten cells or two-digit labels remain unreadable at 700px; cards, tags, meters, or outlines overlap or clip; x endpoints drift; the accepted 10/28 layouts worsen; identity mapping, ear attachment, bite progress, selected meter, handoff, continuity, themes, reduced motion, finale, size, runtime, or npm run check regresses.",
+        "regression_check": "npm run check plus a fresh independent visual Gate over measured 62-roster readability, 3x and 700px dark/light, reduced motion, early/late 10/28/62 progress, tag matching, selected opacity, handoff frames, and 30fps/120fps continuity.",
+        "transfer_check": "Not applicable; this is a project-specific dense-panel geometry correction.",
+        "guardrails": [
+          "Do not change the user's restored ten-cell encoding or varied-color tag mapping",
+          "Preserve the v38 10/28 layouts and v36 x=212–650 two-row space-between endpoints",
+          "Preserve v37 ear attachment, full-width header, snap visibility, and all accepted motion",
+          "Add no row, scroll, cap, effect, dependency, or timeline change",
+          "No publication or profile write without explicit approval"
+        ],
+        "permission_delta": [],
+        "rollback": "Discard the v39 dense geometry adjustment and retain accepted v37; the rejected v38 evidence remains archived for diagnosis."
+      },
+      {
+        "id": "proposal-horizontal-fullness-colored-ear-tags-v38",
+        "feedback_ids": [
+          "feedback-horizontal-fullness-colored-ear-tags-v38-20260818"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "restore per-roster horizontal fullness while preserving the v36 layout-only changes and v37 ear placement",
+        "change_level": "task",
+        "status": "rejected",
+        "from_version": 37,
+        "to_version": 38,
+        "cause": "The prior correction changed the fullness encoding instead of only rearranging the existing roster cards, and reused contribution greens for identity despite the request for individually varied colors.",
+        "candidate_change": "Restore v35's compact ten-cell roster meter and rectangular card, place a one-square tag immediately to its left, calculate exact first/last-card space-between positions over x=212–650, retain the v37 ear-attached tag and selected meter, and replace the four repeating green codes with deterministic unique HSL hues across the reachable roster capacity.",
+        "discovery_evidence": "The v35 renderer already owns the required compact meter and recorded-bite clip, so the correction can reuse it instead of inventing another progress encoding. The current candidate renders ten distinct cells plus one adjacent tag per roster actor and produces 300 unique deterministic hue codes with one rectangle per tag.",
+        "reproduction": "Run npm run visual:fixture and npm run check, render fresh 3x and 700px dark/light and reduced-motion representative frames plus 10/62 variants, compare early and late meter progress, verify tag mappings and x endpoints, sample selected opacity, rerun 30fps/120fps post-reveal continuity, and require an independent Gate.",
+        "primary_metric": "Every roster actor shows exactly ten horizontal bite-driven fullness cells with its distinct non-contribution-green identity tag directly beside them, while 10/28/62 two-row layouts span x=212–650 without overlap or clipping and the same tag remains attached to the sheep ear.",
+        "prediction": "Restoring the previously accepted meter and changing only its placement plus tag color will match the user's intended visual encoding without changing motion or runtime.",
+        "expected_delta": {
+          "fixture_bytes": 1800202,
+          "fixture_runtime_seconds": 44.863,
+          "horizontal_fullness_cells_per_roster_actor": 10,
+          "representative_unique_tag_colors": 28,
+          "tag_color_capacity": 360,
+          "roster_left_x": 212,
+          "roster_right_x": 650,
+          "intermediate_selected_opacity_samples": 0
+        },
+        "falsification_condition": "Reject if fullness remains a whole-square fill or is not ten discrete horizontal cells; the tag is not beside the cells, repeats within the reachable roster, returns to contribution-green-only colors, mismatches across field/selected/roster, or leaves the ear; 10/28/62 spacing clips or misses x=212–650; selected visibility, cue, blank handoff, exact-drop actor, continuity, themes, reduced motion, finale, size, runtime, or npm run check regresses.",
+        "regression_check": "npm run check plus a fresh independent visual Gate over 3x and 700px dark/light, reduced motion, early/late 10/28/62 meter progress, tag identity matching, selected opacity, handoff frames, and 30fps/120fps incoming continuity.",
+        "transfer_check": "Not applicable; this is a project-specific correction to the 700px pasture panel.",
+        "guardrails": [
+          "Preserve the user's v35 ten-cell horizontal fullness encoding; change arrangement only",
+          "Preserve v36 full-width status cells, snap visibility, and x=212–650 two-row space-between distribution",
+          "Preserve v37 ear attachment and shared field/selected/roster identity mapping",
+          "Use the existing compact meter, recorded-bite clips, and one-square tag; add no effect layer, dependency, or timeline change",
+          "Preserve the v35 cue, blank handoff, exact-drop actor, fixed UFO rhythm, causal bites, themes, reduced motion, and finale",
+          "No publication or profile write without explicit approval"
+        ],
+        "permission_delta": [],
+        "rollback": "Revert the v38 roster-card and HSL tag changes to the accepted local v37 square-fill panel; published v36 remains the external rollback."
+      },
+      {
+        "id": "proposal-ear-tag-roster-fullness-v37",
+        "feedback_ids": [
+          "feedback-ear-tag-roster-fullness-v37-20260818"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "field and selected tag attachment plus square-roster fullness",
+        "change_level": "task",
+        "status": "accepted",
+        "from_version": 36,
+        "to_version": 37,
+        "cause": "The v36 tag used body-local coordinates instead of the existing head lifecycle, so it read as a wool sticker; removing the tiny per-slot meters left roster progress static even though the exact bite clip already existed.",
+        "candidate_change": "Nest the existing one-square field tag beside the left ear and drive it with the existing sheep-head animation, align the selected portrait tag to the same ear, and reuse each flock-progress clip to fill the numbered roster square itself from left to right. Keep the selected exact ten-cell meter, v36 spacing, and every motion timeline unchanged.",
+        "discovery_evidence": "Source tracing found the field tag appended after SHEEP_CONTENT at (9, 6.3), outside sheep-head, while flock-progress already encoded every identity's bite history. Fresh frames show the relocated ear mark and progressive square fill without adding a new meter or motion layer.",
+        "reproduction": "Run npm run visual:fixture and npm run check, render 3x and 700px forced dark/light and reduced-motion representative frames plus 10/62 variants, inspect head-nod attachment and roster progress, sample selected opacity, rerun 30fps/120fps post-reveal continuity, and require an independent Gate before promotion.",
+        "primary_metric": "At 700px the 1x1 mark reads at the left ear and tracks the head instead of the wool, while every numbered roster square visibly fills only from recorded bites without obscuring its number/color or losing the v36 layout.",
+        "prediction": "Reusing the existing head and fullness tracks will answer both corrections with no new animation, meter component, dependency, or runtime.",
+        "expected_delta": {
+          "fixture_bytes": 1790045,
+          "fixture_runtime_seconds": 44.863,
+          "field_tag_x": 3,
+          "field_tag_y": 4.55,
+          "field_tag_size": 2.1,
+          "representative_roster_fullness_rects": 28,
+          "compact_roster_meters": 0,
+          "intermediate_selected_opacity_samples": 0
+        },
+        "falsification_condition": "Reject if a field or selected tag reads as body-attached or separates from the head pose; roster fill is not bite-driven, hides a number/color, or restores compact per-slot meters; v36 header or roster spacing changes; cue, blank handoff, exact-drop actor, continuity, theme, reduced-motion, finale, runtime, size, or npm run check regresses.",
+        "regression_check": "npm run check plus a fresh independent visual Gate over 3x and 700px dark/light, reduced motion, 10/28/62 layouts, selected opacity, handoff frames, and 30fps/120fps incoming continuity.",
+        "transfer_check": "Not applicable; this is a project-specific 700px pasture identity and fullness correction.",
+        "guardrails": [
+          "Preserve the v36 one-square four-color identity and full-width space-between layout",
+          "Reuse the existing sheep-head and flock-progress tracks instead of adding effects or timing",
+          "Keep the selected exact 포만 n/20 plus ten cells and do not restore compact per-slot meters",
+          "Preserve the v35 cue, blank handoff, exact-drop actor, fixed UFO rhythm, causal bites, themes, reduced motion, and finale",
+          "No publication or profile write without explicit approval"
+        ],
+        "permission_delta": [],
+        "rollback": "Revert the v37 ear wrapper and roster fullness rect to the published v36 static square panel while retaining all v36 behavior."
       }
     ],
     "promotions": [
@@ -2134,6 +2341,36 @@
           "metric": "Fresh 700px dark/light cue, pickup, blank, incoming, and exact-drop frames plus 10/28/62 layouts and 30fps/120fps continuity probes",
           "rollback_threshold": "Roll back if field, selected, and roster tags mismatch; the next cue or blank handoff disappears; any fallback sheep fills the gap; dense tags clip; an incoming actor slides or jumps; replacement text cards return; or any accepted causal, motion, theme, finale, size, or runtime check fails.",
           "evidence": "A fresh independent Gate scored v35 20/20 with no blocker. At the first turnover the next slot cues 0.702 playback seconds before pickup, tagged sheep 01 reaches 20/20, the selected region is completely empty for exactly 0.104 seconds with FIELD 5/6, tagged sheep 07 appears at 0/20 before the remote drop, and the same tag appears on its exact-drop field actor. Capacity is 492 with the first 300 tags unique and all 28 representative field/selected/roster mappings identical. All 22 cue/handoffs pass. Fresh 30fps/120fps probes found zero stale coordinates, outside reveals, non-adjacent jumps, velocity spikes, or movement before UFO hide across all 22 representative and six 10-roster incoming actors. The 1,851,823-byte, 44.863-second fixture preserves 201 arrivals and pulses, 50 stops, exact bridge timing, early pickup, dark/light 10/28/62 layouts, reduced motion, terminal state, and 53 finale phases. Feature 6886ea8 and successful workflow 32107648450 published project assets in 0496aa0, profile assets in 7f59feb, immutable profile embeds in cd2fd6b, and profile prose in 6115be4; all three public project/profile SVG hashes match byte-for-byte."
+        }
+      },
+      {
+        "id": "promotion-simple-color-tag-panel-v36-20260818",
+        "proposal_id": "proposal-simple-color-tag-panel-v36",
+        "gate_agent": "gate",
+        "before": "V35 used a dense 3x3 bit tag plus a compact fullness meter in every roster slot, kept the three status cells over the right region, and timed selected visibility linearly even though sheep lifecycle changes are discrete.",
+        "after": "V36 uses one shared contribution-color square plus the roster number, keeps fullness only in the selected region, spans the status row across the full panel, distributes square roster cells from x=212 to x=650, and snaps selected visibility without changing the v35 handoff.",
+        "regressions_passed": true,
+        "decision": "accepted",
+        "live_cycle": {
+          "status": "observed",
+          "metric": "Fresh 700px dark/light and reduced-motion turnover frames, 10/28/62 panel layouts, selected-opacity boundary sampling, and 30fps/120fps incoming continuity",
+          "rollback_threshold": "Roll back if a tag is not one square or shared across field, selected, and roster; four contribution colors disappear; selected opacity becomes gradual; fullness is duplicated in roster cells; status or roster endpoints lose their full-width spacing; the next-slot cue or blank handoff changes; dense cells clip; continuity fails; or any accepted causal, motion, theme, finale, size, or runtime check fails.",
+          "evidence": "A fresh independent Gate scored v36 20/20 with no blocker. Forced dark/light and reduced-motion 700px frames show one-square tags across four contribution colors, the equal x=10–650 방목·양떼·잔디 row, selected sheep/tag/number/fullness spacing, and square 10/28/62 two-row rosters from x=212 to x=650 without compact meters or clipping. The v35 cue, exact 0.104-second blank handoff, incoming selection, exact-drop actor, and terminal state remain. A browser probe found zero intermediate opacity across 1,970 selected-boundary samples. Fresh 30fps/120fps probes found zero stale coordinates, outside reveals, non-adjacent jumps, velocity spikes, or movement before UFO hide across all 22 representative and six 10-roster incoming actors. The 1,780,059-byte, 44.863-second fixture preserves all accepted causal, timing, reduced-motion, and finale checks."
+        }
+      },
+      {
+        "id": "promotion-ear-tag-roster-fullness-v37-20260818",
+        "proposal_id": "proposal-ear-tag-roster-fullness-v37",
+        "gate_agent": "gate",
+        "before": "V36 placed the field identity square on the wool and kept every numbered roster square visually static after removing compact per-slot meters.",
+        "after": "V37 attaches the same 1x1 contribution-color square at the field and selected sheep's left ear and fills each numbered roster square from its existing recorded-bite clip without restoring duplicate meters.",
+        "regressions_passed": true,
+        "decision": "accepted",
+        "live_cycle": {
+          "status": "observed",
+          "metric": "Fresh 3x and 700px dark/light plus reduced-motion ear attachment, 10/28/62 bite-driven square fullness, selected-opacity boundaries, and 30fps/120fps incoming continuity",
+          "rollback_threshold": "Roll back if the tag returns to wool, separates from the head pose, or becomes unreadable; square fullness hides identity or stops following bites; compact per-slot meters return; v36 spacing changes; handoff continuity fails; or any accepted causal, motion, theme, finale, size, or runtime check fails.",
+          "evidence": "A fresh independent Gate scored v37 20/20 with no blocker. Fresh 3x and 700px forced dark/light plus reduced-motion frames show the 1x1 mark at the left ear rather than the body and progressive fill inside numbered 10/28/62 roster squares without hiding number or identity color. The full-width header, selected ten-cell meter, next-slot cue, exact blank handoff, exact-drop field actors, and terminal state remain. Selected opacity has zero intermediate values across 1,970 samples; 30fps/120fps probes report zero outside reveals, non-adjacent jumps, velocity spikes, or movement before UFO hide across all 22 representative and six 10-roster incoming actors. The 1,790,045-byte fixture remains 44.863 seconds."
         }
       }
     ],

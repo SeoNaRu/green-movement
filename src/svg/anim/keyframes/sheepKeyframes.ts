@@ -655,6 +655,7 @@ export function buildSheepLayer(params: {
       keyframes: `@keyframes sheep-${si}-move {\n    ${deduped.join("\n    ")}\n  }\n  @keyframes sheep-${si}-pose {\n    ${dedupedPose.join("\n    ")}\n  }\n  @keyframes sheep-${si}-head {\n    ${dedupedHead.join("\n    ")}\n  }\n  @keyframes sheep-${si}-growth {\n    ${dedupedGrowth.join("\n    ")}\n    100% { transform: scale(${biteProgress.length > 0 ? (1 + Math.sqrt(biteProgress.at(-1)!.progress) * 0.15).toFixed(3) : 1}); }\n  }\n  @keyframes sheep-${si}-energy {\n    ${dedupedEnergy.join("\n    ")}\n    100% { opacity: ${biteProgress.length > 0 ? (Math.sqrt(biteProgress.at(-1)!.progress) * 0.48).toFixed(3) : 0}; }\n  }\n  .sheep-${si} .sheep-head { transform-box: fill-box; transform-origin: center; animation: sheep-${si}-head ${animationDuration}s cubic-bezier(.2,.8,.2,1) 0s 1 both; }\n  .sheep-${si} .sheep-growth { transform-box: fill-box; transform-origin: center; animation: sheep-${si}-growth ${animationDuration}s cubic-bezier(.2,.8,.2,1) 0s 1 both; }\n  .sheep-${si} .sheep-energy { animation: sheep-${si}-energy ${animationDuration}s linear 0s 1 both; }`,
       animationCSS: `${initialTransform}animation: sheep-${si}-move ${animationDuration}s linear ${delay * MOTION_TIME_SCALE}s 1 both;`,
       poseCSS: `transform-box:fill-box; transform-origin:center; animation:sheep-${si}-pose ${animationDuration}s linear 0s 1 both;`,
+      headCSS: `transform-box:fill-box; transform-origin:center; animation:sheep-${si}-head ${animationDuration}s cubic-bezier(.2,.8,.2,1) 0s 1 both;`,
       rosterActors,
     };
   });
@@ -675,7 +676,7 @@ export function buildSheepLayer(params: {
       .flatMap((a) =>
         a.rosterActors.map(
           (actor) =>
-            `<g class="sheep-roster-${actor.rosterIndex}" data-roster-index="${actor.rosterIndex}" style="${actor.animationCSS}"><g class="${a.id}" style="${a.animationCSS}"><g class="sheep-growth"><g class="sheep-actor" style="${a.poseCSS}">${SHEEP_CONTENT}${buildSheepTagSvg({ rosterIndex: actor.rosterIndex, x: 9, y: 6.3, size: 3.8, className: "sheep-field-tag", strokeWidth: 0.24 })}<path class="sheep-energy" d="M4.8 6.2Q6.1 5.1 7.1 6.2M7.3 8.5Q8.4 7.2 9.5 8.1M9.2 5.3Q10.3 4.7 11.1 5.8" fill="none" stroke="var(--gm-level-3)" stroke-width=".75" stroke-linecap="round" opacity="0"/></g></g></g></g>`,
+            `<g class="sheep-roster-${actor.rosterIndex}" data-roster-index="${actor.rosterIndex}" style="${actor.animationCSS}"><g class="${a.id}" style="${a.animationCSS}"><g class="sheep-growth"><g class="sheep-actor" style="${a.poseCSS}">${SHEEP_CONTENT}<g class="sheep-ear-tag" transform="translate(0,-1.55)" style="${a.headCSS}">${buildSheepTagSvg({ rosterIndex: actor.rosterIndex, x: 3, y: 4.55, size: 2.1, className: "sheep-field-tag", strokeWidth: 0.22 })}</g><path class="sheep-energy" d="M4.8 6.2Q6.1 5.1 7.1 6.2M7.3 8.5Q8.4 7.2 9.5 8.1M9.2 5.3Q10.3 4.7 11.1 5.8" fill="none" stroke="var(--gm-level-3)" stroke-width=".75" stroke-linecap="round" opacity="0"/></g></g></g></g>`,
         ),
       )
       .join("\n  ");

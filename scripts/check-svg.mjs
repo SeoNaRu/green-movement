@@ -144,8 +144,9 @@ for (const required of [
   'class="flock-selected-region"',
   'class="flock-roster-region"',
   'shape-rendering:crispEdges',
-  'height="16" fill="var(--gm-panel-bg)"',
-  'class="sheep-ranch-tag flock-slot-tag flock-slot-id"',
+  'class="flock-slot-cell"',
+  'class="flock-slot-fullness"',
+  'class="sheep-ranch-tag flock-slot-tag"',
   'class="flock-slot-index"',
   'id="flock-meter-selected"',
   'class="flock-meter-track"',
@@ -155,7 +156,9 @@ for (const required of [
   'href="#flock-sheep-icon" x="17"',
   'href="#flock-ufo-icon" x="17"',
   'class="sheep-ranch-tag sheep-field-tag"',
+  'class="sheep-ear-tag" transform="translate(0,-1.55)"',
   'class="sheep-ranch-tag flock-selected-tag"',
+  'class="sheep-ranch-tag flock-fullness-tag"',
   'class="flock-ready-cue"',
   "@keyframes flock-ready-cue-6",
   'data-ranch-tag="',
@@ -173,23 +176,29 @@ for (const required of [
 ]) {
   if (!svg.includes(required)) throw new Error(`SVG fixture missing ${required}`);
 }
-const firstEightTags = Array.from(
-  { length: 8 },
+const firstThreeHundredTags = Array.from(
+  { length: 300 },
   (_, index) => getSheepTagCode(index),
 );
+const firstTag = buildSheepTagSvg({ rosterIndex: 0, x: 0, y: 0, size: 6 });
 if (
-  SHEEP_TAG_CAPACITY !== 4 ||
-  new Set(firstEightTags.slice(0, 4)).size !== 4 ||
-  firstEightTags.slice(0, 4).join(",") !== firstEightTags.slice(4).join(",") ||
-  (buildSheepTagSvg({ rosterIndex: 0, x: 0, y: 0, size: 6 }).match(/<rect /g) ?? [])
-    .length !== 1
+  SHEEP_TAG_CAPACITY < 300 ||
+  new Set(firstThreeHundredTags).size !== firstThreeHundredTags.length ||
+  (firstTag.match(/<rect /g) ?? []).length !== 1 ||
+  !firstTag.includes('fill="hsl(') ||
+  firstTag.includes('fill="var(--gm-level-')
 ) {
-  throw new Error("sheep tags are not one square across four contribution colors");
+  throw new Error("sheep tags are not distinct one-square non-green identities");
 }
 const expectedTagCodes = Array.from({ length: 28 }, (_, index) =>
   getSheepTagCode(index),
 ).sort((a, b) => a - b);
-for (const className of ["sheep-field-tag", "flock-selected-tag", "flock-slot-tag"]) {
+for (const className of [
+  "sheep-field-tag",
+  "flock-selected-tag",
+  "flock-fullness-tag",
+  "flock-slot-tag",
+]) {
   const actual = [...svg.matchAll(
     new RegExp(`class="[^"]*${className}[^"]*" data-ranch-tag="(\\d+)"`, "g"),
   )].map((match) => Number(match[1])).sort((a, b) => a - b);
@@ -198,12 +207,23 @@ for (const className of ["sheep-field-tag", "flock-selected-tag", "flock-slot-ta
   }
 }
 if (
+  !/<g class="sheep-ear-tag"[^>]*><g class="sheep-ranch-tag sheep-field-tag"[^>]*transform="translate\(3\.00 4\.55\)"/.test(svg) ||
+  !/class="sheep-ranch-tag flock-selected-tag"[^>]*transform="translate\(22\.00 [\d.]+\)"[^>]*><rect width="4\.20"/.test(svg) ||
+  /class="sheep-ranch-tag sheep-field-tag"[^>]*transform="translate\(9\.00 6\.30\)"/.test(svg)
+) {
+  throw new Error("sheep identity tag is not attached to the ear");
+}
+if (
   (svg.match(/class="flock-meter-track"/g) ?? []).length !== 28 ||
   (svg.match(/class="flock-meter-fill"/g) ?? []).length !== 28 ||
   (svg.match(/class="flock-meter-pulse"/g) ?? []).length !== 28 ||
+  (svg.match(/class="flock-slot-fullness"/g) ?? []).length !== 28 ||
   (svg.match(/<clipPath id="flock-progress-/g) ?? []).length !== 28
 ) {
-  throw new Error("selected fullness is not rendered as ten contribution-style cells");
+  throw new Error("selected ten-cell and square-roster fullness are not bite-driven");
+}
+if (!/class="sheep-ranch-tag flock-fullness-tag"[\s\S]*?<use class="flock-meter-track" href="#flock-meter-selected"/.test(svg)) {
+  throw new Error("selected identity tag is not beside the horizontal fullness cells");
 }
 for (const id of ["flock-meter-selected"]) {
   const symbol = svg.match(new RegExp(`<symbol id="${id}"[^>]*>([\\s\\S]*?)</symbol>`))?.[1] ?? "";
@@ -401,12 +421,26 @@ if (threeHundredRoster <= hundredRoster || threeHundredRoster <= 12) {
 const denseSlots = [...denseRosterSvg.matchAll(
   /<g class="flock-slot flock-slot-\d+">\s*<rect[^>]* x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g,
 )].map((match) => ({ x: Number(match[1]), y: Number(match[2]), width: Number(match[3]), height: Number(match[4]) }));
+const denseTags = [...denseRosterSvg.matchAll(
+  /class="sheep-ranch-tag flock-slot-tag"[^>]*transform="translate\(([\d.]+) ([\d.]+)\)"[^>]*><rect width="([\d.]+)"/g,
+)].map((match) => ({ x: Number(match[1]), y: Number(match[2]), size: Number(match[3]) }));
 if (
   denseSlots.length !== threeHundredRoster ||
-  (denseRosterSvg.match(/class="sheep-ranch-tag flock-slot-tag flock-slot-id"/g) ?? []).length !==
+  (denseRosterSvg.match(/class="flock-slot-cell"/g) ?? []).length !==
     threeHundredRoster ||
+  (denseRosterSvg.match(/class="sheep-ranch-tag flock-slot-tag"/g) ?? []).length !==
+    threeHundredRoster ||
+  (denseRosterSvg.match(/class="flock-slot-fullness"/g) ?? []).length !== threeHundredRoster ||
+  denseTags.length !== threeHundredRoster ||
   new Set(denseSlots.map(({ y }) => y)).size !== 2 ||
   denseSlots.some(({ width, height }) => Math.abs(width - height) > 0.01) ||
+  denseTags.some((tag, index) => {
+    const slot = denseSlots[index];
+    return tag.x < slot.x + slot.width * 0.7 ||
+      tag.x + tag.size > slot.x + slot.width ||
+      tag.y < slot.y ||
+      tag.y + tag.size > slot.y + slot.height / 2;
+  }) ||
   Math.abs(Math.min(...denseSlots.map(({ x }) => x)) - 212) > 0.01 ||
   Math.abs(Math.max(...denseSlots.map(({ x, width }) => x + width)) - 650) > 0.02
 ) {
@@ -431,7 +465,8 @@ const tenSheepSlots = [...tenSheepSvg.matchAll(
 )].map((match) => ({ x: Number(match[1]), width: Number(match[2]) }));
 if (
   tenSheepSlots.length !== 10 ||
-  (tenSheepSvg.match(/class="sheep-ranch-tag flock-slot-tag flock-slot-id"/g) ?? []).length !== 10 ||
+  (tenSheepSvg.match(/class="flock-slot-cell"/g) ?? []).length !== 10 ||
+  (tenSheepSvg.match(/class="sheep-ranch-tag flock-slot-tag"/g) ?? []).length !== 10 ||
   Math.abs(Math.min(...tenSheepSlots.map(({ x }) => x)) - 212) > 0.01 ||
   Math.abs(Math.max(...tenSheepSlots.map(({ x, width }) => x + width)) - 650) > 0.02
 ) {
@@ -439,16 +474,19 @@ if (
 }
 if (
   (tenSheepSvg.match(/class="flock-meter-track"/g) ?? []).length !== 10 ||
+  (tenSheepSvg.match(/class="flock-meter-fill"/g) ?? []).length !== 10 ||
+  (tenSheepSvg.match(/class="flock-slot-fullness"/g) ?? []).length !== 10 ||
   (tenSheepSvg.match(/<clipPath id="flock-progress-/g) ?? []).length !== 10
 ) {
-  throw new Error("sparse roster loses the selected ten-cell fullness meter");
+  throw new Error("sparse roster loses selected cells or square fullness");
 }
 if (
-  new Set([...svg.matchAll(/data-id-color="(\d)"/g)].map((match) => match[1])).size !== 4 ||
+  new Set([...svg.matchAll(/data-id-color="(\d+)"/g)].map((match) => match[1])).size !== 28 ||
   svg.includes('id="flock-meter-compact"') ||
+  !svg.includes('class="flock-slot-fullness"') ||
   /animation:flock-selected-\d+ [^";]* linear/.test(svg)
 ) {
-  throw new Error("square sheep IDs, selected fullness, or snap visibility regressed");
+  throw new Error("distinct sheep tags, horizontal fullness, or snap visibility regressed");
 }
 assertAlignedPanel(svg);
 assertAlignedPanel(tenSheepSvg);
