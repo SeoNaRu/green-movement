@@ -90,8 +90,8 @@ export const GRASS_FADE_DURATION = 0.23;
 /** 잔디 단계별 감소 시점(초). [4→3, 3→2, 2→1, 1→0] */
 export const GRASS_STEP_TIMES_S = [0.12, 0.16, 0.2, GRASS_FADE_DURATION];
 // 우주선이 양이 완전히 내린 뒤(ready) 추가로 대기하는 시간(초). 양이 보인 뒤에 우주선이 움직이도록.
-// 스펙: 우주선 밖에서 진입하는 데 걸리는 시간(초).
-export const UFO_ENTRY_S = 0.64;
+// 모든 UFO 이동은 화면에서 같은 출발→점멸→도착 리듬을 쓴다.
+export const UFO_ENTRY_S = 0.14;
 // 스펙: 잔디 다 먹은 뒤 우주선이 양 태우고 밖으로 나가는 시간(초).
 export const UFO_EXIT_S = 1;
 // 스펙: 양이 움직이기 시작할 때 불빛이 점점 꺼지는 데 걸리는 시간(초).
@@ -100,8 +100,10 @@ export const LIGHT_FADE_OUT_S = 0.28;
 export const UFO_CELL_TIME = 0.04;
 export const UFO_MOVE_MIN_S = 0.22;
 export const UFO_MOVE_MAX_S = 0.4;
-/** 짧은 출발/도착 움직임 사이를 점멸로 잇는 실제 고속 이동 시간. */
-export const UFO_BLINK_TRAVEL_S = 0.12;
+/** 0.14 source seconds = 0.182 playback seconds at the shared 1.3× pace. */
+export const UFO_BLINK_TRAVEL_S = 0.14;
+export const UFO_BLINK_EDGE_S = 0.054;
+export const UFO_BLINK_FADE_S = 0.008;
 // 중간 공중 재배치: 접근 0.30 + 탑승 0.45 + 운반 1.20 + 착지 0.45 = 2.40초.
 export const UFO_RELOCATION_TOTAL_S = 2.4;
 export const UFO_RELOCATION_APPROACH_S = 0.3;

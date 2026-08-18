@@ -11,6 +11,8 @@ import {
   SHEEP_WIDTH_PX,
   MAX_SHEEP,
   MOTION_TIME_SCALE,
+  UFO_BLINK_EDGE_S,
+  UFO_BLINK_FADE_S,
   UFO_BLINK_TRAVEL_S,
   UFO_ENTRY_S,
   UFO_WIDTH_PX,
@@ -197,7 +199,9 @@ for (const required of [
   }
 }
 if (/NaN|undefined/.test(svg)) throw new Error("SVG fixture contains invalid values");
-const sheepCount = (svg.match(/class="sheep-\d+"/g) ?? []).length;
+const sheepCount = new Set(
+  [...svg.matchAll(/class="sheep-(\d+)"/g)].map((match) => match[1]),
+).size;
 const grassCount = timingGrid.filter(({ count }) => count > 0).length;
 const expectedSheepCount = buildContext(timingGrid).sheepCountCap;
 if (sheepCount !== expectedSheepCount) {
@@ -406,6 +410,20 @@ const timingSimulation = simulateGrid({
 });
 const flock = buildFlockPlan(timingPlan, timingSimulation);
 const timing = buildTimeline(timingContext, timingPlan, timingSimulation, flock);
+const rosterActorIndices = [...svg.matchAll(/data-roster-index="(\d+)"/g)].map(
+  (match) => Number(match[1]),
+);
+if (
+  svg.includes("-9999px") ||
+  rosterActorIndices.length !== flock.rosterSize ||
+  new Set(rosterActorIndices).size !== flock.rosterSize ||
+  rosterActorIndices.some(
+    (rosterIndex) =>
+      !svg.includes(`@keyframes sheep-roster-${rosterIndex}-visible`),
+  )
+) {
+  throw new Error("field sheep still reuse an offscreen slot actor instead of distinct roster actors");
+}
 const deploymentFlightProblems = Array.from(
   { length: Math.max(0, sheepCount - 1) },
   (_, index) => {
@@ -439,32 +457,39 @@ const ufoPositionAt = (time) => {
   const match = matches.at(-1);
   return match ? { x: Number(match[1]) + UFO_WIDTH_PX / 2, y: Number(match[2]) + UFO_WIDTH_PX / 2 } : null;
 };
-const blinkProblem = (from, to, depart, arrive) => {
+const blinkProblem = (from, to, depart, arrive, arrivalOnly = false) => {
   const duration = arrive - depart;
-  const edgeDuration = duration * 0.24;
+  const edgeDuration = Math.min(UFO_BLINK_EDGE_S, duration / 2);
   const edgeOut = depart + edgeDuration;
   const edgeIn = arrive - edgeDuration;
-  const fade = Math.min(0.008, edgeDuration / 3);
+  const fade = Math.min(UFO_BLINK_FADE_S, edgeDuration / 3);
   const distance = Math.hypot(to.x - from.x, to.y - from.y);
-  const edgeRatio = distance > 0 ? Math.min(0.32, 12 / distance) : 0;
+  const edgeRatio = distance > 0 ? Math.min(0.5, 8 / distance) : 0;
   const expected = [
     [depart, from],
-    [edgeOut, { x: from.x + (to.x - from.x) * edgeRatio, y: from.y + (to.y - from.y) * edgeRatio }],
-    [edgeIn, { x: from.x + (to.x - from.x) * (1 - edgeRatio), y: from.y + (to.y - from.y) * (1 - edgeRatio) }],
+    [edgeOut, arrivalOnly ? from : { x: from.x + (to.x - from.x) * edgeRatio, y: from.y + (to.y - from.y) * edgeRatio }],
+    [edgeIn, arrivalOnly ? from : { x: from.x + (to.x - from.x) * (1 - edgeRatio), y: from.y + (to.y - from.y) * (1 - edgeRatio) }],
     [arrive, to],
   ];
   const badPosition = expected.find(([time, point]) => {
     const actual = ufoPositionAt(time);
     return actual == null || Math.hypot(actual.x - point.x, actual.y - point.y) > 0.001;
   });
-  const visibility = [
-    visibilityFrame(depart, 1),
-    visibilityFrame(edgeOut, 1),
-    visibilityFrame(edgeOut + fade, 0),
-    visibilityFrame(edgeIn - fade, 0),
-    visibilityFrame(edgeIn, 1),
-    visibilityFrame(arrive, 1),
-  ];
+  const visibility = arrivalOnly
+    ? [
+        visibilityFrame(depart, 0),
+        visibilityFrame(edgeIn - fade, 0),
+        visibilityFrame(edgeIn, 1),
+        visibilityFrame(arrive, 1),
+      ]
+    : [
+        visibilityFrame(depart, 1),
+        visibilityFrame(edgeOut, 1),
+        visibilityFrame(edgeOut + fade, 0),
+        visibilityFrame(edgeIn - fade, 0),
+        visibilityFrame(edgeIn, 1),
+        visibilityFrame(arrive, 1),
+      ];
   return badPosition || visibility.some((frame) => !ufoVisibility.includes(frame))
     ? { depart, arrive, badPosition, visibility }
     : null;
@@ -475,11 +500,11 @@ const firstDeployPx = getCellCenterPx(
   timing.ufoStopCells[0][0],
   timing.ufoStopCells[0][1],
 );
-const firstEntryPx = { x: firstDeployPx.x, y: firstDeployPx.y - 30 };
+const firstEntryPx = { x: firstDeployPx.x, y: firstDeployPx.y - 8 };
 const firstArrival = timing.ufoArriveAbsSOffset[0];
 const firstArrivalFlash = `${((firstArrival * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4)}% { opacity: 0.38; }`;
 if (
-  blinkProblem(firstEntryPx, firstDeployPx, 0, firstArrival) ||
+  blinkProblem(firstEntryPx, firstDeployPx, 0, firstArrival, true) ||
   !svg.includes('class="ufo-body" style="animation:ufo-visibility') ||
   !ufoLight.includes(firstArrivalFlash)
 ) {
@@ -532,12 +557,12 @@ const turnoverFlightProblems = timing.turnovers.flatMap((turnover, index) => {
     (turnover.dropArriveAbsS - turnover.outgoingHiddenAbsS) * MOTION_TIME_SCALE;
   return blinkProblem(pickup, drop, turnover.outgoingHiddenAbsS, turnover.dropArriveAbsS) ||
     !ufoLight.includes(arriveFlash) ||
-    Math.abs(playbackDuration - 0.104) > 0.001
+    Math.abs(playbackDuration - UFO_BLINK_TRAVEL_S * MOTION_TIME_SCALE) > 0.001
     ? [{ index, playbackDuration }]
     : [];
 });
 if (turnoverFlightProblems.length) {
-  throw new Error(`turnover loses its 0.104-second visible-edge blink flight: ${JSON.stringify(turnoverFlightProblems)}`);
+  throw new Error(`turnover loses the shared blink-flight rhythm: ${JSON.stringify(turnoverFlightProblems)}`);
 }
 const offstageCenterY =
   getCellCenterPx(timingContext.gridLeftX, timingContext.gridTopY, 0, 0).y - 60;
@@ -550,7 +575,31 @@ const lastStopPx = getCellCenterPx(
   lastStopCell[1],
 );
 const stageExitDepart = timing.ufoLeaveAbsSOffset[lastStopIndex];
+const offstageGapProblems = timing.ufoStopCells.flatMap((cell, index) => {
+  if (index >= timing.ufoStopCells.length - 1) return [];
+  const depart = timing.ufoLeaveAbsSOffset[index];
+  const arrive = timing.ufoArriveAbsSOffset[index + 1];
+  if (arrive - depart <= 0.8) return [];
+  const next = timing.ufoStopCells[index + 1];
+  const from = getCellCenterPx(
+    timingContext.gridLeftX,
+    timingContext.gridTopY,
+    cell[0],
+    cell[1],
+  );
+  const to = getCellCenterPx(
+    timingContext.gridLeftX,
+    timingContext.gridTopY,
+    next[0],
+    next[1],
+  );
+  return [
+    blinkProblem(from, { x: from.x, y: offstageCenterY }, depart, depart + UFO_BLINK_TRAVEL_S),
+    blinkProblem({ x: to.x, y: offstageCenterY }, to, arrive - UFO_BLINK_TRAVEL_S, arrive),
+  ].filter(Boolean);
+});
 const serviceBlinkProblems = [
+  ...offstageGapProblems,
   blinkProblem(
     lastStopPx,
     { x: lastStopPx.x, y: offstageCenterY },
@@ -591,7 +640,7 @@ const serviceBlinkProblems = [
         centre[0],
         centre[1],
       ),
-      timing.sweepArriveAbsSOffset[0] - 0.3,
+      timing.sweepArriveAbsSOffset[0] - UFO_BLINK_TRAVEL_S,
       timing.sweepArriveAbsSOffset[0],
     );
   })(),
@@ -638,9 +687,11 @@ const landingHoldProblems = timing.turnovers.flatMap((turnover, index) => {
   const spawn = frameAt(turnover.incomingSpawnAbsS, 0);
   const landing = frameAt(turnover.incomingReadyAbsS - 0.06);
   const ready = frameAt(turnover.incomingReadyAbsS);
+  const moveStart = frameAt(turnover.incomingMoveAbsS);
   const leave = timing.ufoLeaveAbsSOffset[flock.fieldCount + index * 2 + 1];
-  return spawn == null || landing == null || ready == null || spawn !== landing || landing !== ready || Math.abs(leave - turnover.incomingReadyAbsS) > 0.001
-    ? [{ index, spawn, landing, ready, leave, expectedLeave: turnover.incomingReadyAbsS }]
+  const expectedMove = leave + UFO_BLINK_EDGE_S + UFO_BLINK_FADE_S;
+  return spawn == null || landing == null || ready == null || moveStart == null || spawn !== landing || landing !== ready || ready !== moveStart || leave <= turnover.incomingReadyAbsS || Math.abs(expectedMove - turnover.incomingMoveAbsS) > 0.001
+    ? [{ index, spawn, landing, ready, moveStart, leave, expectedMove, actualMove: turnover.incomingMoveAbsS }]
     : [];
 });
 if (landingHoldProblems.length) {
@@ -739,7 +790,7 @@ const turnoverHoldProblems = timing.turnovers.flatMap((turnover, index) => {
   )?.[1] ?? "";
   const bridgeEndPct = Math.min(
     99.9999,
-    ((turnover.incomingReadyAbsS + turnover.bridgeDuration) * 100) /
+    ((turnover.incomingMoveAbsS + turnover.bridgeDuration) * 100) /
       timing.maxTotalTimeWithEntryExit,
   ).toFixed(4);
   const frames = [...pose.matchAll(
@@ -775,6 +826,7 @@ if (
       turnover.outgoingHiddenAbsS >= turnover.dropArriveAbsS ||
       turnover.dropArriveAbsS > turnover.incomingSpawnAbsS ||
       turnover.incomingSpawnAbsS >= turnover.incomingReadyAbsS ||
+      turnover.incomingReadyAbsS >= turnover.incomingMoveAbsS ||
       turnover.addedDelay <= 0 ||
       turnover.addedDelay + 0.001 < flock.turnovers[index].bridgeDelay ||
       turnover.dropPath[0].join(",") !== turnover.dropCell.join(",") ||
@@ -978,8 +1030,10 @@ for (const arrival of timing.firstArrivals.values()) {
   }
 }
 for (let i = 0; i < timingPlan.sheepCount; i++) {
-  if (Math.abs(timing.moveStartAbsSOffset[i] - timing.ufoLeaveAbsSOffset[i]) > 0.001) {
-    throw new Error(`sheep ${i} slides away before its deployment UFO leaves`);
+  const firstSafeMove =
+    timing.ufoLeaveAbsSOffset[i] + UFO_BLINK_EDGE_S + UFO_BLINK_FADE_S;
+  if (timing.moveStartAbsSOffset[i] + 0.001 < firstSafeMove) {
+    throw new Error(`sheep ${i} moves before its deployment UFO body disappears`);
   }
 }
 const visualFinishBySheep = [];

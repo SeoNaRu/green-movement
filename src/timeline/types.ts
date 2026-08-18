@@ -43,6 +43,7 @@ export type TimelineResult = {
     dropArriveAbsS: number;
     incomingSpawnAbsS: number;
     incomingReadyAbsS: number;
+    incomingMoveAbsS: number;
     addedDelay: number;
   }[];
   flock: {

@@ -7,6 +7,8 @@ import {
   SHEEP_CELL_TIME,
   UFO_ENTRY_S,
   UFO_BLINK_TRAVEL_S,
+  UFO_BLINK_EDGE_S,
+  UFO_BLINK_FADE_S,
 } from "../svg/constants.js";
 
 const LIGHT_RAMP_S = 0.04;
@@ -19,15 +21,15 @@ const PICKUP_WAIT_S = 0.2;
 const PICKUP_LIGHT_S = 0.14;
 const PICKUP_FADE_S = 0.18;
 const SIGNATURE_FALSE_END_S = 0.28;
-const SIGNATURE_APPROACH_S = 0.3;
+const SIGNATURE_APPROACH_S = UFO_BLINK_TRAVEL_S;
 const SIGNATURE_FOCUS_S = 0.18;
 const SIGNATURE_IMPACT_S = 0.12;
 const SIGNATURE_REVEAL_S = 1.08;
 const SIGNATURE_CONFIRM_S = 0.28;
-const SIGNATURE_EXIT_S = 0.36;
+const SIGNATURE_EXIT_S = UFO_BLINK_TRAVEL_S;
 const SIGNATURE_HOLD_S = 1.4;
 const TURNOVER_PICKUP_S = 0.16;
-const TURNOVER_EXCHANGE_S = 0.08;
+const TURNOVER_EXCHANGE_S = UFO_BLINK_TRAVEL_S;
 const TURNOVER_DROP_S = LIGHT_RAMP_S + SHEEP_FADE_S;
 
 export function buildTimeline(
@@ -98,7 +100,7 @@ export function buildTimeline(
     ufoLeaveAbsS[i] = (readyAbsS[i] ?? 0) + UFO_RELEASE_S;
     const simOffset = (moveStartAbsS[i] ?? 0) - (simSpawnAbsS[i] ?? 0);
     visualMoveStartAbsS[i] = Math.max(
-      ufoLeaveAbsS[i],
+      ufoLeaveAbsS[i] + UFO_BLINK_EDGE_S + UFO_BLINK_FADE_S,
       visualSpawnAbsS[i] + Math.max(0, simOffset),
     );
   }
@@ -136,6 +138,7 @@ export function buildTimeline(
     dropArriveAbsS: number;
     incomingSpawnAbsS: number;
     incomingReadyAbsS: number;
+    incomingMoveAbsS: number;
     leaveAbsS: number;
     addedDelay: number;
   }[] = [];
@@ -153,8 +156,9 @@ export function buildTimeline(
     const dropArrive = outgoingHidden + TURNOVER_EXCHANGE_S;
     const incomingSpawn = dropArrive;
     const incomingReady = incomingSpawn + TURNOVER_DROP_S;
-    const leave = incomingReady;
-    const addedDelay = Math.max(0, incomingReady - requested) + turnover.bridgeDelay;
+    const leave = incomingReady + UFO_RELEASE_S;
+    const incomingMove = leave + UFO_BLINK_EDGE_S + UFO_BLINK_FADE_S;
+    const addedDelay = Math.max(0, incomingMove - requested) + turnover.bridgeDelay;
     slotDelays[turnover.slotIndex] += addedDelay;
     scheduledTurnovers.push({
       ...turnover,
@@ -163,6 +167,7 @@ export function buildTimeline(
       dropArriveAbsS: dropArrive,
       incomingSpawnAbsS: incomingSpawn,
       incomingReadyAbsS: incomingReady,
+      incomingMoveAbsS: incomingMove,
       leaveAbsS: leave,
       addedDelay,
     });
@@ -170,7 +175,7 @@ export function buildTimeline(
     ufoArriveAbsS.push(arrive, dropArrive);
     visualSpawnAbsS.push(arrive, incomingSpawn);
     readyAbsS.push(outgoingHidden, incomingReady);
-    visualMoveStartAbsS.push(outgoingHidden, incomingReady);
+    visualMoveStartAbsS.push(outgoingHidden, incomingMove);
     ufoLeaveAbsS.push(outgoingHidden, leave);
     serviceCursor = leave;
   }
@@ -329,6 +334,7 @@ export function buildTimeline(
     dropArriveAbsS: turnover.dropArriveAbsS + timelineOffset,
     incomingSpawnAbsS: turnover.incomingSpawnAbsS + timelineOffset,
     incomingReadyAbsS: turnover.incomingReadyAbsS + timelineOffset,
+    incomingMoveAbsS: turnover.incomingMoveAbsS + timelineOffset,
     addedDelay: turnover.addedDelay,
   }));
 
