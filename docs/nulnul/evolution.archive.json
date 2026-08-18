@@ -437,6 +437,18 @@
         "scope": "project",
         "status": "converted",
         "rejected_proposals": []
+      },
+      {
+        "id": "feedback-independent-roster-fixed-rhythm-20260818",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "V31 still felt inconsistent, a newly delivered sheep could appear to slide in from outside its landing point, and turnover could read as the same collected sheep being moved and dropped again. Repeated still-image inspection had not isolated the structural cause.",
+        "expected": "Use one perceptual rhythm for every UFO leg, give each incoming roster identity a genuinely separate field actor, materialize it only at the exact drop, and keep it fixed until the departing UFO body is hidden.",
+        "evidence": "Source lifecycle tracing found that one SVG root per field slot was reused by roster identities 0, 6, 12, and later; hidden actors were parked at -9999px; incoming bridge movement began at UFO departure rather than after body disappearance; and shared percentage phases produced different playback durations across entry, deployment, turnover, convergence, and exit.",
+        "reproduction": "Trace every roster actor from first visibility at both 30fps and 120fps, inspect adjacent 700px entry/deployment/turnover/collection/convergence/exit frames, and reject actor reuse, any offscreen transform, an unstable first reveal, mixed UFO leg timing, or incoming movement before the departing body is hidden.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
       }
     ],
     "proposals": [
@@ -1681,6 +1693,49 @@
         ],
         "permission_delta": [],
         "rollback": "Restore the published v29 visible first entry, opening travel, and turnover flight while retaining exact sheep anchors, energy, bridge, panel, theme, and finale behavior."
+      },
+      {
+        "id": "proposal-independent-roster-fixed-rhythm-v32",
+        "feedback_ids": [
+          "feedback-independent-roster-fixed-rhythm-20260818"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "shared UFO blink timing, roster field-actor lifecycle, exact-drop hold timing, deterministic SVG assertions, browser first-reveal probes, and durable behavior guidance",
+        "change_level": "task",
+        "status": "accepted",
+        "from_version": 31,
+        "to_version": 32,
+        "cause": "V31 reused one animated SVG root for every later identity occupying a field slot, parked hidden sheep offscreen, began the incoming bridge while the carrier was still visibly departing, and expressed shared UFO phases as percentages of unequal leg durations.",
+        "candidate_change": "Render one lifecycle actor per roster identity while reusing the existing slot route animation, remove all offscreen sheep coordinates, anchor each first visible transform to its exact drop, delay movement until the departing UFO body is hidden, and route entry, deployment, turnover, collection, finale convergence, and exit through one fixed 0.14-source-second / 0.182-playback-second blink with at most 8px of visible body travel at each edge and the existing compact green light plus streak in the middle.",
+        "discovery_evidence": "The local candidate contains 28 unique roster actors and no -9999px transform. Fresh 30fps and 120fps browser probes report zero outside or unstable first-reveal failures across all 28 identities. Adjacent 700px frames show the incoming sheep fixed at its exact drop until the carrier body is hidden and one 0.182-second UFO rhythm across every named leg.",
+        "reproduction": "Run npm run visual:fixture and npm run check; probe every roster actor's first visible coordinate at 30fps and 120fps; inspect fresh 700px forced-theme adjacent frames for entry, deployments, first/later/final turnover, collection, convergence, exit, reduced motion, roster density, finale, and terminal state.",
+        "primary_metric": "All roster identities own independent exact-drop lifecycles with zero offscreen or unstable first reveals, and every UFO leg uses the same fixed playback rhythm without cross-field body exposure.",
+        "prediction": "Fixing actor ownership and timing in their shared render and blink paths will remove the outside-slide and same-sheep story more reliably than another per-scene opacity or coordinate patch.",
+        "expected_delta": {
+          "ufo_leg_playback_seconds": 0.182,
+          "maximum_visible_edge_pixels": 8,
+          "unique_roster_actors": 28,
+          "offscreen_sheep_transforms": 0,
+          "first_reveal_failures_30fps": 0,
+          "first_reveal_failures_120fps": 0,
+          "fixture_runtime_seconds": 44.863,
+          "new_assets": 0
+        },
+        "falsification_condition": "Reject if any roster identity reuses another identity's DOM actor, any hidden sheep uses an offscreen coordinate, a first visible frame is outside or moving into its drop, a sheep moves before the departing UFO body is hidden, UFO legs use different playback rhythms, body travel crosses the middle, accepted causal/layout/finale behavior regresses, runtime exceeds 50 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus a fresh independent exact-time 700px Gate across lifecycle, 30fps and 120fps first reveals, themes, reduced motion, roster densities, finale, terminal state, size, and runtime.",
+        "transfer_check": "Not applicable; this is a project-scoped actor-lifecycle and motion correction.",
+        "guardrails": [
+          "Reuse the original UFO, existing sheep art, existing green light, and single streak",
+          "No new dependency, asset, glyph, filter, blur, scan, marker, ambient wobble, banking, or effect layer",
+          "All 201 grass arrivals remain bite- and owner-synchronized",
+          "All replacement bridges keep exact 0.312-second playback edges and cleared adjacent paths",
+          "Preserve accepted staffing, themes, panel lifecycle, 10/28/62 rosters, early pickup, terminal state, and 53 finale phases",
+          "Runtime at or below 50 seconds and fixture growth below the frozen 15 percent budget",
+          "No permission expansion or publication before explicit approval"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the accepted v31 shared-slot renderer and unequal-duration visible-edge blink while retaining all v31 assets, panel behavior, themes, causal bites, routes, and finale."
       }
     ],
     "promotions": [
@@ -1877,6 +1932,21 @@
           "metric": "Fresh 700px adjacent first-entry, opening-drop, and turnover lifecycle frames plus deterministic hidden-window, destination-light, exact-anchor, causal, route, roster, theme, reduced-motion, finale, size, and runtime checks",
           "rollback_threshold": "Roll back if the first UFO slides from outside, an opening or turnover jump exposes an intermediate UFO or sheep body, a destination flash or exact-drop reveal is missing, the benchmark falls below 16/20, any dimension falls below 3, runtime exceeds 50 seconds, or npm run check fails.",
           "evidence": "A fresh Gate that did not author v30 scored it 20/20 with no blocker. The 1,229,601-byte, 48.581-second fixture keeps the first UFO absent until the 0.832-second exact-drop flash, hides opening jumps 2–6 for exactly 0.052 playback seconds, reveals sheep 3 and 4 only at 2.938 and 4.004 seconds, and hides all 22 turnover jumps for exactly 0.104 seconds. First, maximum-distance, and final exchanges preserve pre-jump INBOUND 0/20, destination light, clean white replacements, stopped holds, and cleared adjacent bridges with no intermediate UFO or sheep body. All 201 arrivals, exact 0.312-second bridge edges, serialized stops, endpoint separation, early final pickup, 10/28/62 rosters, both themes, reduced motion, terminal state, and 53 finale phases pass. Feature 8ea8215 and successful workflow 32086601719 published project asset 6f8af55 plus profile asset f4e30db and embed 0094973; profile README prose 32ef11e describes the hidden jump. Project/profile theme files match byte-for-byte, and the public 10-member dark SVG is 583,478 bytes, 35.204 seconds, with six INBOUND handoffs."
+        }
+      },
+      {
+        "id": "promotion-independent-roster-fixed-rhythm-v32-20260818",
+        "proposal_id": "proposal-independent-roster-fixed-rhythm-v32",
+        "gate_agent": "gate",
+        "before": "V31 reused one animated field-slot SVG across successive roster identities, parked hidden sheep at an offscreen coordinate, let incoming bridge motion begin while the UFO body was still departing, and used unequal playback durations for otherwise shared UFO phases.",
+        "after": "V32 renders one lifecycle actor per roster identity, anchors every hidden and first-visible sheep transform to its exact drop, waits until the departing UFO body is hidden before walking, and routes every UFO leg through one fixed 0.182-second blink with at most 8 pixels of visible endpoint motion.",
+        "regressions_passed": true,
+        "decision": "accepted",
+        "live_cycle": {
+          "status": "observed",
+          "metric": "Fresh 700px lifecycle frames plus independent 30fps and 120fps first-reveal probes across all roster actors, themes, reduced motion, roster densities, finale, and deterministic causal, route, size, and runtime checks",
+          "rollback_threshold": "Roll back if any roster identity reuses another identity's actor, any hidden sheep uses an offscreen coordinate, a first reveal occurs outside or moves into its assigned drop, a sheep moves before the departing UFO body is hidden, any UFO leg loses the fixed rhythm or exposes cross-field body travel, the Gate score falls below 16/20 or below 3 in any dimension, runtime exceeds 50 seconds, or npm run check fails.",
+          "evidence": "A fresh Gate that did not author v32 scored it 20/20 with no blocker. The 1,336,713-byte, 44.863-second fixture contains 28 unique roster actors and zero offscreen transforms; independent browser probes found all 28 first appearances with zero outside or unstable results at both 30fps and 120fps. Entry, opening deployments, all 22 turnovers, early collection, finale convergence, and exit use the same 0.182-second rhythm and maximum-8px visible edges. Incoming sheep appear only at exact remote drops, remain fixed until the carrier body is hidden, and retain distinct INBOUND identity. All 201 causal arrivals, 50 stops, exact replacement bridges, 10/28/62 rosters, both themes, reduced motion, terminal state, and 53 finale phases pass, with no flower, wobble, banking, filter, blur, invalid SVG value, new asset, or permission expansion."
         }
       }
     ],

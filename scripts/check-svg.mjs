@@ -424,6 +424,23 @@ if (
 ) {
   throw new Error("field sheep still reuse an offscreen slot actor instead of distinct roster actors");
 }
+const visibleSheepJumpProblems = Array.from({ length: sheepCount }, (_, slotIndex) => {
+  const move = svg.match(
+    new RegExp(`@keyframes sheep-${slotIndex}-move \\{([\\s\\S]*?)\\n  \\}`),
+  )?.[1] ?? "";
+  const frames = [...move.matchAll(/(?:^|\n\s*)([\d.]+)% \{ transform: translate\(([-\d.]+)px, ([-\d.]+)px\)[^;]+; opacity: ([01]);/g)]
+    .map(([, pct, x, y, opacity]) => ({ pct: Number(pct), x: Number(x), y: Number(y), opacity: Number(opacity) }));
+  return frames.slice(1).flatMap((frame, index) => {
+    const previous = frames[index];
+    const distance = Math.hypot(frame.x - previous.x, frame.y - previous.y);
+    return previous.opacity === 1 && frame.opacity === 1 && distance > CELL_SIZE + GAP + 4
+      ? [{ slotIndex, previous, frame, distance }]
+      : [];
+  });
+}).flat();
+if (visibleSheepJumpProblems.length) {
+  throw new Error(`visible sheep teleport between route frames: ${JSON.stringify(visibleSheepJumpProblems)}`);
+}
 const deploymentFlightProblems = Array.from(
   { length: Math.max(0, sheepCount - 1) },
   (_, index) => {
@@ -690,12 +707,27 @@ const landingHoldProblems = timing.turnovers.flatMap((turnover, index) => {
   const moveStart = frameAt(turnover.incomingMoveAbsS);
   const leave = timing.ufoLeaveAbsSOffset[flock.fieldCount + index * 2 + 1];
   const expectedMove = leave + UFO_BLINK_EDGE_S + UFO_BLINK_FADE_S;
-  return spawn == null || landing == null || ready == null || moveStart == null || spawn !== landing || landing !== ready || ready !== moveStart || leave <= turnover.incomingReadyAbsS || Math.abs(expectedMove - turnover.incomingMoveAbsS) > 0.001
-    ? [{ index, spawn, landing, ready, moveStart, leave, expectedMove, actualMove: turnover.incomingMoveAbsS }]
+  const bridgeStepDuration = turnover.dropPath.length > 1
+    ? turnover.bridgeDuration / (turnover.dropPath.length - 1)
+    : 0;
+  const moveStartPct = (turnover.incomingMoveAbsS * 100) / timing.maxTotalTimeWithEntryExit;
+  const bridgeEndPct = ((turnover.incomingMoveAbsS + turnover.bridgeDuration) * 100) / timing.maxTotalTimeWithEntryExit;
+  const allowedPcts = turnover.dropPath.map(
+    (_, pathIndex) => ((turnover.incomingMoveAbsS + bridgeStepDuration * pathIndex) * 100) / timing.maxTotalTimeWithEntryExit,
+  );
+  const unexpectedFrames = [...move.matchAll(/(?:^|\n\s*)([\d.]+)% \{ transform: ([^;]+); opacity: ([01]);/g)]
+    .map(([, pct, transform, opacity]) => ({ pct: Number(pct), transform, opacity: Number(opacity) }))
+    .filter(({ pct }) =>
+      pct > moveStartPct + 0.0002 &&
+      pct < bridgeEndPct - 0.0002 &&
+      allowedPcts.every((allowedPct) => Math.abs(pct - allowedPct) > 0.0002),
+    );
+  return spawn == null || landing == null || ready == null || moveStart == null || spawn !== landing || landing !== ready || ready !== moveStart || unexpectedFrames.length > 0 || leave <= turnover.incomingReadyAbsS || Math.abs(expectedMove - turnover.incomingMoveAbsS) > 0.001
+    ? [{ index, spawn, landing, ready, moveStart, unexpectedFrames, leave, expectedMove, actualMove: turnover.incomingMoveAbsS }]
     : [];
 });
 if (landingHoldProblems.length) {
-  throw new Error(`replacement does not settle under the stopped UFO before departure: ${JSON.stringify(landingHoldProblems)}`);
+  throw new Error(`replacement leaves its exact drop before the first bridge step: ${JSON.stringify(landingHoldProblems)}`);
 }
 const openingAnchorProblems = Array.from({ length: timingPlan.sheepCount }, (_, index) => {
   const move = svg.match(

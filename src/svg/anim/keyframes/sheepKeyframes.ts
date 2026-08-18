@@ -286,7 +286,7 @@ export function buildSheepLayer(params: {
         if (
           slotTurnovers.some(
             (turnover) =>
-              fi > turnover.historyIndex &&
+              fi >= turnover.historyIndex &&
               fi < turnover.resumeHistoryIndex,
           )
         ) continue;
@@ -313,7 +313,7 @@ export function buildSheepLayer(params: {
         if (
           slotTurnovers.some(
             (turnover) =>
-              ti > turnover.historyIndex &&
+              ti >= turnover.historyIndex &&
               ti < turnover.resumeHistoryIndex,
           )
         ) continue;
