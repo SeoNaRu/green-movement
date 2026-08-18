@@ -401,6 +401,18 @@
         "scope": "project",
         "status": "converted",
         "rejected_proposals": []
+      },
+      {
+        "id": "feedback-exact-spawn-speed-identity-20260818",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "Opening sheep still appeared to swoosh in from outside at deployment, while a replacement could read as the same collected sheep being set down elsewhere. The first attempted correction hid the UFO completely, but the intended teleport-like feeling was a very fast visible flight followed by an arrival flash.",
+        "expected": "Materialize every sheep at its exact destination, keep the UFO physically visible during a brief speed flight, and separate outgoing-full from incoming-hungry identity without another asset, badge, or effect layer.",
+        "evidence": "Source tracing found a 10px pre-drop sheep descent and no deterministic equality check between spawn and ready transforms. Fresh adjacent 700px frames of the corrected candidate show opening sheep 3 and 4 absent until exact-drop materialization; all 22 exchanges show five visible UFO positions across 0.104 playback seconds, the existing travel streak and arrival light, a preflight INBOUND 0/20 panel handoff, and a clean white compressed replacement revealed only at the remote drop.",
+        "reproduction": "Run npm run visual:fixture and npm run check, then inspect adjacent 700px frames for opening sheep 3 and 4 plus the first, maximum-distance, and final exchanges; reject any off-drop sheep reveal, UFO opacity cut, coordinate teleport, sheep visible in flight, delayed incoming identity, or missing arrival response.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
       }
     ],
     "proposals": [
@@ -1521,6 +1533,47 @@
         ],
         "permission_delta": [],
         "rollback": "Restore the published v27 service-cut candidate while retaining distance-paced opening, exact bridge speed, panel energy, themes, and finale behavior."
+      },
+      {
+        "id": "proposal-exact-spawn-speed-exchange-v29",
+        "feedback_ids": [
+          "feedback-exact-spawn-speed-identity-20260818"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "opening sheep materialization, turnover flight duration and acting, incoming identity contrast, deterministic SVG checks, README behavior description, and durable motion guardrails",
+        "change_level": "task",
+        "status": "accepted",
+        "from_version": 28,
+        "to_version": 29,
+        "cause": "Opening sheep began from a vertical offset before their exact drop, while the replacement reused the same field-slot art without a strong lifecycle contrast. A pure opacity cut overcorrected the requested speed sensation by removing physical travel entirely.",
+        "candidate_change": "Remove the pre-drop sheep offset, require identical exact-cell spawn and ready transforms, compress each visible pickup-to-drop UFO flight to 0.104 playback seconds, reuse the existing travel streak and arrival light, and reset the incoming actor to clean white zero energy with a compressed in-place reveal under the stopped UFO.",
+        "discovery_evidence": "The accepted source used a 10px sheep descent and lacked an exact spawn-anchor assertion. The candidate's first exchange renders the UFO at five physical positions from 7.020 through 7.124 seconds, switches the panel to SHEEP 07 INBOUND 0/20 before travel, reveals no sheep in flight, then materializes the replacement only at the drop from 7.280 through 7.358 seconds.",
+        "reproduction": "Run npm run visual:fixture and npm run check; inspect fresh 700px forced-theme adjacent opening, first/later/final exchange, reduced-motion, bridge, roster, finale, and terminal frames.",
+        "primary_metric": "Every opening and replacement sheep reveal is anchored to its exact drop, and all 22 turnover UFO flights remain physically visible for exactly 0.104 playback seconds with an arrival flash while the outgoing and incoming roster identities remain distinct.",
+        "prediction": "Exact-cell materialization plus a short visible carrier burst will remove the outside-swoosh defect and retain speed, while zero-energy in-place replacement acting will communicate a different sheep without adding visual clutter.",
+        "expected_delta": {
+          "exact_opening_spawn_anchors": 6,
+          "visible_speed_exchange_flights": 22,
+          "exchange_playback_seconds": 0.104,
+          "arrival_flashes": 22,
+          "new_assets": 0,
+          "runtime_max_seconds": 50
+        },
+        "falsification_condition": "Reject if an opening or replacement sheep appears outside its drop, any UFO opacity cut or coordinate teleport remains, the fast flight lacks visible intermediate frames or arrival response, the incoming sheep appears in flight or retains outgoing energy, any accepted causal or layout check regresses, runtime exceeds 50 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus a fresh exact-time 700px Gate across opening, multiple exchanges, incoming landing, bridge, reduced motion, finale, terminal, and 10/28/62 rosters in both themes.",
+        "transfer_check": "Not applicable; this is a project-scoped motion correction.",
+        "guardrails": [
+          "One original UFO and the existing sheep art only",
+          "No opacity cut, coordinate teleport, new dependency, glyph, filter, blur, scan, marker, or effect layer",
+          "All 201 grass arrivals remain bite- and owner-synchronized",
+          "All replacement bridges keep exact 0.312-second playback edges and cleared adjacent paths",
+          "Preserve accepted themes, panel lifecycle, 10/28/62 rosters, early pickup, terminal state, and 53 finale phases",
+          "Runtime at or below 50 seconds and fixture growth below the frozen 15 percent budget",
+          "No permission expansion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the accepted v28 exact runtime and continuous exchange duration while retaining all earlier energy, bridge, panel, theme, and finale behavior."
       }
     ],
     "promotions": [
@@ -1672,6 +1725,21 @@
           "metric": "Fresh 700px actor-lifecycle frames plus deterministic opening pace, service-cut, landing, route, energy, roster, finale, publication, and public-asset identity checks",
           "rollback_threshold": "Roll back if any long opening leg is compressed below its distance-derived duration, a turnover exposes one visible pickup-to-drop carrier path, an incoming sheep does not land front-facing, the benchmark falls below 16/20, any dimension falls below 3, runtime exceeds 50 seconds, or npm run check fails.",
           "evidence": "A fresh Gate that did not author v27 scored it 20/20 with no blocker. The 1,231,302-byte, 49.686-second fixture contains 22 service cuts with 0.234-second hidden windows, 22 normalized front-facing landings, distance-paced opening legs of 0.572–0.676 playback seconds, 201 arrivals and pulses, 83 exact 0.312-second bridge edges, 43.267–49.477px endpoint separation, 50 serialized stops, early final pickup, 10/28/62 rosters, both themes, stable terminal frames, and 53 finale phases. Feature ae9068f and workflow 31814164239 published project asset 7d59690 plus profile asset 2e64956; profile README 41b81f1 describes the pasture. Project/profile theme assets match byte-for-byte, and the public 10-member scene runs 35.165 seconds with six service cuts."
+        }
+      },
+      {
+        "id": "promotion-exact-spawn-speed-exchange-v29-20260818",
+        "proposal_id": "proposal-exact-spawn-speed-exchange-v29",
+        "gate_agent": "gate",
+        "before": "The accepted v28 opening still revealed sheep through a small pre-drop descent, and its slower continuous exchange plus reused field-slot art could make the incoming sheep read as the collected sheep being transported and set down elsewhere.",
+        "after": "The accepted v29 opening materializes sheep only at exact destinations. Each full outgoing sheep lifts with stored energy, the panel announces a different hungry roster ID, the visible UFO crosses to the remote drop in 0.104 playback seconds with the existing streak and arrival light, and a clean white replacement appears only there before its bridge.",
+        "regressions_passed": true,
+        "decision": "accepted",
+        "live_cycle": {
+          "status": "observed",
+          "metric": "Fresh 700px adjacent opening and lifecycle frames plus deterministic spawn-anchor, visible-flight, identity, arrival-light, causal, route, roster, theme, reduced-motion, finale, size, and runtime checks",
+          "rollback_threshold": "Roll back if any sheep reveals outside its exact drop, an exchange UFO disappears or coordinate-teleports, fewer than multiple intermediate flight frames remain visible at 60fps, incoming identity or zero energy is absent before flight, the benchmark falls below 16/20, any dimension falls below 3, runtime exceeds 50 seconds, or npm run check fails.",
+          "evidence": "A fresh Gate that did not author v29 scored it 20/20 with no blocker. The 1,230,931-byte, 48.581-second fixture contains six exact opening spawn anchors, 22 visible 0.104-second turnover flights with streak and arrival-light pairs, zero UFO opacity cuts or coordinate teleports, 22 preflight INBOUND handoffs, and exact remote-drop replacement reveals. Opening sheep 3 and 4 stay absent until the UFO stops at their destinations; first, later maximum-distance, and final exchanges show multiple physical UFO positions, no sheep in flight, clean white incoming actors, shared stopped holds, and cleared adjacent bridges. All 201 arrivals/pulses, exact 0.312-second bridge edges, serialized stops, endpoint separation, early final pickup, 10/28/62 rosters, both themes, reduced motion, terminal state, and 53 finale phases pass. Feature 977b065 and successful workflow 32085064689 published project asset ccfc73f plus profile asset cae1d93 and embed c322968; profile README prose 12241ec describes the speed exchange. Project/profile theme files match byte-for-byte, and the public 10-member dark SVG is 599,943 bytes, 39.884 seconds, with six INBOUND handoffs and no ufo-visibility cut."
         }
       }
     ],

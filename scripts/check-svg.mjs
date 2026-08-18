@@ -427,16 +427,67 @@ if (deploymentFlightProblems.length) {
     `long deployment flights are still compressed: ${JSON.stringify(deploymentFlightProblems)}`,
   );
 }
-if (svg.includes("ufo-visibility")) {
-  throw new Error("turnover hides the UFO instead of using a visible speed jump");
-}
-const ufoStreak =
-  svg.match(/@keyframes ufo-streak \{([\s\S]*?)\n  \}/)?.[1] ?? "";
+const ufoVisibility =
+  svg.match(/@keyframes ufo-visibility \{([\s\S]*?)\n  \}/)?.[1] ?? "";
 const ufoLight =
   svg.match(/@keyframes ufo-light \{([\s\S]*?)\n  \}/)?.[1] ?? "";
 const ufoMovePcts = [...ufoMove.matchAll(/([\d.]+)% \{ transform: translate/g)].map(
   (match) => Number(match[1]),
 );
+const visibilityFrame = (time, opacity) =>
+  `${((time * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4)}% { opacity: ${opacity}; }`;
+const firstDeployPx = getCellCenterPx(
+  timingContext.gridLeftX,
+  timingContext.gridTopY,
+  timing.ufoStopCells[0][0],
+  timing.ufoStopCells[0][1],
+);
+const firstMoveFrame = `0% { transform: translate(${firstDeployPx.x - UFO_WIDTH_PX / 2}px, ${firstDeployPx.y - UFO_WIDTH_PX / 2}px); }`;
+const firstArrival = timing.ufoArriveAbsSOffset[0];
+const firstArrivalFlash = `${((firstArrival * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4)}% { opacity: 0.38; }`;
+if (
+  !ufoMove.includes(firstMoveFrame) ||
+  !ufoVisibility.includes("0.0000% { opacity: 0; }") ||
+  !ufoVisibility.includes(visibilityFrame(firstArrival, 1)) ||
+  !ufoLight.includes(firstArrivalFlash)
+) {
+  throw new Error("first deployment still slides in from outside instead of flashing at its drop");
+}
+const deploymentJumpProblems = Array.from(
+  { length: Math.max(0, sheepCount - 1) },
+  (_, index) => {
+    const from = getCellCenterPx(
+      timingContext.gridLeftX,
+      timingContext.gridTopY,
+      timing.ufoStopCells[index][0],
+      timing.ufoStopCells[index][1],
+    );
+    const to = getCellCenterPx(
+      timingContext.gridLeftX,
+      timingContext.gridTopY,
+      timing.ufoStopCells[index + 1][0],
+      timing.ufoStopCells[index + 1][1],
+    );
+    const arrive = timing.ufoArriveAbsSOffset[index + 1];
+    const depart = Math.max(timing.ufoLeaveAbsSOffset[index], arrive - 0.04);
+    const departPct = ((depart * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
+    const arrivePct = ((arrive * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
+    const departFrame = `${departPct}% { transform: translate(${from.x - UFO_WIDTH_PX / 2}px, ${from.y - UFO_WIDTH_PX / 2}px);`;
+    const arriveFrame = `${arrivePct}% { transform: translate(${to.x - UFO_WIDTH_PX / 2}px, ${to.y - UFO_WIDTH_PX / 2}px);`;
+    const flash = `${arrivePct}% { opacity: 0.38; }`;
+    return !ufoMove.includes(departFrame) ||
+      !ufoMove.includes(arriveFrame) ||
+      !ufoVisibility.includes(visibilityFrame(depart + 0.008, 0)) ||
+      !ufoVisibility.includes(visibilityFrame(arrive - 0.008, 0)) ||
+      !ufoVisibility.includes(visibilityFrame(arrive, 1)) ||
+      !ufoLight.includes(flash)
+      ? { index, departFrame, arriveFrame }
+      : null;
+  },
+).filter(Boolean);
+if (deploymentJumpProblems.length) {
+  throw new Error(`opening deployment is not one hidden 0.052-second flash jump: ${JSON.stringify(deploymentJumpProblems)}`);
+}
 const turnoverFlightProblems = timing.turnovers.flatMap((turnover, index) => {
   const departPct = (turnover.outgoingHiddenAbsS * 100) / timing.maxTotalTimeWithEntryExit;
   const arrivePct = (turnover.dropArriveAbsS * 100) / timing.maxTotalTimeWithEntryExit;
@@ -457,23 +508,22 @@ const turnoverFlightProblems = timing.turnovers.flatMap((turnover, index) => {
   const intermediate = ufoMovePcts.filter(
     (pct) => pct > departPct + 0.0001 && pct < arrivePct - 0.0001,
   );
-  const departStreak = `${departPct.toFixed(4)}% { opacity: 0; transform: scaleY(0.2); }`;
-  const arriveStreak = `${arrivePct.toFixed(4)}% { opacity: 0; transform: scaleY(0.2); }`;
   const arriveFlash = `${arrivePct.toFixed(4)}% { opacity: 0.38; }`;
   const playbackDuration =
     (turnover.dropArriveAbsS - turnover.outgoingHiddenAbsS) * MOTION_TIME_SCALE;
   return !ufoMove.includes(departFrame) ||
     !ufoMove.includes(arriveFrame) ||
     intermediate.length ||
-    !ufoStreak.includes(departStreak) ||
-    !ufoStreak.includes(arriveStreak) ||
+    !ufoVisibility.includes(visibilityFrame(turnover.outgoingHiddenAbsS + 0.008, 0)) ||
+    !ufoVisibility.includes(visibilityFrame(turnover.dropArriveAbsS - 0.008, 0)) ||
+    !ufoVisibility.includes(visibilityFrame(turnover.dropArriveAbsS, 1)) ||
     !ufoLight.includes(arriveFlash) ||
     Math.abs(playbackDuration - 0.104) > 0.001
     ? [{ index, departFrame, arriveFrame, intermediate, playbackDuration }]
     : [];
 });
 if (turnoverFlightProblems.length) {
-  throw new Error(`turnover is not one visible 0.104-second speed jump: ${JSON.stringify(turnoverFlightProblems)}`);
+  throw new Error(`turnover is not one hidden 0.104-second flash jump: ${JSON.stringify(turnoverFlightProblems)}`);
 }
 const inboundHandoffProblems = timing.turnovers.flatMap((turnover, index) => {
   const incoming = timing.flock.sheep[turnover.incomingRosterIndex];
