@@ -9,7 +9,7 @@ import {
 } from "../constants.js";
 import { buildFencePieces } from "../layout/gridLayout.js";
 import { PIXEL_FONT_CSS } from "../pixelFont.js";
-import { buildSheepTagSvg } from "../sheepTag.js";
+import { buildSheepTagSvg, getSheepTagCode } from "../sheepTag.js";
 
 type PanelFlock = TimelineResult["flock"];
 type SelectedState = "INBOUND" | "DEPLOYING" | "GRAZING" | "EXTRACTING";
@@ -44,9 +44,8 @@ const meter = (
   width: number,
   height: number,
   rosterIndex: number,
-  compact = false,
   pulseAnimation = "",
-) => `<use class="flock-meter-track" href="#flock-meter-${compact ? "compact" : "selected"}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height}" style="color:var(--gm-panel-track)"/><g clip-path="url(#flock-progress-${rosterIndex})"><use class="flock-meter-fill" href="#flock-meter-${compact ? "compact" : "selected"}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height}" style="color:var(--gm-level-4)"/>${pulseAnimation ? `<use class="flock-meter-pulse" href="#flock-meter-selected" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height}" style="color:var(--gm-beam-core);opacity:0;animation:${pulseAnimation}"/>` : ""}</g>`;
+) => `<use class="flock-meter-track" href="#flock-meter-selected" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height}" style="color:var(--gm-panel-track)"/><g clip-path="url(#flock-progress-${rosterIndex})"><use class="flock-meter-fill" href="#flock-meter-selected" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height}" style="color:var(--gm-level-4)"/>${pulseAnimation ? `<use class="flock-meter-pulse" href="#flock-meter-selected" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height}" style="color:var(--gm-beam-core);opacity:0;animation:${pulseAnimation}"/>` : ""}</g>`;
 
 function visibilityKeyframes(
   name: string,
@@ -109,14 +108,12 @@ export function buildFlockPanelLayer(params: {
   const rosterLeft = 212;
   const rosterWidth = totalWidth - rosterLeft - 10;
   const columns = Math.max(1, Math.ceil(flock.rosterSize / 2));
-  const slotPitch = rosterWidth / columns;
-  const slotWidth = Math.min(72, Math.max(9, slotPitch - 3));
-  const fieldMetaColumns = Math.max(1, Math.round(columns * 0.2));
-  const flockMetaColumns = Math.max(1, Math.round(columns * 0.2));
-  const fieldMetaWidth = fieldMetaColumns * slotPitch;
-  const flockMetaWidth = flockMetaColumns * slotPitch;
-  const grassMetaWidth = rosterWidth - fieldMetaWidth - flockMetaWidth;
-  const fieldMetaX = rosterLeft;
+  const slotSize = Math.min(16, rosterWidth / columns);
+  const slotGap = columns > 1 ? (rosterWidth - slotSize) / (columns - 1) : 0;
+  const fieldMetaX = 10;
+  const fieldMetaWidth = (totalWidth - fieldMetaX * 2) / 3;
+  const flockMetaWidth = fieldMetaWidth;
+  const grassMetaWidth = fieldMetaWidth;
   const flockMetaX = fieldMetaX + fieldMetaWidth;
   const grassMetaX = flockMetaX + flockMetaWidth;
   const panelFence = buildFencePieces({
@@ -219,22 +216,11 @@ export function buildFlockPanelLayer(params: {
   const rosterSlots = flock.sheep.map((sheep, index) => {
     const row = Math.floor(index / columns);
     const column = index % columns;
-    const x = rosterLeft + column * slotPitch + (slotPitch - slotWidth) / 2;
+    const x = rosterLeft + column * slotGap;
     const y = panelTop + 31 + row * 19;
     const label = String(sheep.rosterIndex + 1).padStart(2, "0");
-    const wideSlot = slotWidth >= 28;
-    const tagSize = wideSlot
-      ? 5.4
-      : Math.min(4.4, Math.max(3.2, slotWidth * 0.34));
-    const labelSize = wideSlot
-      ? Math.max(4.2, Math.min(8, (slotWidth - 13) / (label.length * 0.62)))
-      : Math.max(
-          3.4,
-          Math.min(6, (slotWidth - tagSize - 3) / (label.length * 0.62)),
-        );
-    const labelX = wideSlot ? x + 5 : x + slotWidth - 1.5;
-    const labelAnchor = wideSlot ? "start" : "end";
-    const tagX = wideSlot ? x + slotWidth - tagSize - 3 : x + 1.5;
+    const labelSize = Math.max(4.2, Math.min(8, slotSize * 0.44));
+    const tagColor = getSheepTagCode(sheep.rosterIndex);
     let priorProgress = 0;
     const biteFrames = sheep.bites.flatMap((bite) => {
       const atS = bite.atS + 0.23;
@@ -302,15 +288,13 @@ export function buildFlockPanelLayer(params: {
           ]),
     );
     return `<g class="flock-slot flock-slot-${index}">
-      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotWidth.toFixed(2)}" height="16" fill="var(--gm-panel-bg)" stroke="var(--gm-panel-line)" stroke-width=".7"/>
-      ${cuePickup == null ? "" : `<rect class="flock-ready-cue" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotWidth.toFixed(2)}" height="16" fill="var(--gm-level-2)" style="opacity:0;animation:${cueName} ${animationDuration}s linear 0s 1 both"/>`}
-      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotWidth.toFixed(2)}" height="16" fill="var(--gm-level-1)" style="opacity:0;animation:flock-collected-${index} ${animationDuration}s linear 0s 1 both"/>
-      <text x="${labelX.toFixed(2)}" y="${(y + 9.5).toFixed(2)}" text-anchor="${labelAnchor}" class="flock-slot-index" font-size="${labelSize.toFixed(2)}">${label}</text>
-      ${buildSheepTagSvg({ rosterIndex: sheep.rosterIndex, x: tagX, y: y + 2, size: tagSize, className: "flock-slot-tag", strokeWidth: Math.max(0.35, tagSize * 0.08) })}
-      ${meter(x + 2, y + 12.5, Math.max(1, slotWidth - 4), 2, index, true)}
-      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotWidth.toFixed(2)}" height="16" fill="none" stroke="var(--gm-level-2)" stroke-width="1" style="opacity:0;animation:flock-active-${index} ${animationDuration}s linear 0s 1 both"/>
-      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotWidth.toFixed(2)}" height="16" fill="none" stroke="var(--gm-level-4)" stroke-width="1.5" style="opacity:0;animation:flock-extracting-${index} ${animationDuration}s linear 0s 1 both"/>
-      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotWidth.toFixed(2)}" height="16" fill="none" stroke="var(--gm-level-4)" stroke-width="1.2" style="opacity:0;animation:flock-selected-${sheep.rosterIndex} ${animationDuration}s linear 0s 1 both"/>
+      <rect class="sheep-ranch-tag flock-slot-tag flock-slot-id" data-ranch-tag="${tagColor}" data-id-color="${tagColor}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotSize.toFixed(2)}" height="${slotSize.toFixed(2)}" fill="var(--gm-level-${tagColor})" fill-opacity=".28" stroke="var(--gm-level-${tagColor})" stroke-width="1.2"/>
+      ${cuePickup == null ? "" : `<rect class="flock-ready-cue" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotSize.toFixed(2)}" height="${slotSize.toFixed(2)}" fill="var(--gm-level-2)" style="opacity:0;animation:${cueName} ${animationDuration}s linear 0s 1 both"/>`}
+      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotSize.toFixed(2)}" height="${slotSize.toFixed(2)}" fill="var(--gm-level-1)" style="opacity:0;animation:flock-collected-${index} ${animationDuration}s step-end 0s 1 both"/>
+      <text x="${(x + slotSize / 2).toFixed(2)}" y="${(y + slotSize * 0.64).toFixed(2)}" text-anchor="middle" class="flock-slot-index" font-size="${labelSize.toFixed(2)}">${label}</text>
+      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotSize.toFixed(2)}" height="${slotSize.toFixed(2)}" fill="none" stroke="var(--gm-level-2)" stroke-width="1" style="opacity:0;animation:flock-active-${index} ${animationDuration}s step-end 0s 1 both"/>
+      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotSize.toFixed(2)}" height="${slotSize.toFixed(2)}" fill="none" stroke="var(--gm-level-4)" stroke-width="2" style="opacity:0;animation:flock-extracting-${index} ${animationDuration}s step-end 0s 1 both"/>
+      <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${slotSize.toFixed(2)}" height="${slotSize.toFixed(2)}" fill="none" stroke="var(--gm-level-4)" stroke-width="1.5" style="opacity:0;animation:flock-selected-${sheep.rosterIndex} ${animationDuration}s step-end 0s 1 both"/>
     </g>`;
   });
 
@@ -343,7 +327,7 @@ export function buildFlockPanelLayer(params: {
         visibilityKeyframes(name, [interval], maxTotalTime),
       );
       selectedGroups.push(
-        `<text x="56" y="${panelTop + 39}" class="flock-status" style="opacity:0;animation:${name} ${animationDuration}s linear 0s 1 both">${label}</text>`,
+        `<text x="70" y="${panelTop + 58}" class="flock-status" style="opacity:0;animation:${name} ${animationDuration}s step-end 0s 1 both">${label}</text>`,
       );
     }
     let energy = 0;
@@ -360,18 +344,18 @@ export function buildFlockPanelLayer(params: {
         ),
       );
       energyGroups.push(
-        `<text x="190" y="${panelTop + 59}" text-anchor="end" class="flock-energy" style="opacity:0;animation:${energyName} ${animationDuration}s linear 0s 1 both">${energy}/${SHEEP_FULLNESS_CAPACITY}</text>`,
+        `<text x="190" y="${panelTop + 43}" text-anchor="end" class="flock-energy" style="opacity:0;animation:${energyName} ${animationDuration}s step-end 0s 1 both">${energy}/${SHEEP_FULLNESS_CAPACITY}</text>`,
       );
       if (bite == null) break;
       energy = Math.min(SHEEP_FULLNESS_CAPACITY, energy + bite.level);
       energyStart = energyEnd;
     }
-    selectedGroups.push(`<g style="opacity:0;animation:flock-selected-${sheep.rosterIndex} ${animationDuration}s linear 0s 1 both">
-      <use href="#flock-sheep-icon" x="17" y="${panelTop + 22}" width="30" height="25"/>
-      ${buildSheepTagSvg({ rosterIndex: sheep.rosterIndex, x: 38.5, y: panelTop + 29, size: 6.2, className: "flock-selected-tag", strokeWidth: 0.55 })}
-      <text x="56" y="${panelTop + 26}" class="flock-name">양 ${String(sheep.rosterIndex + 1).padStart(2, "0")}</text>
-      <text x="56" y="${panelTop + 59}" class="flock-label">포만</text>
-      ${meter(88, panelTop + 52, 72, 7, sheep.rosterIndex, false, `${pulseName} ${animationDuration}s linear 0s 1 both`)}
+    selectedGroups.push(`<g style="opacity:0;animation:flock-selected-${sheep.rosterIndex} ${animationDuration}s step-end 0s 1 both">
+      <use href="#flock-sheep-icon" x="17" y="${panelTop + 34}" width="30" height="25"/>
+      ${buildSheepTagSvg({ rosterIndex: sheep.rosterIndex, x: 53, y: panelTop + 35, size: 8, className: "flock-selected-tag", strokeWidth: 0.6 })}
+      <text x="70" y="${panelTop + 43}" class="flock-name">양 ${String(sheep.rosterIndex + 1).padStart(2, "0")}</text>
+      <text x="112" y="${panelTop + 43}" class="flock-label">포만</text>
+      ${meter(112, panelTop + 51, 78, 7, sheep.rosterIndex, `${pulseName} ${animationDuration}s linear 0s 1 both`)}
       ${energyGroups.join("")}
     </g>`);
   }
@@ -398,8 +382,8 @@ export function buildFlockPanelLayer(params: {
       ),
     );
     selectedGroups.push(
-      `<g style="opacity:0;animation:flock-inbound ${animationDuration}s linear 0s 1 both"><text x="18" y="${panelTop + 32}" class="flock-name">양떼 접근 중</text><text x="18" y="${panelTop + 48}" class="flock-status">첫 투입 대기</text></g>`,
-      `<g style="opacity:0;animation:flock-complete ${animationDuration}s linear 0s 1 both"><use href="#flock-ufo-icon" x="17" y="${panelTop + 22}" width="30" height="30"/><text x="56" y="${panelTop + 32}" class="flock-name">목장 정리 완료</text><text x="56" y="${panelTop + 48}" class="flock-status">모든 양 수거</text></g>`,
+      `<g style="opacity:0;animation:flock-inbound ${animationDuration}s step-end 0s 1 both"><text x="18" y="${panelTop + 46}" class="flock-name">양떼 접근 중</text><text x="18" y="${panelTop + 60}" class="flock-status">첫 투입 대기</text></g>`,
+      `<g style="opacity:0;animation:flock-complete ${animationDuration}s step-end 0s 1 both"><use href="#flock-ufo-icon" x="17" y="${panelTop + 34}" width="30" height="30"/><text x="56" y="${panelTop + 46}" class="flock-name">목장 정리 완료</text><text x="56" y="${panelTop + 60}" class="flock-status">모든 양 수거</text></g>`,
     );
   }
 
@@ -430,7 +414,7 @@ export function buildFlockPanelLayer(params: {
         .filter((event) => event.value === value);
       const name = `flock-field-${value}`;
       headerStyles.push(visibilityKeyframes(name, intervals, maxTotalTime));
-      return `<g style="opacity:0;animation:${name} ${animationDuration}s linear 0s 1 both"><text x="${fieldMetaX + 7}" y="${panelTop + 21}" class="flock-meta-key">방목</text><text x="${fieldMetaX + fieldMetaWidth - 7}" y="${panelTop + 21}" text-anchor="end" class="flock-meta-value">${value}/${flock.fieldCount}</text></g>`;
+      return `<g style="opacity:0;animation:${name} ${animationDuration}s step-end 0s 1 both"><text x="${fieldMetaX + 7}" y="${panelTop + 21}" class="flock-meta-key">방목</text><text x="${fieldMetaX + fieldMetaWidth - 7}" y="${panelTop + 21}" text-anchor="end" class="flock-meta-value">${value}/${flock.fieldCount}</text></g>`;
     },
   );
 
@@ -456,7 +440,7 @@ export function buildFlockPanelLayer(params: {
     const cells = Array.from({ length: 10 }, (_, cellIndex) =>
       `<rect x="${(progressX + cellIndex * progressPitch).toFixed(2)}" y="${panelTop + 14}" width="${progressCellWidth.toFixed(2)}" height="6" fill="${cellIndex < filledCells ? "var(--gm-level-3)" : "var(--gm-panel-track)"}"/>`,
     ).join("");
-    return `<g style="opacity:0;animation:${name} ${animationDuration}s linear 0s 1 both"><text x="${grassMetaX + 7}" y="${panelTop + 21}" class="flock-meta-key">잔디</text><text x="${grassMetaX + 68}" y="${panelTop + 21}" text-anchor="end" class="flock-meta-value">${value}%</text>${cells}</g>`;
+    return `<g style="opacity:0;animation:${name} ${animationDuration}s step-end 0s 1 both"><text x="${grassMetaX + 7}" y="${panelTop + 21}" class="flock-meta-key">잔디</text><text x="${grassMetaX + 68}" y="${panelTop + 21}" text-anchor="end" class="flock-meta-value">${value}%</text>${cells}</g>`;
   });
 
   const panelStyles = `
@@ -473,10 +457,10 @@ export function buildFlockPanelLayer(params: {
   ${headerStyles.join("\n  ")}`;
 
   const panelGroup = `<g class="flock-panel" aria-hidden="true">
-    <defs><pattern id="flock-panel-grid" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="var(--gm-panel-section)"/></pattern><symbol id="flock-sheep-icon" viewBox="0.5 0 15 12.5">${SHEEP_CONTENT}</symbol><symbol id="flock-ufo-icon" viewBox="${UFO_VIEWBOX}">${UFO_CONTENT}</symbol><symbol id="flock-meter-selected" viewBox="0 0 80 6">${meterSymbolCells(80, 6, 1)}</symbol><symbol id="flock-meter-compact" viewBox="0 0 100 10">${meterSymbolCells(100, 10, 3)}</symbol>${progressClips.join("")}</defs>
+    <defs><pattern id="flock-panel-grid" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="var(--gm-panel-section)"/></pattern><symbol id="flock-sheep-icon" viewBox="0.5 0 15 12.5">${SHEEP_CONTENT}</symbol><symbol id="flock-ufo-icon" viewBox="${UFO_VIEWBOX}">${UFO_CONTENT}</symbol><symbol id="flock-meter-selected" viewBox="0 0 80 6">${meterSymbolCells(80, 6, 1)}</symbol>${progressClips.join("")}</defs>
     <path class="flock-panel-surface" d="M6 ${panelTop + 6}H${panelRight - 6}V${panelBottom - 6}H6Z" fill="var(--gm-panel-bg)"/>
     <path class="flock-panel-grid" d="M8 ${panelTop + 8}H${panelRight - 8}V${panelBottom - 8}H8Z" fill="url(#flock-panel-grid)" opacity=".56"/>
-    <rect class="flock-selected-surface" x="10" y="${panelTop + 10}" width="188" height="56" fill="var(--gm-panel-bg)"/>
+    <rect class="flock-selected-surface" x="10" y="${panelTop + 30}" width="188" height="36" fill="var(--gm-panel-bg)"/>
     <rect class="flock-status-cell" x="${fieldMetaX}" y="${panelTop + 10}" width="${fieldMetaWidth}" height="16" fill="var(--gm-panel-bg)" stroke="var(--gm-panel-line)" stroke-width="1"/>
     <rect class="flock-status-cell" x="${flockMetaX}" y="${panelTop + 10}" width="${flockMetaWidth}" height="16" fill="var(--gm-panel-bg)" stroke="var(--gm-panel-line)" stroke-width="1"/>
     <rect class="flock-status-cell" x="${grassMetaX}" y="${panelTop + 10}" width="${grassMetaWidth}" height="16" fill="var(--gm-panel-bg)" stroke="var(--gm-panel-line)" stroke-width="1"/>

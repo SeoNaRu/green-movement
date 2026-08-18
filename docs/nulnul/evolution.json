@@ -3,17 +3,18 @@
   "personal_evolution_home": null,
   "checkpoint": {
     "goal": "Make the animated contribution pasture feel cohesive, premium, and clearly readable in a GitHub profile README.",
-    "milestone": "Accepted v35 keeps the fixed UFO rhythm and Korean pixel panel while identifying each sheep through one persistent 3x3 ranch tag, an early next-slot cue, and a brief empty selected-region handoff.",
+    "milestone": "Accepted v36 keeps the v35 handoff while simplifying identity to one contribution-color square, snapping selected visibility, and spreading the status, selected detail, and square roster across their full widths.",
     "completion_check": "npm run check",
     "status": "active",
-    "last_verified": "2026-08-18: v35 passes npm run visual:fixture, npm run check, and git diff --check with a 1,851,823-byte, 44.863-second fixture, and a fresh independent Gate scored it 20/20 with no blocker. The first turnover shows a 0.702-playback-second next-slot cue, outgoing tagged sheep 01 at 20/20, an exact 0.104-second empty selected region, incoming tagged sheep 07 at 0/20, and the matching exact-drop field actor. The first 300 tags are unique within a 492-tag capacity and all 28 representative field/selected/roster mappings match. Fresh 30fps/120fps probes report zero continuity failures for all 22 representative and six 10-roster incoming actors. All 201 arrivals and pulses, 50 stops, exact bridge timing, early pickup, 10/28/62 layouts, themes, reduced motion, terminal state, and 53 finale phases remain green. Feature 6886ea8 and successful workflow 32107648450 published project assets in 0496aa0, profile assets in 7f59feb, immutable profile embeds in cd2fd6b, and profile prose in 6115be4; all three public project/profile SVG hashes match byte-for-byte.",
-    "next_action": "Keep published v35 as the rollback champion; reopen the handoff only when new 700px evidence identifies a specific cue, tag, density, or continuity gap.",
+    "last_verified": "2026-08-18: v36 passes npm run visual:fixture, npm run check, and git diff --check with a 1,780,059-byte, 44.863-second fixture, and a fresh independent Gate scored it 20/20 with no blocker. Forced dark/light and reduced-motion 700px frames show one shared 1x1 tag cycling across four contribution colors, full-width equal 방목·양떼·잔디 cells, selected sheep/tag/number/fullness spacing, and square 10/28/62 two-row rosters from x=212 to x=650 without compact meters or clipping. The v35 next-slot cue, exact blank handoff, incoming selection, exact-drop actor, and terminal state remain intact. A browser probe found zero intermediate selected opacity values across 1,970 boundary samples. Fresh 30fps/120fps probes report zero continuity failures for all 22 representative and six 10-roster incoming actors. Published v35 remains the external rollback until the explicitly approved v36 push and workflow complete.",
+    "next_action": "Push the accepted v36 source to main under the user's explicit approval, then confirm the existing profile workflow before recording publication hashes.",
     "blockers": [],
     "approved_permissions": [
       "Read and write files inside this repository",
       "Run local build, TypeScript, and credential-free SVG fixture commands",
       "Write project research pages to the user-designated Obsidian vault",
-      "Vendor the explicitly requested OFL Galmuri7 font from its pinned official source"
+      "Vendor the explicitly requested OFL Galmuri7 font from its pinned official source",
+      "Push the explicitly approved v36 source commit to the project main branch"
     ]
   },
   "agents": {
@@ -24,10 +25,10 @@
       "last_promotion_id": null
     },
     "worker": {
-      "version": 35,
+      "version": 36,
       "job": "Implement one bounded motion or rendering change and report its mechanical and visual evidence.",
       "profile_path": "AGENTS.md",
-      "last_promotion_id": "promotion-ranch-tag-relay-v35-20260818"
+      "last_promotion_id": "promotion-simple-color-tag-panel-v36-20260818"
     },
     "coach": {
       "version": 2,
@@ -39,32 +40,18 @@
       "version": 1,
       "job": "Independently compare a candidate with the frozen fixture, mechanical checks, permissions, and rollback guardrails.",
       "profile_path": "docs/nulnul/visual-benchmark.md",
-      "last_promotion_id": "promotion-ranch-tag-relay-v35-20260818"
+      "last_promotion_id": "promotion-simple-color-tag-panel-v36-20260818"
     }
   },
   "feedback": [
     {
-      "id": "feedback-fast-turnover-ranch-tag-v35-20260818",
+      "id": "feedback-simple-color-tag-panel-v36-20260818",
       "target_agent": "worker",
       "source": "user",
-      "observed": "The proposed simultaneous 수거/출동 panel still felt like generic text pasted onto a fast exchange. The turnover is too short for a multi-stage card story, and the field sheep, selected portrait, and roster did not carry one memorable identity across pickup and replacement.",
-      "expected": "Express a UFO ranch exchange without another cinematic layer: give every sheep one persistent alien-ranch tag, cue the next roster slot before pickup, insert one unmistakable empty beat after the outgoing sheep disappears, then reveal the hungry tagged identity before its exact-drop field appearance.",
-      "evidence": "The representative first turnover provides only about 0.62 playback seconds from pickup to settled replacement. Current 700px dark/light frames show the incoming slot cue before pickup, outgoing tagged sheep 01 at 20/20, a truly empty selected region for 0.104 playback seconds, tagged sheep 07 at 0/20, and the same tag appearing only at its remote field drop.",
-      "reproduction": "At 700px, inspect frames before pickup, at outgoing extraction, inside the blank handoff, at incoming selection, and at exact drop in both themes; then inspect 10/28/62 terminal layouts and reject tag clipping, identity mismatch, fallback selected sheep during the gap, or any replacement text card.",
-      "scope": "project",
-      "status": "converted",
-      "rejected_proposals": [
-        "proposal-korean-pixel-handoff-v34"
-      ]
-    },
-    {
-      "id": "feedback-korean-pixel-handoff-v34-20260818",
-      "target_agent": "worker",
-      "source": "user",
-      "observed": "The English FIELD/FLOCK/GRASS header left three weak horizontal areas, the panel did not read as pixel-game UI, and the first v34 fence-plus-energy treatment became busier: repeated rail posts competed with the pasture while green check cells looked like a mobile badge or a part stuck under the UFO.",
-      "expected": "Use Korean 방목/양떼/잔디 labels in a real self-contained pixel font, preserve the prior restrained brown perimeter, remove every V/check and UFO cargo mark, centre a text-only 수거 완료 state, and distinguish the full outgoing and hungry incoming sheep through simultaneous IDs, 20/20 versus 0/20, and separate field actors.",
-      "evidence": "The user rejected the rendered rail-post fence, attached green cargo, and V icons after inspecting the candidate. Corrected 700px dark/light frames show the restored perimeter, Galmuri7 Korean labels, icon-free 10/28/62 rosters, centred 수거 완료, and a smaller clean incoming sheep at the exact remote drop.",
-      "reproduction": "Generate the representative plus 10- and 62-roster SVGs, inspect adjacent pickup/hidden/drop/ready frames at 700px in both themes, and reject any fallback Korean font, clipped label, V-shaped check, ufo-commit cargo, repeated panel fence tiles, or outgoing/incoming identity ambiguity.",
+      "observed": "The 3x3 sheep mark felt overworked, the selected sheep on the left appeared to fade as time passed, the 방목·양떼·잔디 row occupied only the right side, and the lower sheep, tag, number, and fullness layout did not use its available width cleanly.",
+      "expected": "Use one 1x1 sheep tag with varied contribution colors, switch the selected actor only at exact lifecycle boundaries, span the three status cells across the full panel, and distribute the lower selected detail and square roster with space-between while keeping fullness only in the selected region.",
+      "evidence": "The accepted v35 source rendered ten rectangles per tag, used linear timing on selected visibility, began the status row at x=212, and duplicated a compact ten-cell fullness meter in every roster slot. Fresh v36 700px dark/light frames show one colored square per tag, an equal x=10–650 status row, square roster endpoints at x=212 and x=650, and no compact meter; 1,970 selected-boundary samples contain no intermediate opacity.",
+      "reproduction": "At 700px inspect the representative cue, outgoing, blank, incoming, drop, middle, and terminal frames in both themes plus 10/62 rosters; sample every selected visibility keyframe and reject a non-square tag, fewer than four colors, gradual selected opacity, partial-width status row, duplicated compact fullness meter, uneven roster endpoints, or clipping.",
       "scope": "project",
       "status": "converted",
       "rejected_proposals": []
@@ -96,86 +83,47 @@
   ],
   "proposals": [
     {
-      "id": "proposal-ranch-tag-relay-v35",
+      "id": "proposal-simple-color-tag-panel-v36",
       "feedback_ids": [
-        "feedback-fast-turnover-ranch-tag-v35-20260818",
-        "feedback-korean-pixel-handoff-v34-20260818"
+        "feedback-simple-color-tag-panel-v36-20260818"
       ],
       "target_agent": "worker",
       "author_agent": "coach",
-      "change_target": "fast turnover identity and pixel-pasture panel continuity",
+      "change_target": "sheep tag simplicity, panel width allocation, and selected visibility",
       "change_level": "task",
       "status": "accepted",
-      "from_version": 33,
-      "to_version": 35,
-      "cause": "Text-led outgoing/incoming cards demanded reading during a roughly 0.62-second exchange and duplicated information already present in roster number, fullness, field actor, and UFO motion.",
-      "candidate_change": "Keep the pinned Galmuri7 Korean panel and restrained pasture perimeter, remove all replacement text cards, assign each roster identity one deterministic 3x3 ranch tag shared by its field actor, selected portrait, and roster slot, cue the next slot 0.54 source seconds before pickup, and leave the selected region empty for 0.08 source seconds between the outgoing and incoming identities.",
-      "discovery_evidence": "Fresh current-source 700px dark/light frames show roster 07 visibly pre-cued while sheep 01 remains full, no fallback sheep in the 0.104-playback-second blank interval, sheep 07 appearing empty before the carrier reaches its remote drop, and the matching tag remaining on the dropped field actor. Current 10/28/62 layouts keep all tags within their two-row cells.",
-      "reproduction": "Run npm run visual:fixture and npm run check, render forced dark/light representative and 10/62 variants at 700px, inspect cue/pickup/blank/incoming/drop/terminal frames, and rerun 30fps/120fps post-reveal actor continuity before independent promotion.",
-      "primary_metric": "At 700px, the next sheep is legible before pickup, the outgoing and incoming identities are separated by one empty beat, and the same unique tag is preserved across field, portrait, and roster with zero text-card or clipping regressions.",
-      "prediction": "A persistent ranch mark plus a pre-cued roster relay will communicate a different sheep faster and with less panel clutter than simultaneous replacement labels.",
+      "from_version": 35,
+      "to_version": 36,
+      "cause": "The 3x3 bit pattern and per-slot fullness bars duplicated the roster number and selected meter, while the right-only header and linear visibility timing weakened the panel hierarchy and made a discrete lifecycle change read like fading.",
+      "candidate_change": "Replace the shared 3x3 mark with one square cycling across the four contribution levels, keep the roster number as identity, remove compact roster meters, equally divide x=10–650 among 방목·양떼·잔디, space the selected sheep/tag/number/fullness and square two-row roster across their available widths, and use step-end for discrete panel visibility while preserving the intentional next-slot cue fade.",
+      "discovery_evidence": "Fresh current-source 700px dark/light frames at the first turnover show the outgoing selected sheep and incoming replacement switching around the same v35 blank beat without an opacity blend. Representative, 10-, and 62-roster frames show square numbered cells reaching both endpoints with four visible palette levels and no compact bars.",
+      "reproduction": "Run npm run visual:fixture and npm run check, render forced dark/light and reduced-motion representative plus 10/62 variants at 700px, inspect cue/outgoing/blank/incoming/drop/middle/terminal frames, sample selected opacity at every keyframe boundary, and rerun 30fps/120fps post-reveal continuity before independent promotion.",
+      "primary_metric": "At 700px, each shared tag is one colored square, the status and lower rows use their full widths without duplicated fullness or clipping, and selected visibility has zero intermediate opacity samples while the accepted v35 handoff remains unchanged.",
+      "prediction": "Removing the internal tag grid and compact meters while allocating the complete panel width will improve immediate readability without changing motion, identity lifecycle, or runtime.",
       "expected_delta": {
-        "fixture_bytes": 1851823,
+        "fixture_bytes": 1780059,
         "fixture_runtime_seconds": 44.863,
-        "tag_capacity": 492,
-        "unique_tag_samples": 300,
-        "next_cue_playback_seconds": 0.702,
-        "blank_handoff_playback_seconds": 0.104,
-        "replacement_text_cards": 0
+        "tag_rectangles_per_actor": 1,
+        "tag_color_levels": 4,
+        "compact_roster_meters": 0,
+        "status_left_x": 10,
+        "status_right_x": 650,
+        "roster_left_x": 212,
+        "roster_right_x": 650,
+        "intermediate_selected_opacity_samples": 0
       },
-      "falsification_condition": "Reject if any identity uses mismatched tags across field, selected, or roster; fewer than 300 sampled tags are unique; the next cue starts late; any sheep fills the blank handoff; a replacement text card remains; dense cells clip; an incoming actor slides from a stale coordinate; runtime exceeds 50 seconds; frozen-baseline size is exceeded; or npm run check fails.",
-      "regression_check": "npm run check plus a fresh independent visual Gate over dark/light, reduced motion, 10/28/62 panels, adjacent turnover frames, terminal state, and 30fps/120fps incoming-actor continuity.",
-      "transfer_check": "Not applicable; the ranch tag is a project-specific identity device for this animated SVG.",
+      "falsification_condition": "Reject if any tag is not square or loses its shared color across field, selected, and roster; fewer than four contribution colors render; the selected actor fades; compact roster fullness returns; the three status cells do not span x=10–650 equally; square roster endpoints drift from x=212–650; cue or blank handoff timing changes; dense cells clip; incoming continuity fails; runtime exceeds 50 seconds; the size guardrail fails; or npm run check fails.",
+      "regression_check": "npm run check plus a fresh independent visual Gate over dark/light, reduced motion, 10/28/62 panels, adjacent turnover frames, terminal state, selected opacity boundaries, and 30fps/120fps incoming-actor continuity.",
+      "transfer_check": "Not applicable; this is a project-specific 700px pasture panel correction.",
       "guardrails": [
-        "Keep the published v33 assets as rollback until independent promotion",
-        "Reuse the existing contribution palette, panel cells, sheep art, and UFO glyph",
-        "Do not add a longer turnover timeline, text card, new effect layer, dependency, or external request",
-        "Preserve exact-drop actors, causal bites, fixed UFO rhythm, themes, reduced motion, and finale",
+        "Keep published v35 as the external rollback until the existing workflow publishes v36",
+        "Preserve the v35 next-slot cue, blank handoff, exact-drop field actor, fixed UFO rhythm, causal bites, themes, reduced motion, and finale",
+        "Use only existing contribution colors, sheep art, panel cells, and number labels",
+        "Do not add another identity shape, effect layer, dependency, text card, or timeline delay",
         "No publication or profile write without explicit approval"
       ],
       "permission_delta": [],
-      "rollback": "Remove the ranch-tag and roster-cue diff while retaining the accepted v33 motion; restore the published v33 panel if the combined typography candidate fails Gate."
-    },
-    {
-      "id": "proposal-korean-pixel-handoff-v34",
-      "feedback_ids": [
-        "feedback-korean-pixel-handoff-v34-20260818"
-      ],
-      "target_agent": "worker",
-      "author_agent": "coach",
-      "change_target": "panel typography, restrained perimeter, and outgoing/incoming identity handoff",
-      "change_level": "task",
-      "status": "rejected",
-      "from_version": 33,
-      "to_version": 34,
-      "cause": "Generic Korean fallback text weakened the pixel-game language, while extra fence rails and check-shaped energy cargo duplicated state and read as unrelated mobile UI or an object glued to the carrier.",
-      "candidate_change": "Embed the OFL Galmuri7 WOFF2 directly in each SVG; localize the status cells and selected state; retain the existing square contribution grid and prior stepped brown perimeter; remove all V/check and cargo marks; compare 수거 NN 20/20 with 출동 NN 0/20 in two cells; replace the outgoing meter with centred 수거 완료 text after pickup; and preserve a vertical endpoint/body-hidden/remote-endpoint UFO exchange with a smaller clean incoming actor.",
-      "discovery_evidence": "Fresh 700px dark/light frames at 3.76, 3.98, 4.06, 4.10, 4.30, 4.46, 15.00, and terminal time show no text overlap, no attached green part, no V badge, a centred completion label, exact-drop replacement, and a coherent pixel font. Current 10- and 62-roster frames remain unclipped and readable.",
-      "reproduction": "Run npm run visual:fixture and npm run check, render forced dark/light representative and 10/62 variants at 700px, inspect the complete turnover lifecycle, and rerun 30fps/120fps post-reveal actor probes before independent promotion.",
-      "primary_metric": "At 700px, Korean status and handoff text are pixel-styled and unclipped, the two sheep identities read simultaneously, and check/cargo/fence-tile clutter counts remain zero.",
-      "prediction": "Removing duplicate icon metaphors and using one embedded pixel typeface will make the panel feel like the pasture's game UI while the two numbered fullness states communicate replacement more clearly than carrier cargo.",
-      "expected_delta": {
-        "fixture_bytes": 1807390,
-        "fixture_runtime_seconds": 44.863,
-        "embedded_font_bytes": 316404,
-        "external_font_requests": 0,
-        "check_or_cargo_icons": 0,
-        "roster_layouts_checked": 3
-      },
-      "falsification_condition": "Reject if the font falls back or clips at 700px, any V/check/cargo mark remains, the restored perimeter loses section clarity, the dual handoff reads as one sheep, the font asset or OFL record drifts, any incoming actor slides from a stale coordinate, runtime exceeds 50 seconds, frozen-baseline size is exceeded, or npm run check fails.",
-      "regression_check": "npm run check plus a fresh independent visual Gate over dark/light, reduced motion, 10/28/62 panels, adjacent turnover frames, terminal state, and 30fps/120fps incoming-actor continuity.",
-      "transfer_check": "Not applicable; typography and handoff semantics are specific to this 700px GitHub pasture panel.",
-      "guardrails": [
-        "Keep the published v33 assets as rollback until independent promotion",
-        "Use the pinned official Galmuri7 file and include its OFL text; no runtime font request or package dependency",
-        "Preserve the original sheep and UFO art, accepted timing, exact-drop actors, causal bites, themes, and finale",
-        "Do not reintroduce check badges, energy cargo, repeated panel fence tiles, or another effect layer",
-        "No publication or profile write without explicit approval"
-      ],
-      "permission_delta": [
-        "Download and vendor the user-requested OFL Galmuri7 asset from official commit 71e1cacf1437a11220307120e63e30bc275312d4"
-      ],
-      "rollback": "Remove the embedded font and v34 panel/handoff diff, restoring the published v33 panel and turnover endpoint path."
+      "rollback": "Revert the v36 tag and panel-layout diff to the published v35 3x3-tag panel while retaining all v35 motion and continuity behavior."
     },
     {
       "id": "proposal-semantic-motion-diagnosis-v2",
@@ -250,18 +198,18 @@
   ],
   "promotions": [
     {
-      "id": "promotion-ranch-tag-relay-v35-20260818",
-      "proposal_id": "proposal-ranch-tag-relay-v35",
+      "id": "promotion-simple-color-tag-panel-v36-20260818",
+      "proposal_id": "proposal-simple-color-tag-panel-v36",
       "gate_agent": "gate",
-      "before": "The fast v34 handoff used simultaneous 수거/출동 cards and a completion label, but the short exchange left little time to read them and did not carry one memorable sheep identity across field, selected portrait, and roster.",
-      "after": "V35 gives every sheep one persistent 3x3 ranch tag, cues the next roster slot before pickup, leaves an exact empty beat after the outgoing identity disappears, and reveals the hungry tagged identity before its exact remote drop.",
+      "before": "V35 used a dense 3x3 bit tag plus a compact fullness meter in every roster slot, kept the three status cells over the right region, and timed selected visibility linearly even though sheep lifecycle changes are discrete.",
+      "after": "V36 uses one shared contribution-color square plus the roster number, keeps fullness only in the selected region, spans the status row across the full panel, distributes square roster cells from x=212 to x=650, and snaps selected visibility without changing the v35 handoff.",
       "regressions_passed": true,
       "decision": "accepted",
       "live_cycle": {
         "status": "observed",
-        "metric": "Fresh 700px dark/light cue, pickup, blank, incoming, and exact-drop frames plus 10/28/62 layouts and 30fps/120fps continuity probes",
-        "rollback_threshold": "Roll back if field, selected, and roster tags mismatch; the next cue or blank handoff disappears; any fallback sheep fills the gap; dense tags clip; an incoming actor slides or jumps; replacement text cards return; or any accepted causal, motion, theme, finale, size, or runtime check fails.",
-        "evidence": "A fresh independent Gate scored v35 20/20 with no blocker. At the first turnover the next slot cues 0.702 playback seconds before pickup, tagged sheep 01 reaches 20/20, the selected region is completely empty for exactly 0.104 seconds with FIELD 5/6, tagged sheep 07 appears at 0/20 before the remote drop, and the same tag appears on its exact-drop field actor. Capacity is 492 with the first 300 tags unique and all 28 representative field/selected/roster mappings identical. All 22 cue/handoffs pass. Fresh 30fps/120fps probes found zero stale coordinates, outside reveals, non-adjacent jumps, velocity spikes, or movement before UFO hide across all 22 representative and six 10-roster incoming actors. The 1,851,823-byte, 44.863-second fixture preserves 201 arrivals and pulses, 50 stops, exact bridge timing, early pickup, dark/light 10/28/62 layouts, reduced motion, terminal state, and 53 finale phases. Feature 6886ea8 and successful workflow 32107648450 published project assets in 0496aa0, profile assets in 7f59feb, immutable profile embeds in cd2fd6b, and profile prose in 6115be4; all three public project/profile SVG hashes match byte-for-byte."
+        "metric": "Fresh 700px dark/light and reduced-motion turnover frames, 10/28/62 panel layouts, selected-opacity boundary sampling, and 30fps/120fps incoming continuity",
+        "rollback_threshold": "Roll back if a tag is not one square or shared across field, selected, and roster; four contribution colors disappear; selected opacity becomes gradual; fullness is duplicated in roster cells; status or roster endpoints lose their full-width spacing; the next-slot cue or blank handoff changes; dense cells clip; continuity fails; or any accepted causal, motion, theme, finale, size, or runtime check fails.",
+        "evidence": "A fresh independent Gate scored v36 20/20 with no blocker. Forced dark/light and reduced-motion 700px frames show one-square tags across four contribution colors, the equal x=10–650 방목·양떼·잔디 row, selected sheep/tag/number/fullness spacing, and square 10/28/62 two-row rosters from x=212 to x=650 without compact meters or clipping. The v35 cue, exact 0.104-second blank handoff, incoming selection, exact-drop actor, and terminal state remain. A browser probe found zero intermediate opacity across 1,970 selected-boundary samples. Fresh 30fps/120fps probes found zero stale coordinates, outside reveals, non-adjacent jumps, velocity spikes, or movement before UFO hide across all 22 representative and six 10-roster incoming actors. The 1,780,059-byte, 44.863-second fixture preserves all accepted causal, timing, reduced-motion, and finale checks."
       }
     },
     {
@@ -284,11 +232,11 @@
   "archive": {
     "schema_version": 1,
     "path": "evolution.archive.json",
-    "sha256": "85028914420aa9d32d9471b7851badf7cc9c93f1280064d80c4d358c4ad4b358",
+    "sha256": "a8a0d1251bfa0d940fbf2cc7bf89ee748fffcab575f96ebf59c20ea9f5f245c1",
     "counts": {
-      "feedback": 36,
-      "proposals": 32,
-      "promotions": 15,
+      "feedback": 38,
+      "proposals": 34,
+      "promotions": 16,
       "autonomous_episodes": 0
     }
   }
