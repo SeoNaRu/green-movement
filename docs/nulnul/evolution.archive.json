@@ -449,6 +449,18 @@
         "scope": "project",
         "status": "converted",
         "rejected_proposals": []
+      },
+      {
+        "id": "feedback-turnover-boundary-slide-20260818",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The published v32 still lets replacement sheep, especially human SHEEP 06 and SHEEP 07, appear at the UFO drop and then slide in from another location.",
+        "expected": "After exact-drop reveal, each incoming sheep must remain there until movement starts and then traverse only its cleared adjacent bridge cells; no previous sheep coordinate may reappear.",
+        "evidence": "On the deployed 10-roster asset SHEEP 06 jumped 96.973px in 30ms and SHEEP 07 jumped 134.101px in 35ms. Source tracing found that the outgoing frame and pose at historyIndex equality survived the turnover skip, were delayed into the incoming lifecycle, and interpolated back toward the bridge.",
+        "reproduction": "Sample every incoming roster actor for 1.6 seconds after first visibility at both 30fps and 120fps, and reject any non-adjacent visible coordinate or any frame between incoming move start and bridge completion that is not an allowed bridge step.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
       }
     ],
     "proposals": [
@@ -1736,6 +1748,43 @@
         ],
         "permission_delta": [],
         "rollback": "Restore the accepted v31 shared-slot renderer and unequal-duration visible-edge blink while retaining all v31 assets, panel behavior, themes, causal bites, routes, and finale."
+      },
+      {
+        "id": "proposal-turnover-boundary-continuity-v33",
+        "feedback_ids": [
+          "feedback-turnover-boundary-slide-20260818"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "shared replacement movement and pose boundary plus deterministic post-reveal continuity checks",
+        "change_level": "task",
+        "status": "accepted",
+        "from_version": 32,
+        "to_version": 33,
+        "cause": "The turnover skip excluded frames strictly inside the outgoing-to-incoming gap but retained the outgoing historyIndex frame at the shared boundary, so its pickup coordinate reappeared after the incoming exact-drop reveal.",
+        "candidate_change": "Skip movement and pose frames at historyIndex equality, reject consecutive visible route keyframes farther apart than one cell plus body allowance, reject unplanned replacement coordinates before bridge completion, and inspect 1.6 seconds after every reveal instead of only the first stable frames.",
+        "discovery_evidence": "The two strict-boundary changes remove the stale pickup keyframes. Fresh SHEEP 06/07 browser frames proceed exact drop to adjacent bridge only, and 10- plus 28-roster probes at 30fps and 120fps report zero velocity spikes across every actor's 1.6-second post-reveal window.",
+        "reproduction": "Run npm run visual:fixture and npm run check, then probe all actors in representative and 10-roster SVGs for 1.6 seconds after reveal at 30fps and 120fps and inspect adjacent 700px SHEEP 06/07 frames.",
+        "primary_metric": "Zero stale outgoing coordinates, non-adjacent visible sheep jumps, or post-reveal velocity spikes across all incoming roster actors.",
+        "prediction": "Removing the shared boundary frame fixes every replacement identity at the common keyframe generator without changing routes, timing, art, or effects.",
+        "expected_delta": {
+          "source_boundary_comparisons_changed": 2,
+          "incoming_velocity_spike_failures_10_roster": 0,
+          "incoming_velocity_spike_failures_28_roster": 0,
+          "fixture_runtime_seconds": 44.863,
+          "new_assets": 0
+        },
+        "falsification_condition": "Reject if any incoming sheep revisits an outgoing pickup coordinate, jumps farther than an adjacent route step, leaves its drop before the UFO body is hidden, changes accepted timing or routing, regresses causal/layout/finale behavior, exceeds 50 seconds, or npm run check fails.",
+        "regression_check": "npm run check plus a fresh independent 700px Gate with exact SHEEP 06/07 frames and 1.6-second 30fps/120fps probes for 10- and 28-roster SVGs.",
+        "transfer_check": "Not applicable; this is a project-local keyframe-boundary defect.",
+        "guardrails": [
+          "Change the shared lifecycle boundary once; do not patch individual sheep IDs",
+          "Preserve the accepted UFO rhythm, exact-drop hold, cleared bridges, art, themes, panel, causal bites, collection, and finale",
+          "No new dependency, asset, effect, permission, or publication",
+          "Keep v32 as the published rollback point until independent promotion"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the two strict interior comparisons and the accepted v32 deterministic checks."
       }
     ],
     "promotions": [
@@ -1947,6 +1996,21 @@
           "metric": "Fresh 700px lifecycle frames plus independent 30fps and 120fps first-reveal probes across all roster actors, themes, reduced motion, roster densities, finale, and deterministic causal, route, size, and runtime checks",
           "rollback_threshold": "Roll back if any roster identity reuses another identity's actor, any hidden sheep uses an offscreen coordinate, a first reveal occurs outside or moves into its assigned drop, a sheep moves before the departing UFO body is hidden, any UFO leg loses the fixed rhythm or exposes cross-field body travel, the Gate score falls below 16/20 or below 3 in any dimension, runtime exceeds 50 seconds, or npm run check fails.",
           "evidence": "A fresh Gate that did not author v32 scored it 20/20 with no blocker. The 1,336,713-byte, 44.863-second fixture contains 28 unique roster actors and zero offscreen transforms; independent browser probes found all 28 first appearances with zero outside or unstable results at both 30fps and 120fps. Entry, opening deployments, all 22 turnovers, early collection, finale convergence, and exit use the same 0.182-second rhythm and maximum-8px visible edges. Incoming sheep appear only at exact remote drops, remain fixed until the carrier body is hidden, and retain distinct INBOUND identity. All 201 causal arrivals, 50 stops, exact replacement bridges, 10/28/62 rosters, both themes, reduced motion, terminal state, and 53 finale phases pass, with no flower, wobble, banking, filter, blur, invalid SVG value, new asset, or permission expansion."
+        }
+      },
+      {
+        "id": "promotion-turnover-boundary-continuity-v33-20260818",
+        "proposal_id": "proposal-turnover-boundary-continuity-v33",
+        "gate_agent": "gate",
+        "before": "V32 could reveal an incoming sheep at the exact drop and then replay the outgoing actor's delayed historyIndex pickup coordinate before returning toward the cleared bridge.",
+        "after": "V33 excludes the shared outgoing boundary frame from incoming movement and pose tracks and deterministically rejects stale, non-adjacent, or unplanned pre-bridge coordinates.",
+        "regressions_passed": true,
+        "decision": "accepted",
+        "live_cycle": {
+          "status": "observed",
+          "metric": "Fresh exact 700px SHEEP 06/07 frames plus 1.6-second 30fps and 120fps browser probes for every incoming actor in representative 28- and 10-roster SVGs",
+          "rollback_threshold": "Roll back if any incoming actor revisits an outgoing pickup coordinate, reveals outside its drop, jumps non-adjacently, moves before the UFO body is hidden, or if any accepted causal, route, roster, theme, finale, size, or runtime check fails.",
+          "evidence": "A fresh Gate that did not author v33 scored it 20/20 with no blocker. All 22 representative incoming actors and all six 10-roster incoming actors had zero stale coordinates, outside reveals, non-adjacent jumps, velocity spikes, or movement before an opacity-zero UFO boundary during 1.6-second 30fps and 120fps probes. SHEEP 06 and SHEEP 07 held exact drops and entered only their first adjacent bridge cells in both themes. The 1,336,351-byte, 44.863-second fixture preserves all 201 arrivals and pulses, 22 replacements, 50 stops, 83 exact 0.312-second bridge edges, early pickup, 10/28/62 layouts, reduced motion, terminal state, and 53 finale phases. Feature 8059a81 and successful workflow 32097810199 published project assets in 48d1b46, profile assets in 6d707c5, and the immutable profile embed in 3c4212e; all three public project/profile SVG hashes match byte-for-byte."
         }
       }
     ],

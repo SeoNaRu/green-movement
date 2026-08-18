@@ -10,6 +10,7 @@ import {
   MOTION_TIME_SCALE,
 } from "../../constants.js";
 import { getCellCenterPx } from "../../layout/gridLayout.js";
+import { buildSheepTagSvg } from "../../sheepTag.js";
 
 const BITE_ANTICIPATION_S = 0.06;
 const BITE_IMPACT_S = GRASS_STEP_TIMES_S[0];
@@ -445,7 +446,7 @@ export function buildSheepLayer(params: {
       }
       addPose(turnover.pickupArriveAbsS, "translateY(0) scale(1, 1)");
       addPose(turnover.outgoingHiddenAbsS, "translateY(-6px) scale(.86, 1.1)");
-      addPose(turnover.incomingSpawnAbsS, "scale(.76, .76)");
+      addPose(turnover.incomingSpawnAbsS, "scale(.62, .62)");
       addPose(landingAbsS, "scale(1.12, .88)");
       addPose(turnover.incomingReadyAbsS, "scale(1, 1)");
       addPose(turnover.incomingMoveAbsS, "scale(1, 1)");
@@ -674,7 +675,7 @@ export function buildSheepLayer(params: {
       .flatMap((a) =>
         a.rosterActors.map(
           (actor) =>
-            `<g class="sheep-roster-${actor.rosterIndex}" data-roster-index="${actor.rosterIndex}" style="${actor.animationCSS}"><g class="${a.id}" style="${a.animationCSS}"><g class="sheep-growth"><g class="sheep-actor" style="${a.poseCSS}">${SHEEP_CONTENT}<path class="sheep-energy" d="M4.8 6.2Q6.1 5.1 7.1 6.2M7.3 8.5Q8.4 7.2 9.5 8.1M9.2 5.3Q10.3 4.7 11.1 5.8" fill="none" stroke="var(--gm-level-3)" stroke-width=".75" stroke-linecap="round" opacity="0"/></g></g></g></g>`,
+            `<g class="sheep-roster-${actor.rosterIndex}" data-roster-index="${actor.rosterIndex}" style="${actor.animationCSS}"><g class="${a.id}" style="${a.animationCSS}"><g class="sheep-growth"><g class="sheep-actor" style="${a.poseCSS}">${SHEEP_CONTENT}${buildSheepTagSvg({ rosterIndex: actor.rosterIndex, x: 9, y: 6.3, size: 3.8, className: "sheep-field-tag", strokeWidth: 0.24 })}<path class="sheep-energy" d="M4.8 6.2Q6.1 5.1 7.1 6.2M7.3 8.5Q8.4 7.2 9.5 8.1M9.2 5.3Q10.3 4.7 11.1 5.8" fill="none" stroke="var(--gm-level-3)" stroke-width=".75" stroke-linecap="round" opacity="0"/></g></g></g></g>`,
         ),
       )
       .join("\n  ");

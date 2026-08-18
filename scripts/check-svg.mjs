@@ -1,9 +1,11 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { buildContext } from "../dist/svg/buildContext.js";
 import {
   CELL_SIZE,
   GAP,
   GRASS_STEP_TIMES_S,
+  FENCE_TILE,
   SHEEP_CELL_TIME,
   SHEEP_FULLNESS_CAPACITY,
   SHEEP_GRAZE_HOLD_TICKS,
@@ -29,6 +31,11 @@ import {
 import { getCellCenterPx } from "../dist/svg/layout/gridLayout.js";
 import { buildFlockPlan } from "../dist/svg/flock.js";
 import { withSvgTheme } from "../dist/app/generateSvg.js";
+import {
+  buildSheepTagSvg,
+  getSheepTagCode,
+  SHEEP_TAG_CAPACITY,
+} from "../dist/svg/sheepTag.js";
 
 let randomState = 0x6d2b79f5;
 Math.random = () => {
@@ -51,6 +58,19 @@ const grid = Array.from({ length: 53 * 7 }, (_, index) => {
 const timingGrid = grid.map((cell) => ({ ...cell }));
 
 const svg = renderGridSvg(grid, { targetWidth: 700 });
+const pixelFont = readFileSync("assets/fonts/Galmuri7.woff2");
+if (
+  createHash("sha256").update(pixelFont).digest("hex") !==
+    "c372bb36f06c35b183216709beea7f0db2e70f09eebff964874c4347520a12de" ||
+  !readFileSync("assets/fonts/Galmuri-OFL.txt", "utf8").includes(
+    "SIL OPEN FONT LICENSE Version 1.1",
+  )
+) {
+  throw new Error("embedded Galmuri7 font or its license changed");
+}
+const withoutEmbeddedFonts = (value) =>
+  value.replace(/data:font\/woff2;base64,[A-Za-z0-9+/=]+/g, "");
+const structuralSvg = withoutEmbeddedFonts(svg);
 const lightSvg = withSvgTheme(svg, "light");
 const darkSvg = withSvgTheme(svg, "dark");
 if (
@@ -65,11 +85,10 @@ const emptySvg = renderGridSvg(
   grid.map((cell) => ({ ...cell, count: 0 })),
   { targetWidth: 700 },
 );
+const emptyStructuralSvg = withoutEmbeddedFonts(emptySvg);
 if (
-  /NaN|undefined/.test(emptySvg) ||
-  !emptySvg.includes(
-    '<tspan class="flock-meta-key">Flock</tspan><tspan dx="5" class="flock-meta-value">0</tspan>',
-  ) ||
+  /NaN|undefined/.test(emptyStructuralSvg) ||
+  !/class="flock-meta-key">양떼<\/text><text[^>]*class="flock-meta-value">0<\/text>/.test(emptySvg) ||
   emptySvg.includes('class="ufo-move"')
 ) {
   throw new Error("empty contribution grid does not render as an idle pasture");
@@ -113,14 +132,19 @@ for (const required of [
   'fill="var(--gm-level-3)" style="opacity:0; animation:signature-grid-wave-',
   'class="signature-core"',
   'class="flock-panel"',
+  "@font-face{font-family:GMPixel",
+  "font-family:GMPixel,ui-monospace,monospace",
   'class="flock-panel-surface"',
-  'class="flock-panel-divider"',
+  'class="flock-selected-surface"',
+  'id="flock-panel-grid"',
+  'class="flock-panel-grid"',
+  'class="flock-panel-fence"',
   'class="flock-panel-surface" d="M6',
-  'stroke="var(--gm-fence)" stroke-opacity=".78"',
+  'class="flock-status-cell"',
   'class="flock-selected-region"',
   'class="flock-roster-region"',
-  'font-size:9px',
-  'height="18" rx=".8"',
+  'shape-rendering:crispEdges',
+  'height="16" fill="var(--gm-panel-bg)"',
   'class="flock-slot-index"',
   'id="flock-meter-selected"',
   'id="flock-meter-compact"',
@@ -128,20 +152,50 @@ for (const required of [
   'class="flock-meter-fill"',
   'class="flock-meter-pulse"',
   'id="flock-progress-27"',
-  'href="#flock-sheep-icon" x="13"',
-  'href="#flock-ufo-icon" x="12"',
-  '<tspan class="flock-meta-key">Flock</tspan><tspan dx="5" class="flock-meta-value">28</tspan>',
-  "ENERGY",
+  'href="#flock-sheep-icon" x="17"',
+  'href="#flock-ufo-icon" x="17"',
+  'class="sheep-ranch-tag sheep-field-tag"',
+  'class="sheep-ranch-tag flock-selected-tag"',
+  'class="sheep-ranch-tag flock-slot-tag"',
+  'class="flock-ready-cue"',
+  "@keyframes flock-ready-cue-6",
+  'data-ranch-tag="',
+  'class="flock-meta-key">양떼</text>',
+  '>포만</text>',
   ">0/20</text>",
   ">20/20</text>",
-  "GRAZING",
-  "INBOUND",
-  "PASTURE CLEAR",
-  "ALL SHEEP COLLECTED",
+  ">식사 중</text>",
+  ">목장 정리 완료</text>",
+  ">모든 양 수거</text>",
+  "scale(.62, .62)",
   "@keyframes flock-collected-27",
-  '<tspan class="flock-meta-key">Grass</tspan><tspan dx="5" class="flock-meta-value">100%</tspan>',
+  'class="flock-meta-key">잔디</text>',
+  'class="flock-meta-value">100%</text>',
 ]) {
   if (!svg.includes(required)) throw new Error(`SVG fixture missing ${required}`);
+}
+const firstThreeHundredTags = Array.from(
+  { length: 300 },
+  (_, index) => getSheepTagCode(index),
+);
+if (
+  SHEEP_TAG_CAPACITY < 300 ||
+  new Set(firstThreeHundredTags).size !== firstThreeHundredTags.length ||
+  (buildSheepTagSvg({ rosterIndex: 0, x: 0, y: 0, size: 6 }).match(/<rect /g) ?? [])
+    .length !== 10
+) {
+  throw new Error("UFO ranch tags do not provide 300 distinct 3x3 identities");
+}
+const expectedTagCodes = Array.from({ length: 28 }, (_, index) =>
+  getSheepTagCode(index),
+).sort((a, b) => a - b);
+for (const className of ["sheep-field-tag", "flock-selected-tag", "flock-slot-tag"]) {
+  const actual = [...svg.matchAll(
+    new RegExp(`class="sheep-ranch-tag ${className}" data-ranch-tag="(\\d+)"`, "g"),
+  )].map((match) => Number(match[1])).sort((a, b) => a - b);
+  if (actual.join(",") !== expectedTagCodes.join(",")) {
+    throw new Error(`${className} does not preserve every roster identity`);
+  }
 }
 if (
   (svg.match(/class="flock-meter-track"/g) ?? []).length !== 28 * 2 ||
@@ -198,7 +252,7 @@ for (const required of [
     throw new Error(`profile workflow missing ${required}`);
   }
 }
-if (/NaN|undefined/.test(svg)) throw new Error("SVG fixture contains invalid values");
+if (/NaN|undefined/.test(structuralSvg)) throw new Error("SVG fixture contains invalid values");
 const sheepCount = new Set(
   [...svg.matchAll(/class="sheep-(\d+)"/g)].map((match) => match[1]),
 ).size;
@@ -303,6 +357,39 @@ const rosterSvgFor = (activeGrass) =>
     })),
     { targetWidth: 0 },
   );
+const assertAlignedPanel = (value, rosterSize) => {
+  const statusCells = [...value.matchAll(
+    /<rect class="flock-status-cell" x="([\d.]+)" y="[\d.]+" width="([\d.]+)"/g,
+  )].slice(0, 3).map((match) => ({ x: Number(match[1]), width: Number(match[2]) }));
+  const columns = Math.max(1, Math.ceil(rosterSize / 2));
+  const expectedSpan = Math.max(1, Math.round(columns * 0.2));
+  if (
+    statusCells.length !== 3 ||
+    Math.abs(statusCells[0].x + statusCells[0].width - statusCells[1].x) > 0.01 ||
+    Math.abs(statusCells[1].x + statusCells[1].width - statusCells[2].x) > 0.01 ||
+    Math.abs(statusCells[0].width - (438 * expectedSpan) / columns) > 0.02 ||
+    Math.abs(statusCells[1].width - (438 * expectedSpan) / columns) > 0.02
+  ) {
+    throw new Error(`panel status cells do not align with ${columns} roster columns`);
+  }
+  const grass100Start = value.indexOf('class="flock-meta-value">100%</text>');
+  const grass100End = value.indexOf("</g>", grass100Start);
+  const grass100 = value.slice(grass100Start, grass100End);
+  const progressCells = [...grass100.matchAll(
+    /<rect x="([\d.]+)" y="[\d.]+" width="([\d.]+)" height="6"/g,
+  )].map((match) => ({ x: Number(match[1]), width: Number(match[2]) }));
+  const grassRight = statusCells[2].x + statusCells[2].width;
+  const lastProgress = progressCells.at(-1);
+  const progressRight = lastProgress == null ? Number.NaN : lastProgress.x + lastProgress.width;
+  if (progressCells.length !== 10 || Math.abs(progressRight - (grassRight - 6)) > 0.02) {
+    throw new Error("grass 100% cells do not fill their status column");
+  }
+  const totalWidth = Number(value.match(/viewBox="0 [\d.-]+ ([\d.]+)/)?.[1]);
+  const sharedRightFence = `translate(${totalWidth - FENCE_TILE}, 0)`;
+  if (value.split(sharedRightFence).length - 1 < 2) {
+    throw new Error("pasture and panel fences do not share the same horizontal bounds");
+  }
+};
 const hundredRoster = (rosterSvgFor(100).match(/class="flock-slot /g) ?? []).length;
 const denseRosterSvg = rosterSvgFor(300);
 const threeHundredRoster = (denseRosterSvg.match(/class="flock-slot /g) ?? []).length;
@@ -316,6 +403,8 @@ const denseSlots = [...denseRosterSvg.matchAll(
 )].map((match) => ({ x: Number(match[1]), y: Number(match[2]), width: Number(match[3]) }));
 if (
   denseSlots.length !== threeHundredRoster ||
+  (denseRosterSvg.match(/class="sheep-ranch-tag flock-slot-tag"/g) ?? []).length !==
+    threeHundredRoster ||
   new Set(denseSlots.map(({ y }) => y)).size !== 2 ||
   Math.min(...denseSlots.map(({ x }) => x)) < 198 ||
   Math.max(...denseSlots.map(({ x, width }) => x + width)) > 652
@@ -328,7 +417,7 @@ const oneCellSvg = renderGridSvg(
 );
 if (
   (oneCellSvg.match(/class="flock-slot /g) ?? []).length !== 1 ||
-  (oneCellSvg.match(/class="flock-meta-key">Grass/g) ?? []).length !== 2
+  (oneCellSvg.match(/class="flock-meta-key">잔디/g) ?? []).length !== 2
 ) {
   throw new Error("low-volume selection grid or grass label events overlap");
 }
@@ -341,8 +430,9 @@ const tenSheepSlots = [...tenSheepSvg.matchAll(
 )].map((match) => ({ x: Number(match[1]), width: Number(match[2]) }));
 if (
   tenSheepSlots.length !== 10 ||
-  Math.min(...tenSheepSlots.map(({ x }) => x)) >= 215 ||
-  Math.max(...tenSheepSlots.map(({ x, width }) => x + width)) <= 630
+  (tenSheepSvg.match(/class="sheep-ranch-tag flock-slot-tag"/g) ?? []).length !== 10 ||
+  Math.min(...tenSheepSlots.map(({ x }) => x)) >= 225 ||
+  Math.max(...tenSheepSlots.map(({ x, width }) => x + width)) <= 635
 ) {
   throw new Error("ten-sheep roster does not use the full GitHub-style panel width");
 }
@@ -352,11 +442,15 @@ if (
 ) {
   throw new Error("sparse roster loses the ten-cell fullness meter");
 }
+assertAlignedPanel(svg, 28);
+assertAlignedPanel(tenSheepSvg, 10);
+assertAlignedPanel(denseRosterSvg, threeHundredRoster);
 if (
   svg.includes('class="flock-selected-section"') ||
-  svg.includes('class="flock-roster-section"')
+  svg.includes('class="flock-roster-section"') ||
+  /class="flock-selected-surface"[^>]*stroke=/.test(svg)
 ) {
-  throw new Error("panel restored the rejected nested section boxes");
+  throw new Error("panel restored the rejected nested section boxes or divider");
 }
 const timingPlan = planTargets(timingContext);
 if (timingPlan.spawnTick.join(",") !== "0,1,2,3,4,5") {
@@ -474,7 +568,14 @@ const ufoPositionAt = (time) => {
   const match = matches.at(-1);
   return match ? { x: Number(match[1]) + UFO_WIDTH_PX / 2, y: Number(match[2]) + UFO_WIDTH_PX / 2 } : null;
 };
-const blinkProblem = (from, to, depart, arrive, arrivalOnly = false) => {
+const blinkProblem = (
+  from,
+  to,
+  depart,
+  arrive,
+  arrivalOnly = false,
+  verticalEdges = false,
+) => {
   const duration = arrive - depart;
   const edgeDuration = Math.min(UFO_BLINK_EDGE_S, duration / 2);
   const edgeOut = depart + edgeDuration;
@@ -482,10 +583,16 @@ const blinkProblem = (from, to, depart, arrive, arrivalOnly = false) => {
   const fade = Math.min(UFO_BLINK_FADE_S, edgeDuration / 3);
   const distance = Math.hypot(to.x - from.x, to.y - from.y);
   const edgeRatio = distance > 0 ? Math.min(0.5, 8 / distance) : 0;
+  const edgeOutPoint = verticalEdges
+    ? { x: from.x, y: from.y - Math.min(8, distance) }
+    : { x: from.x + (to.x - from.x) * edgeRatio, y: from.y + (to.y - from.y) * edgeRatio };
+  const edgeInPoint = verticalEdges
+    ? { x: to.x, y: to.y - Math.min(8, distance) }
+    : { x: from.x + (to.x - from.x) * (1 - edgeRatio), y: from.y + (to.y - from.y) * (1 - edgeRatio) };
   const expected = [
     [depart, from],
-    [edgeOut, arrivalOnly ? from : { x: from.x + (to.x - from.x) * edgeRatio, y: from.y + (to.y - from.y) * edgeRatio }],
-    [edgeIn, arrivalOnly ? from : { x: from.x + (to.x - from.x) * (1 - edgeRatio), y: from.y + (to.y - from.y) * (1 - edgeRatio) }],
+    [edgeOut, arrivalOnly ? from : edgeOutPoint],
+    [edgeIn, arrivalOnly ? from : edgeInPoint],
     [arrive, to],
   ];
   const badPosition = expected.find(([time, point]) => {
@@ -572,10 +679,18 @@ const turnoverFlightProblems = timing.turnovers.flatMap((turnover, index) => {
   const arriveFlash = `${arrivePct.toFixed(4)}% { opacity: 0.38; }`;
   const playbackDuration =
     (turnover.dropArriveAbsS - turnover.outgoingHiddenAbsS) * MOTION_TIME_SCALE;
-  return blinkProblem(pickup, drop, turnover.outgoingHiddenAbsS, turnover.dropArriveAbsS) ||
+  const blink = blinkProblem(
+    pickup,
+    drop,
+    turnover.outgoingHiddenAbsS,
+    turnover.dropArriveAbsS,
+    false,
+    true,
+  );
+  return blink ||
     !ufoLight.includes(arriveFlash) ||
     Math.abs(playbackDuration - UFO_BLINK_TRAVEL_S * MOTION_TIME_SCALE) > 0.001
-    ? [{ index, playbackDuration }]
+    ? [{ index, playbackDuration, blink, arriveFlash: ufoLight.includes(arriveFlash) }]
     : [];
 });
 if (turnoverFlightProblems.length) {
@@ -690,8 +805,61 @@ const inboundHandoffProblems = timing.turnovers.flatMap((turnover, index) => {
 if (inboundHandoffProblems.length) {
   throw new Error(`panel does not identify the hungry replacement before UFO travel: ${JSON.stringify(inboundHandoffProblems)}`);
 }
-if ((svg.match(/>INBOUND<\/text>/g) ?? []).length !== timing.turnovers.length) {
-  throw new Error("panel does not render one INBOUND handoff for every replacement");
+const handoffGapS = 0.08;
+const readyCueLeadS = 0.54;
+const selectedTracks = [...svg.matchAll(
+  /@keyframes flock-selected-\d+ \{([\s\S]*?)\n  \}/g,
+)].map((match) =>
+  [...match[1].matchAll(/([\d.]+)% \{ opacity:([\d.]+); \}/g)].map(
+    (frame) => ({ pct: Number(frame[1]), opacity: Number(frame[2]) }),
+  ),
+);
+const handoffCueProblems = timing.turnovers.flatMap((turnover) => {
+  const selected = svg.match(
+    new RegExp(`@keyframes flock-selected-${turnover.incomingRosterIndex} \\{([\\s\\S]*?)\\n  \\}`),
+  )?.[1] ?? "";
+  const cue = svg.match(
+    new RegExp(`@keyframes flock-ready-cue-${turnover.incomingRosterIndex} \\{([\\s\\S]*?)\\n  \\}`),
+  )?.[1] ?? "";
+  const hiddenPct = ((turnover.outgoingHiddenAbsS * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
+  const selectedPct = (((turnover.outgoingHiddenAbsS + handoffGapS) * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
+  const cueStart = Math.max(0, turnover.pickupArriveAbsS - readyCueLeadS);
+  const cuePeakPct = ((Math.min(turnover.pickupArriveAbsS, cueStart + 0.08) * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
+  const gapMidPct = (((turnover.outgoingHiddenAbsS + handoffGapS / 2) * 100) / timing.maxTotalTimeWithEntryExit);
+  const gapLeaks = selectedTracks.some((frames) => {
+    const nextIndex = frames.findIndex((frame) => frame.pct >= gapMidPct);
+    const previous = frames[Math.max(0, nextIndex - 1)];
+    const next = frames[nextIndex < 0 ? frames.length - 1 : nextIndex];
+    return (previous?.opacity ?? 0) > 0 || (next?.opacity ?? 0) > 0;
+  });
+  return !selected.includes(`${selectedPct}% { opacity:1; }`) ||
+    selected.includes(`${hiddenPct}% { opacity:1; }`) ||
+    !cue.includes(`${cuePeakPct}% { opacity:1; }`) ||
+    gapLeaks
+    ? [{ roster: turnover.incomingRosterIndex, hiddenPct, selectedPct, cuePeakPct, gapLeaks }]
+    : [];
+});
+if (
+  handoffCueProblems.length ||
+  (svg.match(/class="flock-ready-cue"/g) ?? []).length !== timing.turnovers.length
+) {
+  throw new Error(`fast handoff loses its persistent tag cue or empty beat: ${JSON.stringify(handoffCueProblems)}`);
+}
+if (
+  svg.includes('class="ufo-commit-cell"') ||
+  svg.includes("@keyframes ufo-commit-cell") ||
+  svg.includes('class="flock-exchange') ||
+  svg.includes('class="flock-panel-divider"') ||
+  svg.includes(">수거 중</text>") ||
+  svg.includes(">출동 대기</text>") ||
+  svg.includes(">수거 완료</text>") ||
+  />수거 \d+<\/text>/.test(svg) ||
+  />출동 \d+<\/text>/.test(svg) ||
+  svg.includes(">착지 중</text>") ||
+  svg.includes("l2.2 2.2 4-4.4") ||
+  svg.includes("l2 2 4-5")
+) {
+  throw new Error("rejected exchange labels, mobile icons, or energy cargo returned");
 }
 const landingHoldProblems = timing.turnovers.flatMap((turnover, index) => {
   const move = svg.match(
@@ -894,13 +1062,11 @@ if (
 if (
   (svg.match(/class="flock-slot /g) ?? []).length !== flock.rosterSize ||
   !svg.includes("@keyframes flock-fill-27") ||
-  !svg.includes(
-    '<tspan class="flock-meta-key">Field</tspan><tspan dx="5" class="flock-meta-value">6/6</tspan>',
-  )
+  !svg.includes('class="flock-meta-value">6/6</text>')
 ) {
   throw new Error("two-row flock panel does not expose the complete roster");
 }
-const fieldCounts = [...svg.matchAll(/class="flock-meta-value">(-?\d+)\/6<\/tspan>/g)].map(
+const fieldCounts = [...svg.matchAll(/class="flock-meta-value">(-?\d+)\/6<\/text>/g)].map(
   (match) => Number(match[1]),
 );
 if (
