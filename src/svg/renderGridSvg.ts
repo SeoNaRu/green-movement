@@ -24,7 +24,6 @@ import { buildFlockPanelLayer } from "./layers/flockPanelLayer.js";
 const DROP_STAY_S = 0.14;
 const LIGHT_RAMP_S = 0.04;
 const SHEEP_FADE_S = 0.14;
-const DROP_DESCENT_PX = 10;
 const PICKUP_WAIT_S = 0.2;
 const PICKUP_LIGHT_S = 0.14;
 const PICKUP_FADE_S = 0.18;
@@ -110,6 +109,7 @@ export function renderGridSvg(
     ufoRippleGroupStr,
   } = buildUfoLayer({
     funnelPositionsEarly: timeline.ufoStopCells,
+    deploymentStopCount: plan.sheepCount,
     spawnAbsS: timeline.spawnAbsSOffset,
     arriveAbsS: timeline.ufoArriveAbsSOffset,
     beamDelayS: UFO_BEAM_DELAY_S,
@@ -172,7 +172,6 @@ export function renderGridSvg(
     gridTopY: ctx.gridTopY,
     lightRampS: LIGHT_RAMP_S,
     sheepFadeS: SHEEP_FADE_S,
-    dropDescentPx: DROP_DESCENT_PX,
     pickupArriveAbsS: timeline.pickupArriveAbsSOffset,
     pickupFadeS: PICKUP_FADE_S,
     pickupWaitS: PICKUP_WAIT_S,

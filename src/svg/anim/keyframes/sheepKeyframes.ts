@@ -27,7 +27,6 @@ export function buildSheepLayer(params: {
   gridTopY: number;
   lightRampS: number;
   sheepFadeS: number;
-  dropDescentPx: number;
   pickupArriveAbsS?: (number | null)[];
   pickupFadeS?: number;
   pickupWaitS?: number;
@@ -71,7 +70,6 @@ export function buildSheepLayer(params: {
     gridTopY,
     lightRampS,
     sheepFadeS,
-    dropDescentPx,
     pickupArriveAbsS,
     pickupFadeS = 0.25,
     pickupWaitS,
@@ -224,7 +222,6 @@ export function buildSheepLayer(params: {
     const dropOff = bodyShift(dropFrame.angle);
     const dropX = dropPx.x + dropOff.dx;
     const dropY = dropPx.y + dropOff.dy;
-    const dropStartY = dropY - dropDescentPx;
     const offscreen = `transform: translate(-9999px, -9999px) rotate(180deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0;`;
     const pctSpawn = maxTotalTime > 0 ? (timeOffset * 100) / maxTotalTime : 0;
     keyframeEntries.push({
@@ -234,12 +231,12 @@ export function buildSheepLayer(params: {
     if (pctSpawn > 0) {
       keyframeEntries.push({
         pct: Math.min(100, pctSpawn),
-        css: `${Math.min(100, pctSpawn).toFixed(4)}% { transform: translate(${dropX}px, ${dropStartY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; animation-timing-function: cubic-bezier(.2, .75, .25, 1); }`,
+        css: `${Math.min(100, pctSpawn).toFixed(4)}% { transform: translate(${dropX}px, ${dropY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; animation-timing-function: cubic-bezier(.2, .75, .25, 1); }`,
       });
     } else {
       keyframeEntries.push({
         pct: 0,
-        css: `0% { transform: translate(${dropX}px, ${dropStartY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; animation-timing-function: cubic-bezier(.2, .75, .25, 1); }`,
+        css: `0% { transform: translate(${dropX}px, ${dropY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 0; animation-timing-function: cubic-bezier(.2, .75, .25, 1); }`,
       });
     }
     const readyTime = timeOffset + (lightRampS + sheepFadeS);
@@ -248,14 +245,14 @@ export function buildSheepLayer(params: {
     const pctMoveStart =
       maxTotalTime > 0 ? (moveStartTime * 100) / maxTotalTime : 0;
     const landingSpan = Math.max(0.01, readyTime - timeOffset);
-    addPose(timeOffset, "translateY(-1.5px) scale(.9, 1.08)");
+    addPose(timeOffset, "scale(.9, 1.08)");
     addPose(
       timeOffset + landingSpan * 0.72,
-      "translateY(-.4px) scale(.97, 1.03)",
+      "scale(.97, 1.03)",
     );
-    addPose(readyTime, "translateY(.8px) scale(1.08, .9)");
-    addPose(readyTime + 0.09, "translateY(-.4px) scale(.98, 1.03)");
-    addPose(readyTime + 0.18, "translateY(0) scale(1, 1)");
+    addPose(readyTime, "scale(1.08, .9)");
+    addPose(readyTime + 0.09, "scale(.98, 1.03)");
+    addPose(readyTime + 0.18, "scale(1, 1)");
     keyframeEntries.push({
       pct: Math.min(100, pctReady),
       css: `${Math.min(100, pctReady).toFixed(4)}% { transform: translate(${dropX}px, ${dropY}px) rotate(${dropFrame.angle}deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px); opacity: 1; }`,
@@ -443,9 +440,9 @@ export function buildSheepLayer(params: {
       }
       addPose(turnover.pickupArriveAbsS, "translateY(0) scale(1, 1)");
       addPose(turnover.outgoingHiddenAbsS, "translateY(-6px) scale(.86, 1.1)");
-      addPose(turnover.incomingSpawnAbsS, "translateY(-3px) scale(.94, 1.04)");
-      addPose(landingAbsS, "translateY(.8px) scale(1.08, .9)");
-      addPose(turnover.incomingReadyAbsS, "translateY(0) scale(1, 1)");
+      addPose(turnover.incomingSpawnAbsS, "scale(.76, .76)");
+      addPose(landingAbsS, "scale(1.12, .88)");
+      addPose(turnover.incomingReadyAbsS, "scale(1, 1)");
       addProgress(turnover.outgoingHiddenAbsS, 1);
       addProgress(turnover.incomingSpawnAbsS, 0);
     }

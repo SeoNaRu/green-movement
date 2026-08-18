@@ -49,6 +49,7 @@ function getRippleRingCells(
 
 export function buildUfoLayer(params: {
   funnelPositionsEarly: [number, number][];
+  deploymentStopCount: number;
   spawnAbsS: number[];
   arriveAbsS: number[];
   maxTotalTime: number;
@@ -94,6 +95,7 @@ export function buildUfoLayer(params: {
 } {
   const {
     funnelPositionsEarly,
+    deploymentStopCount,
     spawnAbsS,
     arriveAbsS,
     maxTotalTime,
@@ -370,7 +372,10 @@ export function buildUfoLayer(params: {
           `${pctStayEndI.toFixed(4)}% { transform: rotate(${angleNext}deg); }`,
           `${pctArriveNext.toFixed(4)}% { transform: rotate(${angleNext}deg); }`,
         );
-        addFlight(currPos, nextPos, stayEndI, arriveNext);
+        const isTurnoverExchange =
+          i >= deploymentStopCount &&
+          (i - deploymentStopCount) % 2 === 0;
+        addFlight(currPos, nextPos, stayEndI, arriveNext, isTurnoverExchange);
         currentAngle = angleNext;
       }
     }
@@ -649,8 +654,14 @@ export function buildUfoLayer(params: {
     const lightOffComplete = leave + lightFadeOutS;
     const pctOff =
       maxTotalTime > 0 ? (lightOffComplete * 100) / maxTotalTime : 0;
-    lightKeyframeEntries.push({ pct: pctOn, opacity: 0 });
-    lightKeyframeEntries.push({ pct: pctFull, opacity: 0.07 });
+    const isTurnoverDrop =
+      i > deploymentStopCount &&
+      (i - deploymentStopCount) % 2 === 1;
+    if (isTurnoverDrop) {
+      lightKeyframeEntries.push({ pct: pctAt(tArrive), opacity: 0.38 });
+    }
+    lightKeyframeEntries.push({ pct: pctOn, opacity: isTurnoverDrop ? 0.1 : 0 });
+    lightKeyframeEntries.push({ pct: pctFull, opacity: isTurnoverDrop ? 0.16 : 0.07 });
     lightKeyframeEntries.push({ pct: pctMoveStart, opacity: 0.16 });
     lightKeyframeEntries.push({ pct: pctOff, opacity: 0 });
   }

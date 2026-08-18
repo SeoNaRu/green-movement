@@ -428,8 +428,12 @@ if (deploymentFlightProblems.length) {
   );
 }
 if (svg.includes("ufo-visibility")) {
-  throw new Error("turnover still teleports the UFO with an opacity cut");
+  throw new Error("turnover hides the UFO instead of using a visible speed jump");
 }
+const ufoStreak =
+  svg.match(/@keyframes ufo-streak \{([\s\S]*?)\n  \}/)?.[1] ?? "";
+const ufoLight =
+  svg.match(/@keyframes ufo-light \{([\s\S]*?)\n  \}/)?.[1] ?? "";
 const ufoMovePcts = [...ufoMove.matchAll(/([\d.]+)% \{ transform: translate/g)].map(
   (match) => Number(match[1]),
 );
@@ -453,12 +457,23 @@ const turnoverFlightProblems = timing.turnovers.flatMap((turnover, index) => {
   const intermediate = ufoMovePcts.filter(
     (pct) => pct > departPct + 0.0001 && pct < arrivePct - 0.0001,
   );
-  return !ufoMove.includes(departFrame) || !ufoMove.includes(arriveFrame) || intermediate.length
-    ? [{ index, departFrame, arriveFrame, intermediate }]
+  const departStreak = `${departPct.toFixed(4)}% { opacity: 0; transform: scaleY(0.2); }`;
+  const arriveStreak = `${arrivePct.toFixed(4)}% { opacity: 0; transform: scaleY(0.2); }`;
+  const arriveFlash = `${arrivePct.toFixed(4)}% { opacity: 0.38; }`;
+  const playbackDuration =
+    (turnover.dropArriveAbsS - turnover.outgoingHiddenAbsS) * MOTION_TIME_SCALE;
+  return !ufoMove.includes(departFrame) ||
+    !ufoMove.includes(arriveFrame) ||
+    intermediate.length ||
+    !ufoStreak.includes(departStreak) ||
+    !ufoStreak.includes(arriveStreak) ||
+    !ufoLight.includes(arriveFlash) ||
+    Math.abs(playbackDuration - 0.104) > 0.001
+    ? [{ index, departFrame, arriveFrame, intermediate, playbackDuration }]
     : [];
 });
 if (turnoverFlightProblems.length) {
-  throw new Error(`turnover UFO path is not one continuous on-field flight: ${JSON.stringify(turnoverFlightProblems)}`);
+  throw new Error(`turnover is not one visible 0.104-second speed jump: ${JSON.stringify(turnoverFlightProblems)}`);
 }
 const inboundHandoffProblems = timing.turnovers.flatMap((turnover, index) => {
   const incoming = timing.flock.sheep[turnover.incomingRosterIndex];
@@ -477,19 +492,37 @@ const landingHoldProblems = timing.turnovers.flatMap((turnover, index) => {
   const move = svg.match(
     new RegExp(`@keyframes sheep-${turnover.slotIndex}-move \\{([\\s\\S]*?)\\n  \\}`),
   )?.[1] ?? "";
-  const frameAt = (time) => {
+  const frameAt = (time, opacity = 1) => {
     const pct = ((time * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
-    return [...move.matchAll(new RegExp(`${pct}% \\{ transform: ([^;]+); opacity: 1;`, "g"))].at(-1)?.[1];
+    return [...move.matchAll(new RegExp(`(?:^|\\n\\s*)${pct}% \\{ transform: ([^;]+); opacity: ${opacity};`, "g"))].at(-1)?.[1];
   };
+  const spawn = frameAt(turnover.incomingSpawnAbsS, 0);
   const landing = frameAt(turnover.incomingReadyAbsS - 0.06);
   const ready = frameAt(turnover.incomingReadyAbsS);
   const leave = timing.ufoLeaveAbsSOffset[flock.fieldCount + index * 2 + 1];
-  return landing == null || ready == null || landing !== ready || Math.abs(leave - turnover.incomingReadyAbsS) > 0.001
-    ? [{ index, landing, ready, leave, expectedLeave: turnover.incomingReadyAbsS }]
+  return spawn == null || landing == null || ready == null || spawn !== landing || landing !== ready || Math.abs(leave - turnover.incomingReadyAbsS) > 0.001
+    ? [{ index, spawn, landing, ready, leave, expectedLeave: turnover.incomingReadyAbsS }]
     : [];
 });
 if (landingHoldProblems.length) {
   throw new Error(`replacement does not settle under the stopped UFO before departure: ${JSON.stringify(landingHoldProblems)}`);
+}
+const openingAnchorProblems = Array.from({ length: timingPlan.sheepCount }, (_, index) => {
+  const move = svg.match(
+    new RegExp(`@keyframes sheep-${index}-move \\{([\\s\\S]*?)\\n  \\}`),
+  )?.[1] ?? "";
+  const frameAt = (time, opacity) => {
+    const pct = ((time * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
+    return [...move.matchAll(new RegExp(`(?:^|\\n\\s*)${pct}% \\{ transform: ([^;]+); opacity: ${opacity};`, "g"))].at(-1)?.[1];
+  };
+  const spawn = frameAt(timing.spawnAbsSOffset[index], 0);
+  const ready = frameAt(timing.readyAbsSOffset[index], 1);
+  return spawn == null || ready == null || spawn !== ready
+    ? { index, spawn, ready }
+    : null;
+}).filter(Boolean);
+if (openingAnchorProblems.length) {
+  throw new Error(`opening sheep do not materialize on their exact drop cell: ${JSON.stringify(openingAnchorProblems)}`);
 }
 if (Math.abs(runtime - timing.maxTotalTimeWithEntryExit * MOTION_TIME_SCALE) > 0.001) {
   throw new Error(`visual runtime does not apply the 1.3x motion scale: ${runtime}`);

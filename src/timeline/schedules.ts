@@ -29,7 +29,7 @@ const SIGNATURE_CONFIRM_S = 0.28;
 const SIGNATURE_EXIT_S = 0.36;
 const SIGNATURE_HOLD_S = 1.4;
 const TURNOVER_PICKUP_S = 0.16;
-const TURNOVER_EXCHANGE_S = 0.18;
+const TURNOVER_EXCHANGE_S = 0.08;
 const TURNOVER_DROP_S = LIGHT_RAMP_S + SHEEP_FADE_S;
 
 export function buildTimeline(
