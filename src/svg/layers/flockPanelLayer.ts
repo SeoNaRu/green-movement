@@ -422,7 +422,7 @@ export function buildFlockPanelLayer(params: {
     );
     selectedGroups.push(
       `<g style="opacity:0;animation:flock-inbound ${animationDuration}s step-end 0s 1 both"><text x="18" y="${panelTop + 46}" class="flock-name">양떼 접근 중</text><text x="18" y="${panelTop + 60}" class="flock-status">첫 투입 대기</text></g>`,
-      `<g style="opacity:0;animation:flock-complete ${animationDuration}s step-end 0s 1 both"><rect class="flock-complete-scrim" x="264" y="${panelTop + 24}" width="130" height="46" rx="2" fill="var(--gm-level-0)" fill-opacity=".96"/><use href="#flock-ufo-icon" x="278" y="${panelTop + 34}" width="30" height="30"/><text x="348" y="${panelTop + 46}" text-anchor="middle" class="flock-name">목장 정리 완료</text><text x="348" y="${panelTop + 60}" text-anchor="middle" class="flock-status">모든 양 수거</text></g>`,
+      `<g style="opacity:0;animation:flock-complete ${animationDuration}s step-end 0s 1 both"><rect class="flock-complete-scrim" x="48" y="${panelTop + 24}" width="130" height="46" rx="2" fill="var(--gm-level-0)" fill-opacity=".96"/><use href="#flock-ufo-icon" x="62" y="${panelTop + 34}" width="30" height="30"/><text x="132" y="${panelTop + 46}" text-anchor="middle" class="flock-name">목장 정리 완료</text><text x="132" y="${panelTop + 60}" text-anchor="middle" class="flock-status">모든 양 수거</text></g>`,
     );
   }
 
