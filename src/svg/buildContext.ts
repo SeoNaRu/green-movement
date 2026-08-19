@@ -116,7 +116,7 @@ export function buildContext(grid: GridCell[]): GridContext {
   }
 
   const fenceRects = buildFencePieces({ fenceRightX, fenceBottomY });
-  const totalHeight = baseHeight + 86;
+  const totalHeight = baseHeight + 92;
 
   return {
     grid,

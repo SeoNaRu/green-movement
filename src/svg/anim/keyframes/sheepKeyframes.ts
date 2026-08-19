@@ -61,7 +61,12 @@ export function buildSheepLayer(params: {
     incomingMoveAbsS: number;
     addedDelay: number;
   }[];
-}): { animationStyles: string; sheepGroups: string } {
+}): {
+  animationStyles: string;
+  sheepGroups: string;
+  cameraSheepGroups: string;
+  cameraTracks: Map<number, { atS: number; x: number; y: number }[]>;
+} {
   const {
     positionsHistory,
     assignedIndices,
@@ -101,6 +106,7 @@ export function buildSheepLayer(params: {
         animationCSS: "",
         poseCSS: "",
         rosterActors: [],
+        cameraTrack: [],
       };
     }
     const totalPoints = timeline.length;
@@ -561,6 +567,16 @@ export function buildSheepLayer(params: {
         return `rotate(${angle}deg)`;
       }),
     );
+    const cameraTrack = unique.flatMap(({ pct, css }) => {
+      const match = css.match(/translate\(([-\d.]+)px, ([-\d.]+)px\)/);
+      return match == null
+        ? []
+        : [{
+            atS: (pct * maxTotalTime) / 100,
+            x: Number(match[1]),
+            y: Number(match[2]),
+          }];
+    });
 
     poseEntries.push({
       pct: 100,
@@ -638,6 +654,8 @@ export function buildSheepLayer(params: {
       const finalVisibility = endPct < 100 ? "hidden" : "visible";
       return {
         rosterIndex,
+        start,
+        end,
         keyframes: `@keyframes ${name} {
     0% { visibility:hidden; }
     ${Math.max(0, startPct - 0.0001).toFixed(4)}% { visibility:hidden; }
@@ -657,6 +675,7 @@ export function buildSheepLayer(params: {
       poseCSS: `transform-box:fill-box; transform-origin:center; animation:sheep-${si}-pose ${animationDuration}s linear 0s 1 both;`,
       headCSS: `transform-box:fill-box; transform-origin:center; animation:sheep-${si}-head ${animationDuration}s cubic-bezier(.2,.8,.2,1) 0s 1 both;`,
       rosterActors,
+      cameraTrack,
     };
   });
 
@@ -671,21 +690,33 @@ export function buildSheepLayer(params: {
     .join("\n  ");
 
   let sheepGroups: string;
+  let cameraSheepGroups: string;
   if (validSheepAnimations.length > 0) {
-    sheepGroups = validSheepAnimations
-      .flatMap((a) =>
-        a.rosterActors.map(
-          (actor) =>
-            `<g class="sheep-roster-${actor.rosterIndex}" data-roster-index="${actor.rosterIndex}" style="${actor.animationCSS}"><g class="${a.id}" style="${a.animationCSS}"><g class="sheep-growth"><g class="sheep-actor" style="${a.poseCSS}">${SHEEP_CONTENT}<g class="sheep-ear-tag" transform="translate(0,-1.55)" style="${a.headCSS}">${buildSheepTagSvg({ rosterIndex: actor.rosterIndex, x: 3, y: 4.55, size: 2.1, className: "sheep-field-tag", strokeWidth: 0.22 })}</g><path class="sheep-energy" d="M4.8 6.2Q6.1 5.1 7.1 6.2M7.3 8.5Q8.4 7.2 9.5 8.1M9.2 5.3Q10.3 4.7 11.1 5.8" fill="none" stroke="var(--gm-level-3)" stroke-width=".75" stroke-linecap="round" opacity="0"/></g></g></g></g>`,
-        ),
-      )
-      .join("\n  ");
+    const renderGroups = (camera: boolean) => validSheepAnimations
+      .flatMap((a) => a.rosterActors.map((actor) =>
+        `<g class="${camera ? "camera-sheep-roster" : "sheep-roster"}-${actor.rosterIndex}${camera ? " sheep-camera-copy" : ""}" data-${camera ? "camera-" : ""}roster-index="${actor.rosterIndex}" style="${actor.animationCSS}"><g class="${a.id}" style="${a.animationCSS}"><g class="sheep-growth"><g class="sheep-actor" style="${a.poseCSS}">${SHEEP_CONTENT}<g class="sheep-ear-tag" transform="translate(0,-1.55)" style="${a.headCSS}">${buildSheepTagSvg({ rosterIndex: actor.rosterIndex, x: 3, y: 4.55, size: 2.1, className: camera ? "sheep-camera-tag" : "sheep-field-tag", strokeWidth: 0.22 })}</g><path class="sheep-energy" d="M4.8 6.2Q6.1 5.1 7.1 6.2M7.3 8.5Q8.4 7.2 9.5 8.1M9.2 5.3Q10.3 4.7 11.1 5.8" fill="none" stroke="var(--gm-level-3)" stroke-width=".75" stroke-linecap="round" opacity="0"/></g></g></g></g>`,
+      )).join("\n  ");
+    sheepGroups = renderGroups(false);
+    cameraSheepGroups = renderGroups(true);
   } else {
     const pos = getCellCenterPx(gridLeftX, gridTopY, 0, 0);
     const off = bodyShift(180);
     const transform = `translate(${pos.x + off.dx}px, ${pos.y + off.dy}px) rotate(180deg) scale(${sheepScale}) translate(${-SHEEP_VIEWBOX_CX}px, ${-SHEEP_VIEWBOX_CY}px)`;
     sheepGroups = `<g class="sheep-fallback" transform="${transform}">${SHEEP_CONTENT}</g>`;
+    cameraSheepGroups = sheepGroups;
   }
 
-  return { animationStyles, sheepGroups };
+  const cameraTracks = new Map<number, { atS: number; x: number; y: number }[]>();
+  for (const animation of validSheepAnimations) {
+    for (const actor of animation.rosterActors) {
+      cameraTracks.set(
+        actor.rosterIndex,
+        animation.cameraTrack.filter(
+          ({ atS }) => atS >= actor.start - 0.001 && atS <= actor.end + 0.001,
+        ),
+      );
+    }
+  }
+
+  return { animationStyles, sheepGroups, cameraSheepGroups, cameraTracks };
 }

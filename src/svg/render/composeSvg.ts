@@ -64,14 +64,14 @@ export function composeSvg(params: {
   ${ufoRippleKeyframesStr}
   ${panelStyles}
   @media (prefers-reduced-motion: reduce) {
-    .ufo-streak, .ufo-ripple, .signature-reveal, #grass-crumbs, .flock-meter-pulse { display: none; }
+    .ufo-streak, .ufo-ripple, .signature-reveal, #grass-crumbs, .flock-meter-pulse, .flock-map-pulse { display: none; }
+    .flock-camera-live { animation-timing-function: step-end !important; }
   }
     </style>
   </defs>
   <rect x="0" y="${viewBoxMinY}" width="${totalWidth}" height="${viewBoxHeight}" fill="${backgroundColor}"/>
   ${fenceRects}
-  ${rects}
-  ${crumbGroup}
+  <g id="pasture-live-scene">${rects}${crumbGroup}</g>
   ${sheepGroups}
   ${ufoRippleGroupStr}
   ${ufoGroupStr}

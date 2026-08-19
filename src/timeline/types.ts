@@ -53,11 +53,12 @@ export type TimelineResult = {
     sheep: {
       rosterIndex: number;
       slotIndex: number;
+      spawnCell: [number, number];
       inboundAbsS: number | null;
       spawnAbsS: number;
       pickupAbsS: number | null;
       hiddenAbsS: number | null;
-      bites: { atS: number; progress: number; level: number }[];
+      bites: { cell: string; atS: number; progress: number; level: number }[];
     }[];
     grassProgress: { atS: number; progress: number }[];
   };

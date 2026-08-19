@@ -160,7 +160,7 @@ export function renderGridSvg(
     }
   }
 
-  const { animationStyles, sheepGroups } = buildSheepLayer({
+  const { animationStyles, sheepGroups, cameraSheepGroups, cameraTracks } = buildSheepLayer({
     positionsHistory: sim.positionsHistory,
     assignedIndices: timeline.assignedIndices,
     spawnAbsS: timeline.spawnAbsSOffset.slice(0, plan.sheepCount),
@@ -184,6 +184,12 @@ export function renderGridSvg(
     maxTotalTime: timeline.maxTotalTimeWithEntryExit,
     panelTop: ctx.baseHeight + 4,
     totalWidth: ctx.totalWidth,
+    maxX: ctx.maxX,
+    maxY: ctx.maxY,
+    gridLeftX: ctx.gridLeftX,
+    gridTopY: ctx.gridTopY,
+    cameraTracks,
+    cameraSheepGroups,
   });
 
   const DEBUG_LAYER = process.env?.DEBUG_SVG === "1";

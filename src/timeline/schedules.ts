@@ -363,6 +363,7 @@ export function buildTimeline(
     return {
       rosterIndex,
       slotIndex,
+      spawnCell: incoming?.dropCell ?? funnelPositionsEarly[slotIndex] ?? [0, 0],
       inboundAbsS: incoming?.outgoingHiddenAbsS ?? null,
       spawnAbsS:
         incoming?.incomingSpawnAbsS ?? spawnAbsSOffset[slotIndex] ?? timelineOffset,
@@ -373,6 +374,7 @@ export function buildTimeline(
         .map((bite) => {
           const arrival = firstArrivals.get(bite.cell);
           return {
+            cell: bite.cell,
             atS: timelineOffset + (arrival?.arrivalTime ?? bite.baseArrivalTime),
             progress: bite.progress,
             level: bite.level,
