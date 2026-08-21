@@ -25,6 +25,7 @@ export function composeSvg(params: {
   ufoLightKeyframesStr: string;
   panelStyles: string;
   panelGroup: string;
+  panelForeground: string;
 }): string {
   const {
     totalWidth,
@@ -49,6 +50,7 @@ export function composeSvg(params: {
     ufoLightKeyframesStr,
     panelStyles,
     panelGroup,
+    panelForeground,
   } = params;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -85,8 +87,9 @@ export function composeSvg(params: {
   <g id="pasture-live-scene">${rects}${crumbGroup}</g>
   ${sheepGroups}
   ${ufoRippleGroupStr}
-  ${ufoGroupStr}
   ${panelGroup}
+  ${ufoGroupStr}
+  ${panelForeground}
   ${debugLayer}
 </svg>`.replace(/[ \t]+$/gm, "");
 }

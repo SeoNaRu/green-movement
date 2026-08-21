@@ -14,6 +14,20 @@ import { buildSheepTagSvg, getSheepTagCode } from "../sheepTag.js";
 
 type PanelFlock = TimelineResult["flock"];
 
+export type InventoryUfoPlan = {
+  staging: { x: number; y: number };
+  docked: { x: number; y: number };
+  opening: {
+    descendAt: number;
+    dockedAt: number;
+    departAt: number;
+  } | null;
+  turnovers: {
+    dockedAt: number;
+    departAt: number;
+  }[];
+};
+
 const HANDOFF_GAP_S = 0.55;
 const MIN_HERO_SHOT_S = 1;
 const INVENTORY_GATE_OPEN_S = 0.18;
@@ -22,14 +36,14 @@ const INVENTORY_ABSORB_S = 0.08;
 const INVENTORY_LOAD_S =
   INVENTORY_GATE_OPEN_S + INVENTORY_ABSORB_DELAY_S + INVENTORY_ABSORB_S;
 const INVENTORY_EMPTY_HOLD_S = 0.05;
-const INVENTORY_LIFT_S = 0.17;
+const INVENTORY_DEPART_HOLD_S = 0.17;
 const INVENTORY_SHIFT_S = 0.12;
 const INVENTORY_REFILL_S = 0.08;
 const INVENTORY_SETTLE_S = 0.04;
 const INVENTORY_TRANSITION_S =
   INVENTORY_LOAD_S +
   INVENTORY_EMPTY_HOLD_S +
-  INVENTORY_LIFT_S +
+  INVENTORY_DEPART_HOLD_S +
   INVENTORY_SHIFT_S +
   INVENTORY_REFILL_S +
   INVENTORY_SETTLE_S;
@@ -127,7 +141,12 @@ export function buildFlockPanelLayer(params: {
   gridTopY: number;
   cameraTracks: Map<number, { atS: number; x: number; y: number }[]>;
   cameraSheepGroups: string;
-}): { panelStyles: string; panelGroup: string } {
+}): {
+  panelStyles: string;
+  panelGroup: string;
+  panelForeground: string;
+  inventoryUfoPlan: InventoryUfoPlan;
+} {
   const {
     flock,
     openingBoardEndAbsS,
@@ -209,6 +228,31 @@ export function buildFlockPanelLayer(params: {
     ? openingRevealEnd + OPENING_REFILL_SETTLE_S
     : 0;
   const laterEvents = inventoryEvents.slice(flock.fieldCount);
+  const dockStaging = { x: inventoryDockX, y: panelTop - 2 };
+  const docked = {
+    x: dockStaging.x,
+    y: dockStaging.y + inventoryDockTravelY,
+  };
+  const inventoryUfoPlan: InventoryUfoPlan = {
+    staging: dockStaging,
+    docked,
+    opening: hasOpening
+      ? {
+          descendAt: OPENING_APPROACH_HOLD_S,
+          dockedAt: INVENTORY_OPENING_GATE_S,
+          departAt: openingBoardEndAbsS,
+        }
+      : null,
+    turnovers: laterEvents.map((event) => {
+      const start = event.atS - INVENTORY_TRANSITION_S;
+      const departHoldAt = start + INVENTORY_LOAD_S + INVENTORY_EMPTY_HOLD_S;
+      const departAt = departHoldAt + INVENTORY_DEPART_HOLD_S;
+      return {
+        dockedAt: start + INVENTORY_GATE_OPEN_S,
+        departAt,
+      };
+    }),
+  };
   const inventoryTransitionWindows = [
     ...(openingEvents.length > 0
       ? [{ start: 0, end: openingBoardEndAbsS }]
@@ -867,8 +911,8 @@ export function buildFlockPanelLayer(params: {
     const gateOpenEnd = start + INVENTORY_GATE_OPEN_S;
     const absorbStart = gateOpenEnd + INVENTORY_ABSORB_DELAY_S;
     const loadEnd = absorbStart + INVENTORY_ABSORB_S;
-    const liftStart = loadEnd + INVENTORY_EMPTY_HOLD_S;
-    const shiftStart = liftStart + INVENTORY_LIFT_S;
+    const departHoldStart = loadEnd + INVENTORY_EMPTY_HOLD_S;
+    const shiftStart = departHoldStart + INVENTORY_DEPART_HOLD_S;
     const shiftEnd = shiftStart + INVENTORY_SHIFT_S;
     const refillEnd = shiftEnd + INVENTORY_REFILL_S;
     const settleEnd = refillEnd + INVENTORY_SETTLE_S;
@@ -884,7 +928,7 @@ export function buildFlockPanelLayer(params: {
     gateFrames.push(
       `${pctAt(start - 0.001, maxTotalTime).toFixed(4)}%{stroke-dashoffset:0}`,
       `${pctAt(gateOpenEnd, maxTotalTime).toFixed(4)}%{stroke-dashoffset:16}`,
-      `${pctAt(liftStart, maxTotalTime).toFixed(4)}%{stroke-dashoffset:16}`,
+      `${pctAt(departHoldStart, maxTotalTime).toFixed(4)}%{stroke-dashoffset:16}`,
       `${pctAt(shiftStart, maxTotalTime).toFixed(4)}%{stroke-dashoffset:0}`,
     );
     const shifting = visibleQueue(beforeQueue).slice(0, INVENTORY_SLOT_COUNT - 1);
@@ -897,66 +941,30 @@ export function buildFlockPanelLayer(params: {
       );
       refill = `<g class="flock-inventory-refill" style="opacity:0;animation:${refillName} ${animationDuration}s ease-out 0s 1 both">${penOccupant(refillRosterIndex, 0)}</g>`;
     }
-    return `<g class="flock-inventory-transition" data-beats="approach-settle-absorb-lift-shift-refill-settle-drop" style="opacity:0;animation:${visibleName} ${animationDuration}s step-end 0s 1 both"><text x="${inventoryCountX}" y="${panelTop + 21}" text-anchor="end" class="flock-meta-value">${beforeQueue.length}/${flock.rosterSize}</text><g class="flock-inventory-motion">${boardingOccupant(beforeQueue[0], boardName)}<g class="flock-inventory-shift" style="animation:${name} ${animationDuration}s ease-in-out 0s 1 both">${shifting.map((rosterIndex, slotIndex) => rosterIndex == null ? "" : penOccupant(rosterIndex, slotIndex)).join("")}</g>${refill}</g></g>`;
+    return `<g class="flock-inventory-transition" data-beats="approach-settle-absorb-direct-departure-shift-refill-settle-drop" style="opacity:0;animation:${visibleName} ${animationDuration}s step-end 0s 1 both"><text x="${inventoryCountX}" y="${panelTop + 21}" text-anchor="end" class="flock-meta-value">${beforeQueue.length}/${flock.rosterSize}</text><g class="flock-inventory-motion">${boardingOccupant(beforeQueue[0], boardName)}<g class="flock-inventory-shift" style="animation:${name} ${animationDuration}s ease-in-out 0s 1 both">${shifting.map((rosterIndex, slotIndex) => rosterIndex == null ? "" : penOccupant(rosterIndex, slotIndex)).join("")}</g>${refill}</g></g>`;
   });
   gateFrames.push("100%{stroke-dashoffset:0}");
   inventoryStyles.push(`@keyframes flock-inventory-gate{${gateFrames.join(" ")}}`);
-  const dockWindows = laterEvents.map((event) => {
-    const start = event.atS - INVENTORY_TRANSITION_S;
-    return {
-      start,
-      end:
-        start +
-        INVENTORY_LOAD_S +
-        INVENTORY_EMPTY_HOLD_S +
-        INVENTORY_LIFT_S,
-    };
-  });
   const dockFrames = ["0%{transform:translateY(0)}"];
-  if (hasOpening) {
-    const openingLoadEnd =
-      INVENTORY_OPENING_GATE_S +
-      openingEvents.length * INVENTORY_OPENING_CYCLE_S;
+  if (inventoryUfoPlan.opening != null) {
+    const opening = inventoryUfoPlan.opening;
     dockFrames.push(
-      `${pctAt(OPENING_APPROACH_HOLD_S, maxTotalTime).toFixed(4)}%{transform:translateY(0)}`,
-      `${pctAt(INVENTORY_OPENING_GATE_S, maxTotalTime).toFixed(4)}%{transform:translateY(${inventoryDockTravelY}px)}`,
-      `${pctAt(openingLoadEnd, maxTotalTime).toFixed(4)}%{transform:translateY(${inventoryDockTravelY}px)}`,
-      `${pctAt(openingBoardEndAbsS, maxTotalTime).toFixed(4)}%{transform:translateY(0)}`,
+      `${pctAt(opening.descendAt, maxTotalTime).toFixed(4)}%{transform:translateY(0)}`,
+      `${pctAt(opening.dockedAt, maxTotalTime).toFixed(4)}%{transform:translateY(${inventoryDockTravelY}px)}`,
+      `${pctAt(opening.departAt - 0.001, maxTotalTime).toFixed(4)}%{transform:translateY(${inventoryDockTravelY}px)}`,
+      `${pctAt(opening.departAt, maxTotalTime).toFixed(4)}%{transform:translateY(0)}`,
     );
   }
-  for (const event of laterEvents) {
-    const start = event.atS - INVENTORY_TRANSITION_S;
-    const gateOpenEnd = start + INVENTORY_GATE_OPEN_S;
-    const liftStart = start + INVENTORY_LOAD_S + INVENTORY_EMPTY_HOLD_S;
-    const shiftStart = liftStart + INVENTORY_LIFT_S;
+  for (const turnover of inventoryUfoPlan.turnovers) {
     dockFrames.push(
-      `${pctAt(start - 0.001, maxTotalTime).toFixed(4)}%{transform:translateY(0)}`,
-      `${pctAt(start, maxTotalTime).toFixed(4)}%{transform:translateY(0)}`,
-      `${pctAt(gateOpenEnd, maxTotalTime).toFixed(4)}%{transform:translateY(${inventoryDockTravelY}px)}`,
-      `${pctAt(liftStart, maxTotalTime).toFixed(4)}%{transform:translateY(${inventoryDockTravelY}px)}`,
-      `${pctAt(shiftStart, maxTotalTime).toFixed(4)}%{transform:translateY(0)}`,
+      `${pctAt(turnover.dockedAt - INVENTORY_GATE_OPEN_S - 0.001, maxTotalTime).toFixed(4)}%{transform:translateY(0)}`,
+      `${pctAt(turnover.dockedAt, maxTotalTime).toFixed(4)}%{transform:translateY(${inventoryDockTravelY}px)}`,
+      `${pctAt(turnover.departAt - 0.001, maxTotalTime).toFixed(4)}%{transform:translateY(${inventoryDockTravelY}px)}`,
+      `${pctAt(turnover.departAt, maxTotalTime).toFixed(4)}%{transform:translateY(0)}`,
     );
   }
   dockFrames.push("100%{transform:translateY(0)}");
-  const dockVisibilityFrames = [hasOpening ? "0%{opacity:1}" : "0%{opacity:0}"];
-  if (hasOpening) {
-    dockVisibilityFrames.push(
-      `${pctAt(openingBoardEndAbsS - 0.08, maxTotalTime).toFixed(4)}%{opacity:1}`,
-      `${pctAt(openingBoardEndAbsS, maxTotalTime).toFixed(4)}%{opacity:0}`,
-    );
-  }
-  for (const { start, end } of dockWindows) {
-    dockVisibilityFrames.push(
-      `${pctAt(start - 0.001, maxTotalTime).toFixed(4)}%{opacity:0}`,
-      `${pctAt(start, maxTotalTime).toFixed(4)}%{opacity:0}`,
-      `${pctAt(start + 0.06, maxTotalTime).toFixed(4)}%{opacity:1}`,
-      `${pctAt(end - 0.06, maxTotalTime).toFixed(4)}%{opacity:1}`,
-      `${pctAt(end, maxTotalTime).toFixed(4)}%{opacity:0}`,
-    );
-  }
-  dockVisibilityFrames.push("100%{opacity:0}");
   inventoryStyles.push(
-    `@keyframes flock-inventory-ufo-visible{${dockVisibilityFrames.join(" ")}}`,
     focusKeyframes(
       "flock-turnover-focus",
       inventoryTransitionWindows,
@@ -979,12 +987,12 @@ export function buildFlockPanelLayer(params: {
   for (const event of laterEvents) {
     const transitionStart = event.atS - INVENTORY_TRANSITION_S;
     const gateOpenEnd = transitionStart + INVENTORY_GATE_OPEN_S;
-    const liftStart = transitionStart + INVENTORY_LOAD_S + INVENTORY_EMPTY_HOLD_S;
-    const shiftStart = liftStart + INVENTORY_LIFT_S;
+    const departHoldStart = transitionStart + INVENTORY_LOAD_S + INVENTORY_EMPTY_HOLD_S;
+    const shiftStart = departHoldStart + INVENTORY_DEPART_HOLD_S;
     coreFrames.push(
       `${pctAt(transitionStart, maxTotalTime).toFixed(4)}%{opacity:0}`,
       `${pctAt(gateOpenEnd, maxTotalTime).toFixed(4)}%{opacity:0.140}`,
-      `${pctAt(liftStart, maxTotalTime).toFixed(4)}%{opacity:0.140}`,
+      `${pctAt(departHoldStart, maxTotalTime).toFixed(4)}%{opacity:0.140}`,
       `${pctAt(shiftStart, maxTotalTime).toFixed(4)}%{opacity:0}`,
     );
   }
@@ -1019,12 +1027,13 @@ export function buildFlockPanelLayer(params: {
     ${Array.from({ length: INVENTORY_SLOT_COUNT - 1 }, (_, index) => `<rect class="flock-inventory-pen" x="${inventoryPenX + index * inventoryPenPitch}" y="${inventoryPenY}" width="16" height="11" rx="1"/>`).join("")}<path class="flock-inventory-pen" d="M${inventoryRightPenX} ${inventoryPenY}V${inventoryPenY + 11}H${inventoryRightPenX + 16}V${inventoryPenY}"/>
     <g class="flock-inventory-states">${inventoryGroups.join("")}${openingDispatchGroups.join("")}${openingShiftGroup}${dispatchGroups.join("")}</g>
     <path class="flock-inventory-gate" d="M${inventoryRightPenX} ${inventoryPenY}H${inventoryRightPenX + 16}"/>
-    <g class="flock-inventory-dock-activity" data-energy-link="pickup-dock-finale" style="opacity:0;animation:flock-inventory-ufo-visible ${animationDuration}s ease-in-out 0s 1 both"><g class="flock-inventory-dock-motion" style="animation:flock-inventory-dock ${animationDuration}s ease-in-out 0s 1 both"><use class="flock-inventory-ufo" href="#flock-ufo-icon" x="${inventoryDockX - 13}" y="${panelTop - 15}" width="26" height="26"/><circle class="flock-inventory-core" cx="${inventoryDockX}" cy="${panelTop + 7}" r="5" fill="var(--gm-beam-core)" style="opacity:0;animation:flock-inventory-core ${animationDuration}s ease-in-out 0s 1 both"/></g></g>
     ${grassLabels.join("")}
     <g class="flock-camera-window" data-camera-heroes="${heroShots.map(({ sheep }) => sheep.rosterIndex).join(",")}" data-camera-modes="${heroShots.map(({ mode }) => mode).join(",")}" data-camera-reframes="${Math.max(0, cameraTargets.length - heroShots.length)}" data-camera-handoff="blank" clip-path="url(#flock-camera-clip)" style="opacity:0;animation:flock-camera-visible ${animationDuration}s step-end 0s 1 both"><g class="flock-camera-live" style="animation:flock-camera-follow ${animationDuration}s linear 0s 1 both"><use href="#pasture-live-scene"/>${cameraSheepGroups}</g></g>
     <g class="flock-selected-region">${selectedGroups.join("")}</g>
     <g class="flock-map-region">${mapMarks.join("")}${footprintGroups.join("")}<g class="flock-secondary-motion">${mapPulses.join("")}${mapCursor}</g></g>
   </g>`;
 
-  return { panelStyles, panelGroup };
+  const panelForeground = `<g class="flock-inventory-dock-activity" data-energy-link="pickup-dock-finale"><g class="flock-inventory-dock-motion" style="animation:flock-inventory-dock ${animationDuration}s ease-in-out 0s 1 both"><circle class="flock-inventory-core" cx="${inventoryDockX}" cy="${panelTop + 7}" r="5" fill="var(--gm-beam-core)" style="opacity:0;animation:flock-inventory-core ${animationDuration}s ease-in-out 0s 1 both"/></g></g>`;
+
+  return { panelStyles, panelGroup, panelForeground, inventoryUfoPlan };
 }

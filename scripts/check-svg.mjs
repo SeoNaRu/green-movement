@@ -174,10 +174,10 @@ for (const required of [
   'class="flock-inventory-pen"',
   'class="flock-inventory-sheep"',
   'class="flock-inventory-tag"',
-  'class="flock-inventory-ufo"',
+  'class="ufo-body"',
   'id="flock-inventory-sheep-icon"',
   'href="#flock-inventory-sheep-icon"',
-  'data-beats="approach-settle-absorb-lift-shift-refill-settle-drop"',
+  'data-beats="approach-settle-absorb-direct-departure-shift-refill-settle-drop"',
   'data-energy-link="pickup-dock-finale"',
   '@keyframes flock-turnover-focus',
   '@keyframes flock-inventory-core',
@@ -733,6 +733,7 @@ const openingShiftEndS = openingRevealEndS + 0.08;
 const openingLoadEndS =
   INVENTORY_OPENING_GATE_S +
   openingInventoryEvents.length * INVENTORY_OPENING_CYCLE_S;
+const openingDepartLeadS = timing.openingBoardEndAbsS - 0.001;
 const inventoryPct = (time) =>
   ((time * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
 const openingShiftBlock = svg.match(/@keyframes flock-inventory-opening-shift\{([^\n]+)\}/)?.[1] ?? "";
@@ -744,8 +745,8 @@ const firstTransitionStart = (firstLaterEvent?.atS ?? 0) - 0.76;
 const firstGateOpenEnd = firstTransitionStart + 0.18;
 const firstAbsorbStart = firstGateOpenEnd + 0.04;
 const firstLoadEnd = firstAbsorbStart + 0.08;
-const firstLiftStart = firstLoadEnd + 0.05;
-const firstShiftStart = firstLiftStart + 0.17;
+const firstDepartHoldStart = firstLoadEnd + 0.05;
+const firstShiftStart = firstDepartHoldStart + 0.17;
 const firstShiftEnd = firstShiftStart + 0.12;
 const firstRefillEnd = firstShiftEnd + 0.08;
 const firstSettleEnd = firstRefillEnd + 0.04;
@@ -792,26 +793,19 @@ const finalTransitionAlignmentProblems = inventoryTransitionStarts.flatMap((star
 });
 const gateKeyframes = svg.match(/@keyframes flock-inventory-gate\{([^\n]+)\}/)?.[1] ?? "";
 const coreKeyframes = svg.match(/@keyframes flock-inventory-core\{([^\n]+)\}/)?.[1] ?? "";
-const inventoryUfoKeyframes = svg.match(
-  /@keyframes flock-inventory-ufo-visible\{([^\n]+)\}/,
-)?.[1] ?? "";
 const inventoryDockKeyframes = svg.match(
   /@keyframes flock-inventory-dock\{([^\n]+)\}/,
 )?.[1] ?? "";
-const bodyHiddenDockWindows = laterInventoryEvents.map((event) => ({
-  start: event.atS - 0.76,
-  end: event.atS - 0.76 + 0.52,
-}));
 const coreTimingProblems = laterInventoryEvents.flatMap((event, index) => {
   const transitionStart = event.atS - 0.76;
   const gateOpenEnd = transitionStart + 0.18;
-  const liftStart = transitionStart + 0.35;
+  const departHoldStart = transitionStart + 0.35;
   const shiftStart = transitionStart + 0.52;
   return !coreKeyframes.includes(`${inventoryPct(transitionStart)}%{opacity:0}`) ||
     !coreKeyframes.includes(`${inventoryPct(gateOpenEnd)}%{opacity:0.140}`) ||
-    !coreKeyframes.includes(`${inventoryPct(liftStart)}%{opacity:0.140}`) ||
+    !coreKeyframes.includes(`${inventoryPct(departHoldStart)}%{opacity:0.140}`) ||
     !coreKeyframes.includes(`${inventoryPct(shiftStart)}%{opacity:0}`)
-    ? [{ index, transitionStart, gateOpenEnd, liftStart, shiftStart }]
+    ? [{ index, transitionStart, gateOpenEnd, departHoldStart, shiftStart }]
     : [];
 });
 const inventoryDiagnostics = {
@@ -849,14 +843,12 @@ const inventoryDiagnostics = {
     !firstTransitionRefillMarkup.includes('data-roster="14" data-inventory-slot="0"'),
   dock:
     !gateKeyframes.includes(`${inventoryPct(firstGateOpenEnd)}%{stroke-dashoffset:16}`) ||
-    !gateKeyframes.includes(`${inventoryPct(firstLiftStart)}%{stroke-dashoffset:16}`) ||
+    !gateKeyframes.includes(`${inventoryPct(firstDepartHoldStart)}%{stroke-dashoffset:16}`) ||
     !gateKeyframes.includes(`${inventoryPct(firstShiftStart)}%{stroke-dashoffset:0}`) ||
     !inventoryDockKeyframes.includes(`${inventoryPct(firstGateOpenEnd)}%{transform:translateY(18.5px)}`) ||
-    !inventoryDockKeyframes.includes(`${inventoryPct(firstLiftStart)}%{transform:translateY(18.5px)}`) ||
+    !inventoryDockKeyframes.includes(`${inventoryPct(firstShiftStart - 0.001)}%{transform:translateY(18.5px)}`) ||
     !inventoryDockKeyframes.includes(`${inventoryPct(firstShiftStart)}%{transform:translateY(0)}`),
-  light: coreTimingProblems.length > 0 ||
-    !inventoryUfoKeyframes.includes("0%{opacity:1}") ||
-    !inventoryUfoKeyframes.includes(`${inventoryPct(timing.openingBoardEndAbsS)}%{opacity:0}`),
+  light: coreTimingProblems.length > 0,
 };
 const failedInventoryDiagnostics = Object.entries(inventoryDiagnostics)
   .filter(([, failed]) => failed)
@@ -895,7 +887,7 @@ if (
   openingRefillBlocks.length !== openingRefillCount ||
   laterRefillBlocks.length !== Math.max(0, laterInventoryEvents.length - 8) ||
   (svg.match(/data-beats="dock-settle-absorb-empty-shift-settle"/g) ?? []).length !== openingInventoryEvents.length ||
-  (svg.match(/data-beats="approach-settle-absorb-lift-shift-refill-settle-drop"/g) ?? []).length !== laterInventoryEvents.length ||
+  (svg.match(/data-beats="approach-settle-absorb-direct-departure-shift-refill-settle-drop"/g) ?? []).length !== laterInventoryEvents.length ||
   !openingShiftBlock.includes(`${inventoryPct(openingMotionEndS)}%,100%{transform:translateX(18px)}`) ||
   !svg.includes('data-refill="shift-then-stagger"') ||
   (openingRefillCount > 0 &&
@@ -906,7 +898,7 @@ if (
   !gateKeyframes.includes(`${inventoryPct(INVENTORY_OPENING_GATE_S)}%{stroke-dashoffset:16}`) ||
   !gateKeyframes.includes(`${inventoryPct(INVENTORY_OPENING_GATE_S + openingInventoryEvents.length * INVENTORY_OPENING_CYCLE_S)}%{stroke-dashoffset:16}`) ||
   !gateKeyframes.includes(`${inventoryPct(firstGateOpenEnd)}%{stroke-dashoffset:16}`) ||
-  !gateKeyframes.includes(`${inventoryPct(firstLiftStart)}%{stroke-dashoffset:16}`) ||
+  !gateKeyframes.includes(`${inventoryPct(firstDepartHoldStart)}%{stroke-dashoffset:16}`) ||
   !gateKeyframes.includes(`${inventoryPct(firstShiftStart)}%{stroke-dashoffset:0}`) ||
   !firstShiftBlock.includes(`${inventoryPct(firstShiftStart)}%{transform:translateX(0)}`) ||
   !firstShiftBlock.includes(`${inventoryPct(firstShiftEnd)}%,100%{transform:translateX(18px)}`) ||
@@ -928,18 +920,19 @@ if (
   !svg.includes('<clipPath id="flock-inventory-clip"><rect x="287" y="123" width="142" height="11"/>') ||
   svg.includes('flock-inventory-board-clip') ||
   svg.includes('translateY(-10px)') ||
-  svg.indexOf('<g class="flock-inventory-dock-activity"') < svg.indexOf('<g class="flock-inventory-states">') ||
+  svg.indexOf('<g class="flock-panel"') > svg.indexOf('<g class="ufo-move"') ||
+  svg.indexOf('<g class="ufo-move"') > svg.indexOf('<g class="flock-inventory-dock-activity"') ||
   !svg.includes('<path class="flock-inventory-pen" d="M413 123V134H429V123"/>') ||
   !svg.includes('<path class="flock-inventory-gate" d="M413 123H429"/>') ||
-  !svg.includes('<use class="flock-inventory-ufo" href="#flock-ufo-icon" x="408" y="97" width="26" height="26"') ||
-  !svg.includes('animation:flock-inventory-ufo-visible') ||
+  svg.includes('class="flock-inventory-ufo"') ||
+  (svg.match(/class="ufo-body"/g) ?? []).length !== 1 ||
   !svg.includes('flock-inventory-dock') ||
   !inventoryDockKeyframes.includes(`transform:translateY(18.5px)`) ||
   !inventoryDockKeyframes.includes(`${inventoryPct(INVENTORY_OPENING_GATE_S)}%{transform:translateY(18.5px)}`) ||
-  !inventoryDockKeyframes.includes(`${inventoryPct(openingLoadEndS)}%{transform:translateY(18.5px)}`) ||
+  !inventoryDockKeyframes.includes(`${inventoryPct(openingDepartLeadS)}%{transform:translateY(18.5px)}`) ||
   !inventoryDockKeyframes.includes(`${inventoryPct(timing.openingBoardEndAbsS)}%{transform:translateY(0)}`) ||
   !inventoryDockKeyframes.includes(`${inventoryPct(firstGateOpenEnd)}%{transform:translateY(18.5px)}`) ||
-  !inventoryDockKeyframes.includes(`${inventoryPct(firstLiftStart)}%{transform:translateY(18.5px)}`) ||
+  !inventoryDockKeyframes.includes(`${inventoryPct(firstShiftStart - 0.001)}%{transform:translateY(18.5px)}`) ||
   !inventoryDockKeyframes.includes(`${inventoryPct(firstShiftStart)}%{transform:translateY(0)}`) ||
   !svg.includes('<text x="231" y="133" class="flock-meta-key">양떼</text>') ||
   !svg.includes('<text x="283" y="133" text-anchor="end" class="flock-meta-value">') ||
@@ -957,17 +950,7 @@ if (
   !svg.includes('fill="var(--gm-beam-core)" style="opacity:0;animation:flock-inventory-core') ||
   coreTimingProblems.length > 0 ||
   !svg.includes('.flock-secondary-motion,#grass-crumbs{animation:flock-turnover-focus') ||
-  (svg.match(/class="flock-secondary-motion"/g) ?? []).length !== 1 ||
-  !inventoryUfoKeyframes.includes(`0%{opacity:1}`) ||
-  !inventoryUfoKeyframes.includes(`${inventoryPct(timing.openingBoardEndAbsS)}%{opacity:0}`) ||
-  bodyHiddenDockWindows.some(({ start, end }) =>
-    !inventoryUfoKeyframes.includes(
-      `${(((start + 0.06) * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4)}%{opacity:1}`,
-    ) ||
-    !inventoryUfoKeyframes.includes(
-      `${((end * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4)}%{opacity:0}`,
-    ),
-  )
+  (svg.match(/class="flock-secondary-motion"/g) ?? []).length !== 1
 ) {
   throw new Error("eight-pen batch boarding, adjacent queue shift, or identity stamps drifted");
 }
@@ -1027,8 +1010,12 @@ const ufoBodyOpacities = [...ufoVisibility.matchAll(/opacity: ([\d.]+)/g)]
   .map((match) => Number(match[1]));
 const ufoLight =
   svg.match(/@keyframes ufo-light \{([\s\S]*?)\n  \}/)?.[1] ?? "";
+const ufoStreak =
+  svg.match(/@keyframes ufo-streak \{([\s\S]*?)\n  \}/)?.[1] ?? "";
 const visibilityFrame = (time, opacity) =>
   `${((time * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4)}% { opacity: ${opacity}; }`;
+const streakFrame = (time, opacity, scale) =>
+  `${((time * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4)}% { opacity: ${opacity}; transform: scaleY(${scale}); }`;
 const ufoPositionAt = (time) => {
   const pct = ((time * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
   const matches = [...ufoMove.matchAll(
@@ -1037,13 +1024,24 @@ const ufoPositionAt = (time) => {
   const match = matches.at(-1);
   return match ? { x: Number(match[1]) + UFO_WIDTH_PX / 2, y: Number(match[2]) + UFO_WIDTH_PX / 2 } : null;
 };
+const ufoPositionProblem = (time, expected) => {
+  const actual = ufoPositionAt(time);
+  return actual == null || Math.hypot(actual.x - expected.x, actual.y - expected.y) > 0.001;
+};
+const ufoHoldProblem = (start, end, expected) =>
+  [...ufoMove.matchAll(/([\d.]+)% \{ transform: translate\(([-\d.]+)px, ([-\d.]+)px\);/g)]
+    .some((match) => {
+      const time = Number(match[1]) * timing.maxTotalTimeWithEntryExit / 100;
+      const x = Number(match[2]) + UFO_WIDTH_PX / 2;
+      const y = Number(match[3]) + UFO_WIDTH_PX / 2;
+      return time >= start - 0.001 && time <= end + 0.001 &&
+        Math.hypot(x - expected.x, y - expected.y) > 0.001;
+    });
 const blinkProblem = (
   from,
   to,
   depart,
   arrive,
-  arrivalOnly = false,
-  verticalEdges = false,
 ) => {
   const duration = arrive - depart;
   const edgeDuration = Math.min(UFO_BLINK_EDGE_S, duration / 2);
@@ -1051,37 +1049,32 @@ const blinkProblem = (
   const edgeIn = arrive - edgeDuration;
   const distance = Math.hypot(to.x - from.x, to.y - from.y);
   const edgeRatio = distance > 0 ? Math.min(0.5, 8 / distance) : 0;
-  const edgeOutPoint = verticalEdges
-    ? { x: from.x, y: from.y - Math.min(8, distance) }
-    : { x: from.x + (to.x - from.x) * edgeRatio, y: from.y + (to.y - from.y) * edgeRatio };
-  const edgeInPoint = verticalEdges
-    ? { x: to.x, y: to.y - Math.min(8, distance) }
-    : { x: from.x + (to.x - from.x) * (1 - edgeRatio), y: from.y + (to.y - from.y) * (1 - edgeRatio) };
+  const edgeOutPoint = {
+    x: from.x + (to.x - from.x) * edgeRatio,
+    y: from.y + (to.y - from.y) * edgeRatio,
+  };
+  const edgeInPoint = {
+    x: from.x + (to.x - from.x) * (1 - edgeRatio),
+    y: from.y + (to.y - from.y) * (1 - edgeRatio),
+  };
   const expected = [
     [depart, from],
-    [edgeOut, arrivalOnly ? from : edgeOutPoint],
-    [edgeIn, arrivalOnly ? from : edgeInPoint],
+    [edgeOut, edgeOutPoint],
+    [edgeIn, edgeInPoint],
     [arrive, to],
   ];
   const badPosition = expected.find(([time, point]) => {
     const actual = ufoPositionAt(time);
     return actual == null || Math.hypot(actual.x - point.x, actual.y - point.y) > 0.001;
   });
-  const visibility = arrivalOnly
-    ? [
-        visibilityFrame(depart, 0),
-        visibilityFrame(edgeIn, 0),
-        visibilityFrame(edgeIn, 1),
-        visibilityFrame(arrive, 1),
-      ]
-    : [
-        visibilityFrame(depart, 1),
-        visibilityFrame(edgeOut, 1),
-        visibilityFrame(edgeOut, 0),
-        visibilityFrame(edgeIn, 0),
-        visibilityFrame(edgeIn, 1),
-        visibilityFrame(arrive, 1),
-      ];
+  const visibility = [
+    visibilityFrame(depart, 1),
+    visibilityFrame(edgeOut, 1),
+    visibilityFrame(edgeOut, 0),
+    visibilityFrame(edgeIn, 0),
+    visibilityFrame(edgeIn, 1),
+    visibilityFrame(arrive, 1),
+  ];
   return badPosition || visibility.some((frame) => !ufoVisibility.includes(frame))
     ? { depart, arrive, badPosition, visibility }
     : null;
@@ -1092,12 +1085,20 @@ const firstDeployPx = getCellCenterPx(
   timing.ufoStopCells[0][0],
   timing.ufoStopCells[0][1],
 );
-const firstEntryPx = { x: firstDeployPx.x, y: firstDeployPx.y - 8 };
+const inventoryDockStagingPx = { x: 421, y: timingContext.baseHeight + 2 };
 const firstArrival = timing.ufoArriveAbsSOffset[0];
 const firstDeparture = firstArrival - UFO_ENTRY_S;
+const inventoryDockDownPx = {
+  x: inventoryDockStagingPx.x,
+  y: inventoryDockStagingPx.y + 18.5,
+};
 const firstArrivalFlash = `${((firstArrival * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4)}% { opacity: 0.38; }`;
 if (
-  blinkProblem(firstEntryPx, firstDeployPx, firstDeparture, firstArrival, true) ||
+  blinkProblem(inventoryDockDownPx, firstDeployPx, firstDeparture, firstArrival) ||
+  ufoPositionProblem(INVENTORY_OPENING_GATE_S, inventoryDockDownPx) ||
+  ufoPositionProblem(firstDeparture, inventoryDockDownPx) ||
+  ufoHoldProblem(INVENTORY_OPENING_GATE_S, firstDeparture, inventoryDockDownPx) ||
+  !ufoStreak.includes(streakFrame(firstDeparture, 0, 0.2)) ||
   ufoBodyOpacities.some((opacity) => opacity !== 0 && opacity !== 1) ||
   !/class="ufo-body" style="animation:ufo-visibility [\d.]+s step-end/.test(svg) ||
   !ufoLight.includes(firstArrivalFlash)
@@ -1149,22 +1150,40 @@ const turnoverFlightProblems = timing.turnovers.flatMap((turnover, index) => {
   const arriveFlash = `${arrivePct.toFixed(4)}% { opacity: 0.38; }`;
   const playbackDuration =
     (turnover.dropArriveAbsS - turnover.outgoingHiddenAbsS) * MOTION_TIME_SCALE;
-  const blink = blinkProblem(
+  const transitionStart = turnover.dropArriveAbsS - 0.76;
+  const dockedAt = transitionStart + 0.18;
+  const departAt = transitionStart + 0.52;
+  const inboundBlink = blinkProblem(
     pickup,
-    drop,
+    inventoryDockDownPx,
     turnover.outgoingHiddenAbsS,
-    turnover.dropArriveAbsS,
-    false,
-    true,
+    dockedAt,
   );
-  return blink ||
+  const outboundBlink = blinkProblem(
+    inventoryDockDownPx,
+    drop,
+    departAt,
+    turnover.dropArriveAbsS,
+  );
+  return inboundBlink ||
+    outboundBlink ||
+    ufoPositionProblem(departAt, inventoryDockDownPx) ||
+    ufoHoldProblem(dockedAt, departAt, inventoryDockDownPx) ||
+    !ufoStreak.includes(streakFrame(departAt, 0, 0.2)) ||
+    !ufoStreak.includes(streakFrame(turnover.dropArriveAbsS, 0, 0.2)) ||
     !ufoLight.includes(arriveFlash) ||
     Math.abs(playbackDuration - INVENTORY_TURNOVER_EXCHANGE_S * MOTION_TIME_SCALE) > 0.001
-    ? [{ index, playbackDuration, blink, arriveFlash: ufoLight.includes(arriveFlash) }]
+    ? [{
+        index,
+        playbackDuration,
+        inboundBlink,
+        outboundBlink,
+        arriveFlash: ufoLight.includes(arriveFlash),
+      }]
     : [];
 });
 if (turnoverFlightProblems.length) {
-  throw new Error(`turnover loses the shared blink-flight rhythm: ${JSON.stringify(turnoverFlightProblems)}`);
+  throw new Error(`turnover loses the inventory-facing blink-flight rhythm: ${JSON.stringify(turnoverFlightProblems)}`);
 }
 const offstageCenterY =
   getCellCenterPx(timingContext.gridLeftX, timingContext.gridTopY, 0, 0).y - 60;
@@ -1563,7 +1582,7 @@ if (
   !svg.includes("@keyframes flock-fill-27") ||
   !svg.includes('class="flock-meta-value">6/6</text>') ||
   (svg.match(/class="flock-inventory-pen"/g) ?? []).length !== 8 ||
-  !svg.includes("@keyframes flock-inventory-ufo-visible") ||
+  (svg.match(/class="ufo-body"/g) ?? []).length !== 1 ||
   !svg.includes("@keyframes flock-inventory-shift-") ||
   svg.includes("flock-inventory-return")
 ) {
