@@ -1,5 +1,6 @@
 /** 타임라인 빌더 출력: 레이어/컴포즈에 전달 */
 export type TimelineResult = {
+  openingBoardEndAbsS: number;
   timelineOffset: number;
   maxTotalTimeWithEntryExit: number;
   firstArrivals: Map<
@@ -58,6 +59,8 @@ export type TimelineResult = {
       spawnAbsS: number;
       pickupAbsS: number | null;
       hiddenAbsS: number | null;
+      capacity: number;
+      appetite: "high" | "normal" | "low";
       bites: { cell: string; atS: number; progress: number; level: number }[];
     }[];
     grassProgress: { atS: number; progress: number }[];

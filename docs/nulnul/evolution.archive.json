@@ -589,6 +589,18 @@
         "scope": "project",
         "status": "converted",
         "rejected_proposals": []
+      },
+      {
+        "id": "feedback-live-hero-camera-v49-20260819",
+        "target_agent": "worker",
+        "source": "user",
+        "observed": "The v48 left panel still behaved like a rapidly switching selected-sheep widget rather than a believable enlargement of the active pasture. Frequent bite-target cuts made each subject too brief, while the terminal UFO and completion text remained visibly left within the left camera region.",
+        "expected": "Show the actual grazing field enlarged, choose a few representative sheep with nearby flock context, hold each long enough to show real movement, change only after collection, and centre the final UFO plus completion copy within the left 202px camera region rather than the whole panel.",
+        "evidence": "The user explicitly approved the long-lived hero recommendation after asking to see the real grazing view, nearby sheep, and movement for longer; final review called the result very good, then clarified that terminal centring refers to the left panel region rather than the full panel.",
+        "reproduction": "At native 700px inspect dark/light representative plus 10/62 hero holds, adjacent hero handoffs, reduced motion, and terminal. Reject a decorative camera actor, bite-speed cutting, a hero disappearing while its HUD is visible, field-camera pose mismatch, completion bounds not centred at x=113 within the left x=12..214 region, low-contrast completion copy, or any regression in the accepted map, meter, field lifecycle, theme, and finale.",
+        "scope": "project",
+        "status": "converted",
+        "rejected_proposals": []
       }
     ],
     "proposals": [
@@ -2421,6 +2433,50 @@
         ],
         "permission_delta": [],
         "rollback": "Restore the v45 cardless focus roster and remove the tracking camera, fixed bite map, and footprint overlays."
+      },
+      {
+        "id": "proposal-live-hero-camera-v49",
+        "feedback_ids": [
+          "feedback-live-hero-camera-v49-20260819"
+        ],
+        "target_agent": "worker",
+        "author_agent": "coach",
+        "change_target": "replace rapid selected-camera cuts with a live hero pasture camera",
+        "change_level": "task",
+        "status": "accepted",
+        "from_version": 48,
+        "to_version": 49,
+        "cause": "The v48 crop reused the grid but still rendered a separate selected actor and retargeted at spawn and bite events, so it read as a fast status widget rather than a sustained view into the pasture. Its terminal group also hugged the left edge of the camera region.",
+        "candidate_change": "Reuse the exact pasture group and duplicate field sheep with their existing movement, pose, head, growth, energy, lifecycle, and ear-tag tracks inside one 190x40 crop at 1.55x. Rank active identities by remaining lifetime plus nearby flock context, hold a bounded hero set through collection, follow actual movement with restrained horizontal reframes, and blank HUD plus footprints during a 0.55-source-second pan before the next hero arrives. Centre the terminal UFO and copy at x=113 within the left x=12..214 region on one grid-aligned level-0 merge.",
+        "discovery_evidence": "The renderer already owns exact field keyframes, sheep DOM, pasture cells, selected fullness, and map attribution. Reusing those tracks removes the decorative camera actor and needs no dependency, new simulation, new effect, or full-speed camera-follow subsystem.",
+        "reproduction": "Run npm run visual:fixture and npm run check; inspect native and 3x dark/light representative plus 10/62 hero holds, adjacent handoffs, reduced motion, and terminal; compare field-camera actor position, pose, head, and tag; verify bounded hero counts and reframes, exact ten-cell fullness, fixed map, terminal contrast, selected opacity, and 30fps/120fps field continuity; require a fresh independent Gate.",
+        "primary_metric": "At 700px the left panel reads as a sustained enlarged window into the live pasture: each hero remains visible long enough to show real travel and nearby sheep, while camera and HUD change subjects together only after collection.",
+        "prediction": "Using the exact field instead of a reconstructed selected view and cutting six representative hero shots instead of every bite will slow perceived switching without changing the global animation speed.",
+        "expected_delta": {
+          "fixture_bytes": 1975600,
+          "fixture_runtime_seconds": 44.863,
+          "camera_width": 190,
+          "camera_height": 40,
+          "camera_scale": 1.55,
+          "representative_heroes": 6,
+          "representative_reframes": 24,
+          "representative_bites": 201,
+          "hero_handoff_source_seconds": 0.55,
+          "new_dependencies": 0
+        },
+        "falsification_condition": "Reject if the camera does not reuse exact field sheep and pasture tracks; cuts at bite speed; loses the hero while its HUD is visible; reveals mismatched identity, pose, or tag; hides nearby useful context; places the completion group outside the left-region centre or obscures its copy; restores roster geometry; or regresses accepted motion, map, meter, panel, fence, theme, finale, size, runtime, and continuity checks.",
+        "regression_check": "npm run check plus a fresh independent visual Gate over live field identity and pose matching, hero selection and holds, handoff synchronization, terminal centring and contrast, dark/light 10/28/62 density, reduced motion, map, meter, selected opacity, and 30fps/120fps field continuity.",
+        "transfer_check": "Not applicable; this is a project-specific panel rendering correction.",
+        "guardrails": [
+          "Reuse exact pasture and field-sheep tracks; do not invent a second actor system",
+          "Hold each hero until collection and keep representative cuts far below recorded bite count",
+          "Keep HUD and footprints blank until the camera reaches the next hero",
+          "Keep the fixed map, ten-cell fullness, themes, field motion, and finale unchanged",
+          "Use one borderless grid-aligned terminal contrast merge; add no card frame or effect layer",
+          "Add no dependency and publish only after explicit approval"
+        ],
+        "permission_delta": [],
+        "rollback": "Restore the accepted v48 82x34 selected crop and left-aligned terminal group while retaining the fixed bite map and ten-cell fullness."
       }
     ],
     "promotions": [
@@ -2767,6 +2823,21 @@
           "metric": "Native 700x212 dark/light and reduced 10/28/62 camera tracking, ten-cell fullness, fixed 36x4 bite map, current-only footprints, handoff, terminal cleanup, selected opacity, and reveal continuity",
           "rollback_threshold": "Roll back if the crop stops matching the actual source grid or target cells; the selected sheep leaves camera centre; a roster returns; the map loses contribution-green hierarchy; footprints expose another sheep, a future bite, or terminal state; or accepted motion, panel, fence, theme, finale, size, runtime, and continuity checks fail.",
           "evidence": "A fresh independent Gate scored v48 20/20 with no blocker. Native and 3x dark/light representative plus 10/62 frames show an 82x34 actual-grid crop, centered 30x25 sheep, exact ten-cell fullness, fixed 36x4 map, one latest-bite cursor, and subtle matching-hue two-dot footprints only for the current selected sheep's past bites. Reduced motion applies step-end camera movement and hides pulses; handoff adjacent frames are clean; terminal keeps map history but removes camera, selected content, pulse, and footprints. Selected opacity has zero failures across 1,970 samples. Representative incoming22 and 10-member incoming6 30fps/120fps probes report zero missing, outside, non-adjacent, velocity-spike, or early-move failures. npm run visual:fixture, npm run check, and git diff --check pass; the fixture is 1,991,724 bytes and 44.863 seconds."
+        }
+      },
+      {
+        "id": "promotion-live-hero-camera-v49-20260819",
+        "proposal_id": "proposal-live-hero-camera-v49",
+        "gate_agent": "gate",
+        "before": "The selected panel reconstructed one sheep over an actual-grid crop and retargeted at spawn and bite events, producing fast subject changes; terminal completion remained left-aligned.",
+        "after": "The left panel is a 1.55x live view of the exact running field, six representative heroes remain through collection with restrained route reframes and synchronized handoffs, and the final UFO plus completion copy is centred at x=113 within the left 202px region on a grid-aligned contrast merge.",
+        "regressions_passed": true,
+        "decision": "accepted",
+        "live_cycle": {
+          "status": "observed",
+          "metric": "Native 700x212 dark/light representative plus 10/62 live-field heroes, field-camera identity and pose parity, 0.55-source-second blank-HUD handoffs, reduced motion, left-region terminal centring and contrast, fixed map, ten-cell fullness, selected opacity, and field continuity",
+          "rollback_threshold": "Roll back if camera sheep or pasture diverge from the field; hero shots cut at bite speed; HUD appears without its framed sheep; terminal copy leaves the x=113 left-region centre or loses contrast; a roster or decorative actor returns; or accepted motion, map, meter, panel, fence, theme, finale, size, runtime, and continuity checks fail.",
+          "evidence": "A fresh independent Gate scored v49 20/20 with no blocker. Native and 3x dark/light representative plus 10/62 frames show the exact pasture and field sheep at 1.55x inside a 190x40 crop. Field-camera movement, pose, head, and tag comparisons report zero mismatches across 252 paired samples. Representative heroes 0,4,7,13,15,22 remain through collection and use 24 reframes across 201 bites. First and second adjacent handoff frames keep HUD and footprints blank through 0.55 source seconds, then reveal the framed hero and exact fullness together at 4683ms and 10611ms. The terminal UFO and two lines are centred at x=113 inside the left x=12..214 region and isolated from map marks by one grid-aligned level-0 merge. Reduced motion, map, ten-cell meter, terminal cleanup, selected opacity, and 30fps/120fps field continuity remain green. npm run visual:fixture, npm run check, and git diff --check pass; the fixture is 1,975,600 bytes and 44.863 seconds."
         }
       }
     ],

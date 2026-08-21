@@ -14,5 +14,5 @@ export function buildSheepTagSvg(params: {
   const { rosterIndex, x, y, size, className = "", strokeWidth = size * 0.08 } =
     params;
   const color = getSheepTagCode(rosterIndex);
-  return `<g class="sheep-ranch-tag${className ? ` ${className}` : ""}" data-ranch-tag="${color}" data-id-color="${color}" transform="translate(${x.toFixed(2)} ${y.toFixed(2)})" shape-rendering="crispEdges"><rect width="${size.toFixed(2)}" height="${size.toFixed(2)}" fill="hsl(${color},72%,52%)" stroke="var(--gm-panel-bg)" stroke-width="${strokeWidth.toFixed(2)}"/></g>`;
+  return `<g class="sheep-ranch-tag${className ? ` ${className}` : ""}" data-ranch-tag="${color}" data-id-color="${color}" transform="translate(${x.toFixed(2)} ${y.toFixed(2)})" shape-rendering="crispEdges"><rect width="${size.toFixed(2)}" height="${size.toFixed(2)}" fill="hsl(${color},72%,52%)" stroke="var(--gm-tag-outline)" stroke-width="${strokeWidth.toFixed(2)}"/></g>`;
 }

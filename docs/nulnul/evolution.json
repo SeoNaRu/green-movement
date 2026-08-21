@@ -3,11 +3,11 @@
   "personal_evolution_home": null,
   "checkpoint": {
     "goal": "Make the animated contribution pasture feel cohesive, premium, and clearly readable in a GitHub profile README.",
-    "milestone": "Accepted v49 turns the left panel into a true enlarged live-field camera with long-held hero sheep, restrained real-route reframes, synchronized handoffs, and a terminal group centred within the left camera region.",
+    "milestone": "Local v59 keeps the accepted eight-pen inventory, relaxes the exact-field camera to 1.30x, prefers unique three-to-four-edge work routes, and lets full outgoing sheep finish their recorded cleared pickup approach instead of freezing at the last bite.",
     "completion_check": "npm run check",
     "status": "active",
-    "last_verified": "2026-08-19: v49 passes npm run visual:fixture, npm run check, and git diff --check with a 1,975,600-byte, 44.863-second fixture, and a fresh independent Gate scored it 20/20 with no blocker. Native 700x212 dark/light representative plus 10/62 frames show a 190x40 live crop of the exact field at 1.55x with matching position, pose, head, growth, energy, and ear tags. Representative heroes 0,4,7,13,15,22 remain through collection and use 24 actual-route reframes across 201 bites. HUD and footprints stay blank during each 0.55-source-second hero pan and appear with the framed sheep at arrival. Reduced motion, ten-cell fullness, fixed bite map, terminal cleanup, the completion group centred at x=113 inside the left x=12..214 region, panel/fence, themes, finale, selected opacity, and 30fps/120fps continuity remain green.",
-    "next_action": "Keep accepted v49 stable after its explicitly approved GitHub push; revisit the live camera or bite map only for new user feedback or a measured regression.",
+    "last_verified": "2026-08-21: local v59 passes npm run visual:fixture, npm run check, and git diff --check with a 2,141,551-byte, 63.736-second fixture. The 190×40 exact-field camera uses 1.30x, exposing 11.5% more source width than v58 while retaining the exact pasture and actor tracks. Unique reachable grass destinations and a restrained three-to-four-edge route preference raise comparable 30fps average root-moving sheep from 1.84 to 2.43 and cut frames with at least four fully still sheep from 164 to 27. Full outgoing sheep use the recorded cleared approach through the final pre-work cell before exact pickup; three adjacent pickup sequences show no fake idle movement. Native 700px dark/light, 350px, and reduced-motion frames remain clear. Fresh 30fps/120fps field↔camera probes report zero jumps or mismatches, while inventory probes retain a maximum of eight actors with zero failures. A fresh independent Gate scored 19/20 with no blocker; pacing remains 3/4 because of total runtime. The candidate remains local and unpushed.",
+    "next_action": "Resume by opening dist/visual-fixture.svg and inspecting local v59 at the 1.30x live camera plus the first, second, and late pickup approaches. Keep it unpushed; make no further change unless user playback exposes a named discontinuity.",
     "blockers": [],
     "approved_permissions": [
       "Read and write files inside this repository",
@@ -26,10 +26,10 @@
       "last_promotion_id": null
     },
     "worker": {
-      "version": 49,
+      "version": 50,
       "job": "Implement one bounded motion or rendering change and report its mechanical and visual evidence.",
       "profile_path": "AGENTS.md",
-      "last_promotion_id": "promotion-live-hero-camera-v49-20260819"
+      "last_promotion_id": "promotion-waiting-inventory-appetite-v50-20260820"
     },
     "coach": {
       "version": 2,
@@ -41,18 +41,30 @@
       "version": 1,
       "job": "Independently compare a candidate with the frozen fixture, mechanical checks, permissions, and rollback guardrails.",
       "profile_path": "docs/nulnul/visual-benchmark.md",
-      "last_promotion_id": "promotion-live-hero-camera-v49-20260819"
+      "last_promotion_id": "promotion-waiting-inventory-appetite-v50-20260820"
     }
   },
   "feedback": [
     {
-      "id": "feedback-live-hero-camera-v49-20260819",
+      "id": "feedback-inventory-dock-queue-v50-20260820",
       "target_agent": "worker",
       "source": "user",
-      "observed": "The v48 left panel still behaved like a rapidly switching selected-sheep widget rather than a believable enlargement of the active pasture. Frequent bite-target cuts made each subject too brief, while the terminal UFO and completion text remained visibly left within the left camera region.",
-      "expected": "Show the actual grazing field enlarged, choose a few representative sheep with nearby flock context, hold each long enough to show real movement, change only after collection, and centre the final UFO plus completion copy within the left 202px camera region rather than the whole panel.",
-      "evidence": "The user explicitly approved the long-lived hero recommendation after asking to see the real grazing view, nearby sheep, and movement for longer; final review called the result very good, then clarified that terminal centring refers to the left panel region rather than the full panel.",
-      "reproduction": "At native 700px inspect dark/light representative plus 10/62 hero holds, adjacent hero handoffs, reduced motion, and terminal. Reject a decorative camera actor, bite-speed cutting, a hero disappearing while its HUD is visible, field-camera pose mismatch, completion bounds not centred at x=113 within the left x=12..214 region, low-contrast completion copy, or any regression in the accepted map, meter, field lifecycle, theme, and finale.",
+      "observed": "The v50 panel replayed the collected full sheep beside the waiting inventory, making the dock look cramped or broken, and both opening refill and turnover shifts visibly pulled an extra sheep from beyond the six-pen grid.",
+      "expected": "Keep collected energy on the accepted field pickup and finale path, leave clear space around the panel UFO, and animate only sheep already inside the six fixed pens; reveal the next hidden sheep only after the adjacent shift reaches the last pen.",
+      "evidence": "Native and 3x adjacent frames reproduced a second collected-sheep actor beneath the panel UFO and source tracing found slot 6 actors in both opening and turnover motion groups outside the six visible pens.",
+      "reproduction": "Inspect native and 3x opening refill plus first and late turnover frames. Reject a collected sheep beside the inventory, a boxed or overlapping dock, any inventory actor with a source slot outside 0..5, or a pending sheep sliding in across the right grid edge.",
+      "scope": "project",
+      "status": "converted",
+      "rejected_proposals": []
+    },
+    {
+      "id": "feedback-waiting-inventory-appetite-v50-20260819",
+      "target_agent": "worker",
+      "source": "user",
+      "observed": "Remote turnover did not communicate that a different sheep had boarded and deployed, while the first inventory attempt looked like a lagging roster, re-added collected sheep, and treated fixed absolute commit counts as appetite thresholds that would disadvantage casual users.",
+      "expected": "Use six small pens as a waiting inventory only: preserve opening dispatch holes before a group refill, show the UFO load the front sheep, hold one empty pen before an adjacent shift, decrease the count to zero, and drop replacements at their first real work cell. Derive appetite from each user's own active-week distribution; start all sheep at the same size and make a full high-appetite sheep about 20% larger than a full low-appetite sheep.",
+      "evidence": "The user explicitly approved the recommended relative-activity and growth model, clarified that collected sheep must not remain in inventory, requested visible 4/6 opening gaps plus queue movement, and prohibited pushing before inspection.",
+      "reproduction": "At native 700px inspect dark/light opening dispatch, group refill, adjacent first two and late turnovers, high/low initial and full growth, sparse/dense variants, reduced motion, and terminal. Reject a roster-like arrangement, returned sheep in waiting pens, non-monotonic count, missing empty-pen hold, random or absolute activity thresholds, unequal initial size, a mature high/low ratio far from 1.20, artificial bridge motion, or accepted camera/map/finale regressions.",
       "scope": "project",
       "status": "converted",
       "rejected_proposals": []
@@ -84,48 +96,47 @@
   ],
   "proposals": [
     {
-      "id": "proposal-live-hero-camera-v49",
+      "id": "proposal-waiting-inventory-appetite-v50",
       "feedback_ids": [
-        "feedback-live-hero-camera-v49-20260819"
+        "feedback-waiting-inventory-appetite-v50-20260819",
+        "feedback-inventory-dock-queue-v50-20260820"
       ],
       "target_agent": "worker",
       "author_agent": "coach",
-      "change_target": "replace rapid selected-camera cuts with a live hero pasture camera",
+      "change_target": "make turnover legible through a waiting inventory and relative appetite growth",
       "change_level": "task",
       "status": "accepted",
-      "from_version": 48,
-      "to_version": 49,
-      "cause": "The v48 crop reused the grid but still rendered a separate selected actor and retargeted at spawn and bite events, so it read as a fast status widget rather than a sustained view into the pasture. Its terminal group also hugged the left edge of the camera region.",
-      "candidate_change": "Reuse the exact pasture group and duplicate field sheep with their existing movement, pose, head, growth, energy, lifecycle, and ear-tag tracks inside one 190x40 crop at 1.55x. Rank active identities by remaining lifetime plus nearby flock context, hold a bounded hero set through collection, follow actual movement with restrained horizontal reframes, and blank HUD plus footprints during a 0.55-source-second pan before the next hero arrives. Centre the terminal UFO and copy at x=113 within the left x=12..214 region on one grid-aligned level-0 merge.",
-      "discovery_evidence": "The renderer already owns exact field keyframes, sheep DOM, pasture cells, selected fullness, and map attribution. Reusing those tracks removes the decorative camera actor and needs no dependency, new simulation, new effect, or full-speed camera-follow subsystem.",
-      "reproduction": "Run npm run visual:fixture and npm run check; inspect native and 3x dark/light representative plus 10/62 hero holds, adjacent handoffs, reduced motion, and terminal; compare field-camera actor position, pose, head, and tag; verify bounded hero counts and reframes, exact ten-cell fullness, fixed map, terminal contrast, selected opacity, and 30fps/120fps field continuity; require a fresh independent Gate.",
-      "primary_metric": "At 700px the left panel reads as a sustained enlarged window into the live pasture: each hero remains visible long enough to show real travel and nearby sheep, while camera and HUD change subjects together only after collection.",
-      "prediction": "Using the exact field instead of a reconstructed selected view and cutting six representative hero shots instead of every bite will slow perceived switching without changing the global animation speed.",
+      "from_version": 49,
+      "to_version": 50,
+      "cause": "The accepted field exchange was mechanically continuous but the lower panel provided no persistent source of incoming identities. The first inventory draft mixed waiting and collected states, shifted immediately, used absolute appetite assumptions, replayed collected cargo beside the dock, and seeded motion from a seventh off-grid slot, so it read as lag or a rendering error and scaled poorly across user activity levels.",
+      "candidate_change": "Reuse the centre status merge for exactly six fixed waiting pens and the existing UFO glyph. Drive it only from visual dispatch times: leave opening holes before one group refill, then load the front sheep, hold one empty pen, and shift only the five visible in-grid sheep one slot per turnover before revealing the next sheep in the last pen. Keep the dock unboxed with no collected-sheep replay, and let collected energy remain on the accepted pickup and finale path. Decrease the count to zero, remove artificial bridge cells, and drop each incoming actor at its first bite. Rank weeks relative to the same user's active weeks, assign deterministic balanced appetite quotas, normalize fullness to each capacity, and reuse the existing growth track so every sheep starts at scale 1 while full high and low sheep end near a 1.20 ratio.",
+      "discovery_evidence": "The renderer already owns sheep art, identity tags, the UFO symbol, exact spawn/hide times, bite energy, and growth keyframes. Reusing those paths requires no dependency, random state, second actor model, or new effect layer.",
+      "reproduction": "Run npm run visual:fixture and npm run check; inspect native and 3x dark/light representative plus sparse/dense opening, turnover, growth, and terminal frames; verify inventory count and tag mapping, no collected replay or source slot outside 0..5, direct first-bite drops, appetite balance and scale ratio, reduced motion, camera/map/finale, selected opacity, and 30fps/120fps lifecycle continuity; require a fresh independent Gate.",
+      "primary_metric": "At 700px every dispatch reads as one actual waiting sheep leaving a stable six-pen queue, while different user activity densities still produce a balanced appetite mix whose growth begins equally and ends with a visible but restrained 20% high/low size difference.",
+      "prediction": "A waiting-only queue with explicit holes and one-step movement will communicate replacement more clearly than roster or text status, and per-user relative appetite will preserve large sheep for both heavy and casual contributors.",
       "expected_delta": {
-        "fixture_bytes": 1975600,
-        "fixture_runtime_seconds": 44.863,
-        "camera_width": 190,
-        "camera_height": 40,
-        "camera_scale": 1.55,
-        "representative_heroes": 6,
-        "representative_reframes": 24,
-        "representative_bites": 201,
-        "hero_handoff_source_seconds": 0.55,
+        "fixture_bytes": 2406604,
+        "fixture_runtime_seconds": 48.838,
+        "fixed_inventory_pens": 6,
+        "representative_inventory_start": 28,
+        "representative_inventory_end": 0,
+        "turnover_source_seconds": 0.42,
+        "mature_high_low_ratio": 1.2,
         "new_dependencies": 0
       },
-      "falsification_condition": "Reject if the camera does not reuse exact field sheep and pasture tracks; cuts at bite speed; loses the hero while its HUD is visible; reveals mismatched identity, pose, or tag; hides nearby useful context; places the completion group outside the left-region centre or obscures its copy; restores roster geometry; or regresses accepted motion, map, meter, panel, fence, theme, finale, size, runtime, and continuity checks.",
-      "regression_check": "npm run check plus a fresh independent visual Gate over live field identity and pose matching, hero selection and holds, handoff synchronization, terminal centring and contrast, dark/light 10/28/62 density, reduced motion, map, meter, selected opacity, and 30fps/120fps field continuity.",
-      "transfer_check": "Not applicable; this is a project-specific panel rendering correction.",
+      "falsification_condition": "Reject if waiting count rises or fails to end at zero; collected sheep rejoin; opening or turnover holes are not legible; queue motion resembles a jump or duplicate; appetite depends on absolute commit thresholds or randomness; sheep begin at different sizes; mature high/low ratio is not approximately 1.20; direct drops break lifecycle continuity; or accepted motion, camera, map, panel, theme, finale, size, and runtime checks regress.",
+      "regression_check": "npm run check plus a fresh independent visual Gate over waiting-inventory lifecycle, relative appetite and growth, direct first-bite drops, dark/light sparse/representative/dense layouts, reduced motion, camera/map/meter, terminal, selected opacity, and 30fps/120fps continuity.",
+      "transfer_check": "Not applicable; keep the inventory choreography and appetite calibration project-scoped.",
       "guardrails": [
-        "Reuse exact pasture and field-sheep tracks; do not invent a second actor system",
-        "Hold each hero until collection and keep representative cuts far below recorded bite count",
-        "Keep HUD and footprints blank until the camera reaches the next hero",
-        "Keep the fixed map, ten-cell fullness, themes, field motion, and finale unchanged",
-        "Use one borderless grid-aligned terminal contrast merge; add no card frame or effect layer",
-        "Add no dependency and publish only after explicit approval"
+        "Waiting inventory contains undispatched sheep only and decreases monotonically to zero",
+        "Use the existing sheep, UFO, tag, bite, and growth systems; add no actor or effect layer",
+        "Every sheep starts at scale 1 and grows only from recorded bites",
+        "Use per-user relative activity with deterministic balance, never random or absolute thresholds",
+        "Keep the live camera, fixed map, ten-cell fullness, themes, and finale",
+        "Add no dependency and do not push without explicit approval"
       ],
       "permission_delta": [],
-      "rollback": "Restore the accepted v48 82x34 selected crop and left-aligned terminal group while retaining the fixed bite map and ten-cell fullness."
+      "rollback": "Restore accepted v49 without the waiting inventory, appetite tiers, or direct first-bite replacement drops."
     },
     {
       "id": "proposal-semantic-motion-diagnosis-v2",
@@ -200,18 +211,18 @@
   ],
   "promotions": [
     {
-      "id": "promotion-live-hero-camera-v49-20260819",
-      "proposal_id": "proposal-live-hero-camera-v49",
+      "id": "promotion-waiting-inventory-appetite-v50-20260820",
+      "proposal_id": "proposal-waiting-inventory-appetite-v50",
       "gate_agent": "gate",
-      "before": "The selected panel reconstructed one sheep over an actual-grid crop and retargeted at spawn and bite events, producing fast subject changes; terminal completion remained left-aligned.",
-      "after": "The left panel is a 1.55x live view of the exact running field, six representative heroes remain through collection with restrained route reframes and synchronized handoffs, and the final UFO plus completion copy is centred at x=113 within the left 202px region on a grid-aligned contrast merge.",
+      "before": "The lower panel had no persistent source for incoming identities; its first waiting-inventory draft replayed collected sheep beside a cramped boxed dock and animated a seventh sheep from beyond the six-pen grid. Appetite also used absolute activity assumptions.",
+      "after": "The centre panel contains only six fixed waiting pens and one unboxed UFO dock. Collected sheep remain on the field pickup and finale path, only the five visible in-grid occupants shift one adjacent pen, the next hidden sheep appears afterward in the last pen, and appetite is balanced relative to each user's active weeks with direct first-work-cell drops.",
       "regressions_passed": true,
       "decision": "accepted",
       "live_cycle": {
         "status": "observed",
-        "metric": "Native 700x212 dark/light representative plus 10/62 live-field heroes, field-camera identity and pose parity, 0.55-source-second blank-HUD handoffs, reduced motion, left-region terminal centring and contrast, fixed map, ten-cell fullness, selected opacity, and field continuity",
-        "rollback_threshold": "Roll back if camera sheep or pasture diverge from the field; hero shots cut at bite speed; HUD appears without its framed sheep; terminal copy leaves the x=113 left-region centre or loses contrast; a roster or decorative actor returns; or accepted motion, map, meter, panel, fence, theme, finale, size, runtime, and continuity checks fail.",
-        "evidence": "A fresh independent Gate scored v49 20/20 with no blocker. Native and 3x dark/light representative plus 10/62 frames show the exact pasture and field sheep at 1.55x inside a 190x40 crop. Field-camera movement, pose, head, and tag comparisons report zero mismatches across 252 paired samples. Representative heroes 0,4,7,13,15,22 remain through collection and use 24 reframes across 201 bites. First and second adjacent handoff frames keep HUD and footprints blank through 0.55 source seconds, then reveal the framed hero and exact fullness together at 4683ms and 10611ms. The terminal UFO and two lines are centred at x=113 inside the left x=12..214 region and isolated from map marks by one grid-aligned level-0 merge. Reduced motion, map, ten-cell meter, terminal cleanup, selected opacity, and 30fps/120fps field continuity remain green. npm run visual:fixture, npm run check, and git diff --check pass; the fixture is 1,975,600 bytes and 44.863 seconds."
+        "metric": "Native light and 3x dark opening vacancy, refill, first-two and late turnover, reduced-motion, terminal, source-slot bounds, waiting count, relative appetite, growth ratio, direct drops, field-camera parity, map, fullness, themes, and finale",
+        "rollback_threshold": "Roll back if a collected sheep appears beside or inside inventory; an actor shifts from outside slots 0..5; the first empty pen or adjacent shift disappears; inventory rises or fails to end at zero; the dock becomes boxed or cramped; appetite becomes absolute or random; initial sizes diverge; the mature high/low ratio leaves approximately 1.20; or accepted motion, camera, map, meter, panel, theme, finale, size, runtime, and continuity checks fail.",
+        "evidence": "A fresh independent Gate scored v50 20/20 with no blocker. Source inspection found exactly six pens, all data-inventory-slot values within 0..5, five in-grid sheep in every shift group, no flock-inventory-return path, and an unboxed dock. Native light and 3x dark opening, refill, first-two and late-turnover frames show no right-edge ingress or collected-sheep replay; reduced motion and terminal remain coherent. Relative appetite retains deterministic 6 high / 1 normal / 3 low groups, capacities averaging 20, equal initial scale, and an approximately 1.20 mature high/low ratio. Direct first-work-cell drops and field/camera/map/fullness behavior remain intact. npm run visual:fixture, npm run check, and git diff --check pass; the fixture is 2,406,604 bytes and 48.838 seconds, 41.3% below the frozen baseline."
       }
     },
     {
@@ -234,11 +245,11 @@
   "archive": {
     "schema_version": 1,
     "path": "evolution.archive.json",
-    "sha256": "cc6e87e22153af2ee1e9edce612556fd1528f6c316f5df7f770b5b4f62619b00",
+    "sha256": "9c148114f809dd9da149e662a86afe92713b6f2c611c47e6dcbb2d53962bc600",
     "counts": {
-      "feedback": 46,
-      "proposals": 44,
-      "promotions": 23,
+      "feedback": 47,
+      "proposals": 45,
+      "promotions": 24,
       "autonomous_episodes": 0
     }
   }

@@ -145,7 +145,7 @@ export function renderGridSvg(
   );
   const biteProgressBySheep = Array.from(
     { length: plan.sheepCount },
-    () => [] as { atS: number; progress: number }[],
+    () => [] as { atS: number; progress: number; growthScale: number }[],
   );
   for (const arrival of timeline.firstArrivals.values()) {
     const atS = timeline.timelineOffset + arrival.arrivalTime;
@@ -156,6 +156,12 @@ export function renderGridSvg(
       biteProgressBySheep[sheep.slotIndex]?.push({
         atS: bite.atS,
         progress: bite.progress,
+        growthScale:
+          sheep.appetite === "high"
+            ? 1.3
+            : sheep.appetite === "low"
+              ? 1.083
+              : 1.18,
       });
     }
   }
@@ -181,6 +187,7 @@ export function renderGridSvg(
 
   const { panelStyles, panelGroup } = buildFlockPanelLayer({
     flock: timeline.flock,
+    openingBoardEndAbsS: timeline.openingBoardEndAbsS,
     maxTotalTime: timeline.maxTotalTimeWithEntryExit,
     panelTop: ctx.baseHeight + 4,
     totalWidth: ctx.totalWidth,

@@ -31,6 +31,7 @@ export const GITHUB_THEME_CSS = `
     --gm-panel-track: #d0d7de;
     --gm-panel-line: #d0d7de;
     --gm-panel-text: #24292f;
+    --gm-tag-outline: #24292f;
   }
   :root[data-theme="dark"] {
     --gm-background: #0d1117;
@@ -46,6 +47,7 @@ export const GITHUB_THEME_CSS = `
     --gm-panel-track: #21262d;
     --gm-panel-line: #30363d;
     --gm-panel-text: #c9d1d9;
+    --gm-tag-outline: #0d1117;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme]) {
@@ -62,6 +64,7 @@ export const GITHUB_THEME_CSS = `
       --gm-panel-track: #21262d;
       --gm-panel-line: #30363d;
       --gm-panel-text: #c9d1d9;
+      --gm-tag-outline: #0d1117;
     }
   }`;
 
@@ -104,6 +107,9 @@ export const UFO_MOVE_MAX_S = 0.4;
 export const UFO_BLINK_TRAVEL_S = 0.14;
 export const UFO_BLINK_EDGE_S = 0.054;
 export const UFO_BLINK_FADE_S = 0.008;
+export const INVENTORY_OPENING_GATE_S = 0.24;
+export const INVENTORY_OPENING_CYCLE_S = 0.3;
+export const INVENTORY_TURNOVER_EXCHANGE_S = 0.86;
 // 중간 공중 재배치: 접근 0.30 + 탑승 0.45 + 운반 1.20 + 착지 0.45 = 2.40초.
 export const UFO_RELOCATION_TOTAL_S = 2.4;
 export const UFO_RELOCATION_APPROACH_S = 0.3;

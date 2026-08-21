@@ -1,13 +1,9 @@
 import type { PlanResult } from "../planning/types.js";
-import { pathBetweenCells } from "./pathUtils.js";
 import type { SimulationResult } from "./sim/simulate.js";
 import {
-  CELL_SIZE,
-  GAP,
   GRASS_STEP_TIMES_S,
   SHEEP_CELL_TIME,
   SHEEP_FULLNESS_CAPACITY,
-  UFO_WIDTH_PX,
 } from "./constants.js";
 
 export type FlockBite = {
@@ -17,7 +13,11 @@ export type FlockBite = {
   baseArrivalTime: number;
   level: number;
   progress: number;
+  capacity: number;
+  appetite: SheepAppetite;
 };
+
+export type SheepAppetite = "high" | "normal" | "low";
 
 export type FlockTurnover = {
   slotIndex: number;
@@ -65,89 +65,102 @@ export function buildFlockPlan(
     bites.sort((a, b) => a.arrivalTime - b.arrivalTime);
   }
 
-  const firstArrivalByCell = new Map(
-    [...sim.targetCellArrivals].flatMap(([cell, arrivals]) =>
-      arrivals[0] ? [[cell, arrivals[0].arrivalTime] as const] : [],
-    ),
-  );
-  const gridKeys = [
-    ...plan.targetBfsLen.keys(),
-    ...firstArrivalByCell.keys(),
-    ...sim.positionsHistory.flat().map(([x, y]) => `${x},${y}`),
-  ];
-  const gridPoints = gridKeys.map((key) => key.split(",").map(Number));
-  const maxX = Math.max(0, ...gridPoints.map(([x]) => x));
-  const maxY = Math.max(0, ...gridPoints.map(([, y]) => y));
-  const cellPitch = CELL_SIZE + GAP;
-  const minimumDropDistancePx = UFO_WIDTH_PX + CELL_SIZE;
-  const remoteDropPath = (
-    pickup: [number, number],
-    target: [number, number],
-    clearedAt: number,
-  ): [number, number][] => {
-    const targetKey = `${target[0]},${target[1]}`;
-    const allowed = new Set<string>();
-    for (let x = 0; x <= maxX; x++) {
-      for (let y = 0; y <= maxY; y++) {
-        const key = `${x},${y}`;
-        const firstArrival = firstArrivalByCell.get(key);
-        if (key === targetKey || firstArrival == null || firstArrival <= clearedAt)
-          allowed.add(key);
-      }
+  const weekEnergy = new Map<number, number>();
+  for (const bites of bySlot) {
+    for (const bite of bites) {
+      const week = Number(bite.cell.split(",")[0]);
+      weekEnergy.set(week, (weekEnergy.get(week) ?? 0) + bite.level);
     }
-    const candidates = [...allowed]
-      .map((key) => key.split(",").map(Number) as [number, number])
-      .filter(([x, y]) => {
-        const dx = x - pickup[0];
-        const dy = y - pickup[1];
-        return (
-          `${x},${y}` !== targetKey &&
-          (dx * dx + dy * dy) * cellPitch ** 2 >= minimumDropDistancePx ** 2
-        );
-      })
-      .map((cell) => ({
-        pickupDistanceSq:
-          (cell[0] - pickup[0]) ** 2 + (cell[1] - pickup[1]) ** 2,
-        path: pathBetweenCells(
-          cell[0],
-          cell[1],
-          target[0],
-          target[1],
-          allowed,
-          maxX,
-          maxY,
-        ),
-      }))
-      .filter(({ path }) => path.length >= 1);
-    candidates.sort(
-      (a, b) =>
-        Number(!(a.path.length >= 3 && a.path.length <= 4)) -
-          Number(!(b.path.length >= 3 && b.path.length <= 4)) ||
-        a.path.length - b.path.length ||
-        a.pickupDistanceSq - b.pickupDistanceSq ||
-        a.path[0][0] - b.path[0][0] ||
-        a.path[0][1] - b.path[0][1],
+  }
+  const rankedWeeks = [...weekEnergy].sort(
+    ([weekA, energyA], [weekB, energyB]) => energyB - energyA || weekA - weekB,
+  );
+  const appetiteByWeek = new Map<number, SheepAppetite>();
+  const highWeeks = Math.round(rankedWeeks.length * 0.6);
+  const lowWeeks = Math.round(rankedWeeks.length * 0.3);
+  for (const [rank, [week]] of rankedWeeks.entries()) {
+    appetiteByWeek.set(
+      week,
+      rank < highWeeks
+        ? "high"
+        : rank >= rankedWeeks.length - lowWeeks
+          ? "low"
+          : "normal",
     );
-    if (candidates[0]) return candidates[0].path;
-    return [target];
+  }
+  const energyQuantum = bySlot
+    .flatMap((bites) => bites.map((bite) => bite.level))
+    .reduce((a, b) => {
+      while (b !== 0) [a, b] = [b, a % b];
+      return a;
+    }, 0) || 1;
+  const appetiteDelta = Math.max(
+    energyQuantum,
+    Math.floor(5 / energyQuantum) * energyQuantum,
+  );
+  const capacityByAppetite: Record<SheepAppetite, number> = {
+    high: SHEEP_FULLNESS_CAPACITY + appetiteDelta,
+    normal: SHEEP_FULLNESS_CAPACITY,
+    low: SHEEP_FULLNESS_CAPACITY - appetiteDelta * 2,
   };
-
-  const segmentByBite = bySlot.map((slotBites) => {
-    let segment = 0;
-    let energy = 0;
-    return slotBites.map((bite, index) => {
-      energy += bite.level;
-      const current = { segment, energy };
-      if (
-        energy >= SHEEP_FULLNESS_CAPACITY &&
-        index < slotBites.length - 1
-      ) {
-        segment++;
-        energy = 0;
-      }
-      return current;
-    });
-  });
+  const quota: Record<SheepAppetite, number> = { high: 6, normal: 1, low: 3 };
+  let quotaUsed: Record<SheepAppetite, number> = { high: 0, normal: 0, low: 0 };
+  const nextAppetite = (cell: string): SheepAppetite => {
+    if (Object.values(quotaUsed).reduce((sum, value) => sum + value, 0) === 10) {
+      quotaUsed = { high: 0, normal: 0, low: 0 };
+    }
+    const week = Number(cell.split(",")[0]);
+    const desired = appetiteByWeek.get(week) ?? "normal";
+    const preference: SheepAppetite[] = desired === "high"
+      ? ["high", "normal", "low"]
+      : desired === "low"
+        ? ["low", "normal", "high"]
+        : ["normal", "high", "low"];
+    const selected = preference.find((tier) => quotaUsed[tier] < quota[tier])!;
+    quotaUsed[selected]++;
+    return selected;
+  };
+  const segmentByBite = bySlot.map((bites) =>
+    bites.map(() => ({
+      segment: 0,
+      energy: 0,
+      capacity: SHEEP_FULLNESS_CAPACITY,
+      appetite: "normal" as SheepAppetite,
+    })),
+  );
+  const slotState = bySlot.map(() => ({
+    segment: 0,
+    energy: 0,
+    capacity: 0,
+    appetite: "normal" as SheepAppetite,
+  }));
+  const chronologicalBites = bySlot
+    .flatMap((bites, slotIndex) =>
+      bites.map((bite, biteIndex) => ({ bite, biteIndex, slotIndex })),
+    )
+    .sort(
+      (a, b) =>
+        a.bite.arrivalTime - b.bite.arrivalTime ||
+        a.slotIndex - b.slotIndex ||
+        a.biteIndex - b.biteIndex,
+    );
+  for (const { bite, biteIndex, slotIndex } of chronologicalBites) {
+    const state = slotState[slotIndex];
+    if (state.capacity === 0) {
+      state.appetite = nextAppetite(bite.cell);
+      state.capacity = capacityByAppetite[state.appetite];
+    }
+    state.energy += bite.level;
+    segmentByBite[slotIndex][biteIndex] = { ...state };
+    if (
+      state.energy >= state.capacity &&
+      biteIndex < bySlot[slotIndex].length - 1
+    ) {
+      state.segment++;
+      state.energy = 0;
+      state.capacity = 0;
+    }
+  }
 
   const boundaryDrafts: Omit<
     FlockTurnover,
@@ -160,7 +173,7 @@ export function buildFlockPlan(
       if (segments[index + 1].segment === segments[index].segment) continue;
       const bite = slotBites[index];
       const nextBite = slotBites[index + 1];
-      const historyIndex = Math.max(
+      const fullHistoryIndex = Math.max(
         1,
         Math.round(
           (bite.arrivalTime -
@@ -170,37 +183,42 @@ export function buildFlockPlan(
         ) + 1,
       );
       const history = sim.positionsHistory[slotIndex] ?? [];
-      const pickupCell = (history[Math.min(historyIndex, history.length - 1)] ??
-        bite.cell.split(",").map(Number)) as [number, number];
       const nextCell = nextBite.cell.split(",").map(Number) as [number, number];
       const resumeHistoryIndex = history.findIndex(
         ([x, y], candidateIndex) =>
-          candidateIndex > historyIndex &&
+          candidateIndex > fullHistoryIndex &&
           x === nextCell[0] &&
           y === nextCell[1] &&
           (candidateIndex === 0 ||
             history[candidateIndex - 1][0] !== x ||
             history[candidateIndex - 1][1] !== y),
       );
-      const dropPath = remoteDropPath(pickupCell, nextCell, bite.arrivalTime);
+      const historyIndex = resumeHistoryIndex > 0
+        ? Math.max(fullHistoryIndex, resumeHistoryIndex - 1)
+        : fullHistoryIndex;
+      const pickupCell = (history[Math.min(historyIndex, history.length - 1)] ??
+        bite.cell.split(",").map(Number)) as [number, number];
+      const dropPath = [nextCell];
       const routeWindow = Math.max(
         SHEEP_CELL_TIME,
         nextBite.arrivalTime -
           (bite.arrivalTime + GRASS_STEP_TIMES_S.at(-1)!),
       );
-      const bridgeDuration = (dropPath.length - 1) * SHEEP_CELL_TIME;
       boundaryDrafts.push({
         slotIndex,
-        baseTime: bite.arrivalTime + GRASS_STEP_TIMES_S.at(-1)!,
+        baseTime:
+          bite.arrivalTime +
+          GRASS_STEP_TIMES_S.at(-1)! +
+          (historyIndex - fullHistoryIndex) * SHEEP_CELL_TIME,
         historyIndex,
         pickupCell,
         dropCell: dropPath[0],
         dropPath,
         resumeHistoryIndex:
           resumeHistoryIndex >= 0 ? resumeHistoryIndex : historyIndex + 1,
-        bridgeDuration,
-        bridgeDelay: Math.max(0, bridgeDuration - routeWindow),
-        bridgeHold: Math.max(0, routeWindow - bridgeDuration),
+        bridgeDuration: 0,
+        bridgeDelay: 0,
+        bridgeHold: routeWindow,
       });
     }
   }
@@ -241,7 +259,9 @@ export function buildFlockPlan(
         rosterIndex: rosterBySlotSegment.get(`${slotIndex},${segment.segment}`)!,
         baseArrivalTime: bite.arrivalTime,
         level: bite.level,
-        progress: Math.min(1, segment.energy / SHEEP_FULLNESS_CAPACITY),
+        progress: Math.min(1, segment.energy / segment.capacity),
+        capacity: segment.capacity,
+        appetite: segment.appetite,
       });
     }
   }

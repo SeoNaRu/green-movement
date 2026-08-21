@@ -221,7 +221,7 @@ export function buildUfoLayer(params: {
     if (arrivalOnly) {
       ufoVisibilityFrames.push(
         { t: departT, opacity: 0 },
-        { t: edgeInT - fade, opacity: 0 },
+        { t: edgeInT, opacity: 0 },
         { t: edgeInT, opacity: 1 },
         { t: arriveT, opacity: 1 },
       );
@@ -229,8 +229,8 @@ export function buildUfoLayer(params: {
       ufoVisibilityFrames.push(
         { t: departT, opacity: 1 },
         { t: edgeOutT, opacity: 1 },
-        { t: edgeOutT + fade, opacity: 0 },
-        { t: edgeInT - fade, opacity: 0 },
+        { t: edgeOutT, opacity: 0 },
+        { t: edgeInT, opacity: 0 },
         { t: edgeInT, opacity: 1 },
         { t: arriveT, opacity: 1 },
       );
@@ -268,10 +268,11 @@ export function buildUfoLayer(params: {
     );
     ufoRotKeyframePcts.push(`0% { transform: rotate(${entryAngle}deg); }`);
     const arrive0 = arriveAbsS[0] ?? ufoEntryS;
+    const depart0 = Math.max(0, arrive0 - ufoEntryS);
     const pctArrive0 = maxTotalTime > 0 ? (arrive0 * 100) / maxTotalTime : 0;
-    addBlinkFlight(entryStart, pos0, 0, arrive0, true, true);
+    addBlinkFlight(entryStart, pos0, depart0, arrive0, true, true);
     ufoRotKeyframePcts.push(
-      `${pctAt(ufoEntryS).toFixed(4)}% { transform: rotate(${entryAngle}deg); }`,
+      `${pctAt(depart0).toFixed(4)}% { transform: rotate(${entryAngle}deg); }`,
     );
     let currentAngle = entryAngle;
     ufoRotKeyframePcts.push(
@@ -851,7 +852,7 @@ export function buildUfoLayer(params: {
     ? `${signatureGroupStr}<g class="ufo-move" style="transform:translate(${firstPosPx.x - UFO_WIDTH_PX / 2}px, ${firstPosPx.y - UFO_WIDTH_PX / 2}px); animation:ufo-move ${animationDuration}s cubic-bezier(.12,.72,.2,1) 0s 1 both;">
         <g class="ufo-rot" style="transform-box:fill-box; transform-origin:center; animation:ufo-rot ${animationDuration}s cubic-bezier(.12,.72,.2,1) 0s 1 both;">
           <path class="ufo-streak" d="M12 11 Q16 -20 20 11 Q16 7 12 11Z" fill="var(--gm-level-4)" style="opacity:0; transform-origin:16px 11px; animation:ufo-streak ${animationDuration}s linear 0s 1 both; pointer-events:none;"/>
-          <g class="ufo-body" style="animation:ufo-visibility ${animationDuration}s linear 0s 1 both;"><svg width="${UFO_WIDTH_PX}" height="${UFO_WIDTH_PX}" viewBox="${UFO_VIEWBOX}" x="0" y="0">${UFO_CONTENT}</svg></g>
+          <g class="ufo-body" style="animation:ufo-visibility ${animationDuration}s step-end 0s 1 both;"><svg width="${UFO_WIDTH_PX}" height="${UFO_WIDTH_PX}" viewBox="${UFO_VIEWBOX}" x="0" y="0">${UFO_CONTENT}</svg></g>
           <circle cx="${ufoCenter}" cy="${ufoCenter}" r="${glowR}" fill="var(--gm-level-3)" style="opacity:0; animation:ufo-light ${animationDuration}s ease-out 0s 1 both; pointer-events:none;"/>
         </g>
       </g>`

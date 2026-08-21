@@ -230,6 +230,7 @@ export function findNearestReachableGrassCandidates(
     c >= 0 && c <= maxX && r >= minFunnelRow && r <= maxY;
 
   const visited = new Set<string>();
+  const seenGrass = new Set<string>();
   const q: { pos: [number, number]; dist: number }[] = [];
   const results: GrassCandidate[] = [];
 
@@ -258,7 +259,7 @@ export function findNearestReachableGrassCandidates(
       if (!inBounds(nc, nr)) continue;
 
       const nk = key(nc, nr);
-      if (!availableGrassKeys.has(nk)) continue;
+      if (!availableGrassKeys.has(nk) || seenGrass.has(nk)) continue;
 
       const grassCell = byKey.get(nk);
       if (!grassCell || grassCell.count <= 0) continue;
@@ -271,6 +272,7 @@ export function findNearestReachableGrassCandidates(
       const res = reservedApproach.get(approachKey);
       if (res != null && res.owner !== selfIndex) continue;
 
+      seenGrass.add(nk);
       results.push({ grass: grassCell, emptyNeighbor: [c, r], dist });
       if (results.length >= maxCandidates) return results;
     }
@@ -291,8 +293,7 @@ export function findNearestReachableGrassCandidates(
 }
 
 /**
- * 후보 중 거리(가까울수록 좋음), 풍부함(initialCount 클수록 좋음), 경쟁(다른 양이 가는 잔디는 패널티)으로 최선 선택.
- * score = dist * 2 - rich * RICHNESS_WEIGHT + (다른 양이 예약 중이면 RESERVED_BY_OTHER_PENALTY) → 낮을수록 좋음.
+ * 후보 중 3–4칸짜리 실제 이동 여유, 풍부함, 경쟁을 함께 보고 최선 선택.
  */
 const RESERVED_BY_OTHER_PENALTY = 6;
 const RICHNESS_WEIGHT = 1.5;
@@ -307,7 +308,7 @@ export function pickBestGrassCandidate(
   const scored = candidates.map((c) => {
     const gk = `${c.grass.x},${c.grass.y}`;
     const rich = initialCountByKey.get(gk) ?? c.grass.count;
-    let score = c.dist * 2 - rich * RICHNESS_WEIGHT;
+    let score = Math.abs(c.dist - 2.5) * 20 - rich * RICHNESS_WEIGHT;
     if (reservedGrass != null && selfIndex >= 0) {
       const owner = reservedGrass.get(gk);
       if (owner != null && owner !== selfIndex)

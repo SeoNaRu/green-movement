@@ -65,7 +65,18 @@ export function composeSvg(params: {
   ${panelStyles}
   @media (prefers-reduced-motion: reduce) {
     .ufo-streak, .ufo-ripple, .signature-reveal, #grass-crumbs, .flock-meter-pulse, .flock-map-pulse { display: none; }
-    .flock-camera-live { animation-timing-function: step-end !important; }
+    .flock-camera-live, .flock-inventory-motion, .flock-inventory-shift, .flock-inventory-opening-shift, .flock-inventory-refill, .flock-inventory-core, .flock-inventory-gate, .flock-inventory-board-body, .flock-inventory-board-tag, .flock-inventory-dock-activity { animation-timing-function: step-end !important; }
+    .flock-inventory-dock-motion { animation-timing-function: step-start !important; }
+  }
+  @media (max-width: 480px) {
+    .flock-meta-key, .flock-meta-value { font-size: 9px; }
+    .flock-name, .flock-status, .flock-label, .flock-energy { font-size: 10px; }
+    .flock-meta-key { opacity: .82; }
+    .flock-inventory-pen, .flock-inventory-gate { stroke-width: 1.2; }
+    .flock-inventory-tag { stroke-width: .6; }
+    .flock-map-focus { stroke-width: 1.8; }
+    .flock-map-footprint { fill-opacity: .58; }
+    .ufo-ripple, #grass-crumbs, .flock-map-pulse { display: none; }
   }
     </style>
   </defs>

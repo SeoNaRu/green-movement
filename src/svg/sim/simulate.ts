@@ -475,7 +475,7 @@ export function simulateGrid(params: {
         byKey,
         new Map(),
         reservedApproach,
-        8,
+        availableForThisSheep.size,
         grassEating,
       );
       let best = pickBestGrassCandidate(
@@ -497,7 +497,7 @@ export function simulateGrid(params: {
           byKey,
           new Map(),
           reservedApproach,
-          8,
+          availableKeysEarly.size,
           grassEating,
         );
         best = pickBestGrassCandidate(
@@ -583,7 +583,7 @@ export function simulateGrid(params: {
           byKey,
           new Map(),
           reservedApproach,
-          8,
+          availableForFallback.size,
           grassEating,
         );
         const chosenFallback = pickBestGrassCandidate(

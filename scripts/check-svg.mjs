@@ -6,8 +6,10 @@ import {
   GAP,
   GRASS_STEP_TIMES_S,
   FENCE_TILE,
+  INVENTORY_OPENING_CYCLE_S,
+  INVENTORY_OPENING_GATE_S,
+  INVENTORY_TURNOVER_EXCHANGE_S,
   SHEEP_CELL_TIME,
-  SHEEP_FULLNESS_CAPACITY,
   SHEEP_GRAZE_HOLD_TICKS,
   SHEEP_VIEWBOX_W,
   SHEEP_WIDTH_PX,
@@ -88,7 +90,7 @@ const emptySvg = renderGridSvg(
 const emptyStructuralSvg = withoutEmbeddedFonts(emptySvg);
 if (
   /NaN|undefined/.test(emptyStructuralSvg) ||
-  !/class="flock-meta-key">양떼<\/text><text[^>]*class="flock-meta-value">0<\/text>/.test(emptySvg) ||
+  !emptySvg.includes('class="flock-meta-value">0/0</text>') ||
   emptySvg.includes('class="ufo-move"')
 ) {
   throw new Error("empty contribution grid does not render as an idle pasture");
@@ -117,12 +119,15 @@ for (const required of [
   'id="grass-crumbs"',
   "@keyframes grass-crumb",
   "@media (prefers-color-scheme: dark)",
+  "@media (max-width: 480px)",
   ':root[data-theme="light"]',
   ':root[data-theme="dark"]',
   "--gm-background: #ffffff",
   "--gm-background: #0d1117",
   "--gm-level-4: #216e39",
   "--gm-level-4: #39d353",
+  "--gm-tag-outline: #24292f",
+  "--gm-tag-outline: #0d1117",
   "@keyframes signature-grid-wave-0",
   "@keyframes signature-grid-wave-7",
   "@keyframes signature-core",
@@ -166,9 +171,33 @@ for (const required of [
   'class="sheep-ranch-tag flock-selected-tag flock-fullness-tag"',
   'data-ranch-tag="',
   'class="flock-meta-key">양떼</text>',
+  'class="flock-inventory-pen"',
+  'class="flock-inventory-sheep"',
+  'class="flock-inventory-tag"',
+  'class="flock-inventory-ufo"',
+  'id="flock-inventory-sheep-icon"',
+  'href="#flock-inventory-sheep-icon"',
+  'data-beats="approach-settle-absorb-lift-shift-refill-settle-drop"',
+  'data-energy-link="pickup-dock-finale"',
+  '@keyframes flock-turnover-focus',
+  '@keyframes flock-inventory-core',
+  '@keyframes flock-boarding',
+  'data-camera-handoff="blank"',
+  'data-camera-modes="context,route,graze,',
+  'data-growth-exponent="0.72"',
+  'class="flock-meta-value">22/28</text>',
+  'class="flock-meta-value">23/28</text>',
+  'class="flock-meta-value">28/28</text>',
   '>포만</text>',
+  '>첫 방목 준비</text>',
+  '>양떼 승선 중</text>',
+  '>양떼 이동 중</text>',
   ">0/20</text>",
   ">20/20</text>",
+  ">0/25</text>",
+  ">25/25</text>",
+  ">0/10</text>",
+  ">10/10</text>",
   ">목장 정리 완료</text>",
   ">모든 양 수거</text>",
   "scale(.62, .62)",
@@ -176,6 +205,15 @@ for (const required of [
   'class="flock-meta-value">100%</text>',
 ]) {
   if (!svg.includes(required)) throw new Error(`SVG fixture missing ${required}`);
+}
+const fieldUfoLayerIndex = svg.indexOf('<g class="ufo-move"');
+const firstFieldSheepLayerIndex = svg.indexOf('data-roster-index="0"');
+if (
+  fieldUfoLayerIndex < 0 ||
+  firstFieldSheepLayerIndex < 0 ||
+  fieldUfoLayerIndex < firstFieldSheepLayerIndex
+) {
+  throw new Error("field sheep paint through the stopped opaque UFO");
 }
 const firstThreeHundredTags = Array.from(
   { length: 300 },
@@ -187,6 +225,7 @@ if (
   new Set(firstThreeHundredTags).size !== firstThreeHundredTags.length ||
   (firstTag.match(/<rect /g) ?? []).length !== 1 ||
   !firstTag.includes('fill="hsl(') ||
+  !firstTag.includes('stroke="var(--gm-tag-outline)"') ||
   firstTag.includes('fill="var(--gm-level-')
 ) {
   throw new Error("sheep tags are not distinct one-square non-green identities");
@@ -210,7 +249,9 @@ for (const className of [
 if (
   !/<g class="sheep-ear-tag"[^>]*><g class="sheep-ranch-tag sheep-field-tag"[^>]*transform="translate\(3\.00 4\.55\)"/.test(svg) ||
   !/class="sheep-ranch-tag flock-selected-tag flock-fullness-tag"[^>]*transform="translate\(48\.00 [\d.]+\)"[^>]*><rect width="4\.20"/.test(svg) ||
-  /class="sheep-ranch-tag sheep-field-tag"[^>]*transform="translate\(9\.00 6\.30\)"/.test(svg)
+  /class="sheep-ranch-tag sheep-field-tag"[^>]*transform="translate\(9\.00 6\.30\)"/.test(svg) ||
+  svg.includes('stroke="var(--gm-panel-bg)"') ||
+  (svg.match(/stroke="var\(--gm-tag-outline\)"/g) ?? []).length < 28 * 3
 ) {
   throw new Error("sheep identity tag is not attached to the ear");
 }
@@ -311,9 +352,8 @@ if (/filter\s*[:=]/.test(svg)) {
   throw new Error("SVG fixture contains a blur/filter effect");
 }
 const runtime = Number(svg.match(/animation:ufo-move ([\d.]+)s/)?.[1]);
-const timelineRuntime = runtime / MOTION_TIME_SCALE;
-if (!Number.isFinite(runtime) || runtime > 50 || MOTION_TIME_SCALE !== 1.3) {
-  throw new Error(`expected the relaxed 1.3x runtime at or below 50s, got ${runtime}`);
+if (!Number.isFinite(runtime) || MOTION_TIME_SCALE !== 1.3) {
+  throw new Error(`expected one finite runtime at the shared 1.3x pace, got ${runtime}`);
 }
 const mismatchedDurations = [...svg.matchAll(/animation:\s*(?!grass-crumb)([\w-]+)\s+([\d.]+)s/g)]
   .map((match) => ({ name: match[1], duration: Number(match[2]) }))
@@ -430,6 +470,22 @@ const assertAlignedPanel = (value) => {
     throw new Error("panel does not share the pasture grid or aligned lower fence geometry");
   }
 };
+const assertInventoryPanel = (value) => {
+  const slots = [...value.matchAll(/data-inventory-slot="(\d+)"/g)]
+    .map((match) => Number(match[1]));
+  if (
+    (value.match(/class="flock-inventory-pen"/g) ?? []).length !== 8 ||
+    slots.some((slot) => slot < 0 || slot >= 8) ||
+    !value.includes('<text x="231"') ||
+    !value.includes('class="flock-meta-key">양떼</text>') ||
+    !value.includes('<clipPath id="flock-inventory-clip"><rect x="287"') ||
+    value.includes('flock-inventory-board-clip') ||
+    !value.includes('@keyframes flock-inventory-dock') ||
+    value.includes("translateX(-18px)")
+  ) {
+    throw new Error("inventory variants lose the eight in-grid pens or left label alignment");
+  }
+};
 const hundredMap = (rosterSvgFor(100).match(/class="flock-map-mark"/g) ?? []).length;
 const denseRosterSvg = rosterSvgFor(300);
 const threeHundredMap = (denseRosterSvg.match(/class="flock-map-mark"/g) ?? []).length;
@@ -478,10 +534,12 @@ const tenSheepSvg = renderGridSvg(
   { targetWidth: 0 },
 );
 assertPastureMap(tenSheepSvg);
+const sparseSheepCount = (tenSheepSvg.match(/<clipPath id="flock-progress-/g) ?? []).length;
 if (
-  (tenSheepSvg.match(/class="flock-meter-track"/g) ?? []).length !== 10 ||
-  (tenSheepSvg.match(/class="flock-meter-fill"/g) ?? []).length !== 10 ||
-  (tenSheepSvg.match(/<clipPath id="flock-progress-/g) ?? []).length !== 10 ||
+  sparseSheepCount < 8 ||
+  sparseSheepCount > 12 ||
+  (tenSheepSvg.match(/class="flock-meter-track"/g) ?? []).length !== sparseSheepCount ||
+  (tenSheepSvg.match(/class="flock-meter-fill"/g) ?? []).length !== sparseSheepCount ||
   tenSheepSvg.includes('class="flock-roster-region"')
 ) {
   throw new Error("sparse pasture map loses activity, focus, or selected fullness");
@@ -497,6 +555,10 @@ if (
 assertAlignedPanel(svg);
 assertAlignedPanel(tenSheepSvg);
 assertAlignedPanel(denseRosterSvg);
+assertInventoryPanel(emptySvg);
+assertInventoryPanel(oneCellSvg);
+assertInventoryPanel(tenSheepSvg);
+assertInventoryPanel(denseRosterSvg);
 if (
   svg.includes('class="flock-selected-section"') ||
   svg.includes('class="flock-roster-section"') ||
@@ -557,6 +619,358 @@ const timingSimulation = simulateGrid({
 });
 const flock = buildFlockPlan(timingPlan, timingSimulation);
 const timing = buildTimeline(timingContext, timingPlan, timingSimulation, flock);
+const appetiteCounts = Object.fromEntries(
+  ["high", "normal", "low"].map((appetite) => [
+    appetite,
+    timing.flock.sheep.filter((sheep) => sheep.appetite === appetite).length,
+  ]),
+);
+const growthCurveSample = timing.flock.sheep
+  .flatMap((sheep) => sheep.bites.map((bite) => ({ sheep, bite })))
+  .find(({ bite }) => bite.progress > 0.05 && bite.progress < 0.95);
+const growthScaleFor = (appetite) =>
+  appetite === "high" ? 1.3 : appetite === "low" ? 1.083 : 1.18;
+const growthCurvePct = growthCurveSample == null
+  ? ""
+  : (((growthCurveSample.bite.atS + 0.23) * 100) /
+      timing.maxTotalTimeWithEntryExit).toFixed(4);
+const expectedLateGrowth = growthCurveSample == null
+  ? ""
+  : (1 + Math.pow(growthCurveSample.bite.progress, 0.72) *
+      (growthScaleFor(growthCurveSample.sheep.appetite) - 1)).toFixed(3);
+const sampledGrowthKeyframes = growthCurveSample == null
+  ? ""
+  : svg.match(
+      new RegExp(`@keyframes sheep-${growthCurveSample.sheep.slotIndex}-growth \\{([\\s\\S]*?)\\n  \\}`),
+    )?.[1] ?? "";
+if (
+  timing.flock.sheep.some(
+    (sheep) =>
+      sheep.capacity !== ({ high: 25, normal: 20, low: 10 })[sheep.appetite] ||
+      sheep.bites.some((bite) => bite.progress < 0 || bite.progress > 1),
+  ) ||
+  appetiteCounts.high < timing.flock.rosterSize * 0.5 ||
+  appetiteCounts.high > timing.flock.rosterSize * 0.7 ||
+  appetiteCounts.low < timing.flock.rosterSize * 0.2 ||
+  appetiteCounts.low > timing.flock.rosterSize * 0.4 ||
+  appetiteCounts.normal < 1 ||
+  (svg.match(/transform: scale\(1\.000\)/g) ?? []).length !== timing.flock.rosterSize ||
+  (svg.match(/data-growth-exponent="0\.72"/g) ?? []).length !== 2 ||
+  growthCurveSample == null ||
+  !sampledGrowthKeyframes.includes(`${growthCurvePct}% { transform: scale(${expectedLateGrowth}); }`) ||
+  !svg.includes("transform: scale(1.300)") ||
+  !svg.includes("transform: scale(1.083)") ||
+  Math.abs(1.3 / 1.083 - 1.2) > 0.001
+) {
+  throw new Error("relative weekly appetite mix, fullness capacity, or 20% mature-size spread drifted");
+}
+const inventoryCounts = [...svg.matchAll(
+  /class="flock-inventory-state"[^>]*><text[^>]*class="flock-meta-value">(\d+)\/(\d+)<\/text>/g,
+)].map((match) => ({ current: Number(match[1]), total: Number(match[2]) }));
+const inventoryTags = [...svg.matchAll(
+  /class="flock-inventory-sheep" data-roster="(\d+)"[\s\S]*?class="flock-inventory-tag(?: [^"]*)?"[^>]*fill="hsl\((\d+)/g,
+)].map((match) => ({ rosterIndex: Number(match[1]), tag: Number(match[2]) }));
+const inventorySlots = [...svg.matchAll(/data-inventory-slot="(\d+)"/g)].map(
+  (match) => Number(match[1]),
+);
+const inventoryStateStarts = [...svg.matchAll(/<g class="flock-inventory-state"/g)].map(
+  (match) => match.index,
+);
+const inventoryStateEnd = svg.indexOf('<g class="flock-inventory-opening-board"');
+const finalQueueAlignmentProblems = inventoryStateStarts.flatMap((start, index) => {
+  const markup = svg.slice(start, inventoryStateStarts[index + 1] ?? inventoryStateEnd);
+  const count = Number(markup.match(/class="flock-meta-value">(\d+)\/\d+<\/text>/)?.[1]);
+  if (!Number.isInteger(count) || count > 8) return [];
+  const slots = [...markup.matchAll(/data-inventory-slot="(\d+)"/g)].map((match) => Number(match[1]));
+  const visibleCount = Math.min(8, count);
+  const expected = Array.from({ length: visibleCount }, (_, slot) => 8 - visibleCount + slot);
+  return slots.join(",") === expected.join(",") ? [] : [{ count, slots, expected }];
+});
+const postOpeningIdleSlots = inventoryStateStarts
+  .map((start, index) => svg.slice(start, inventoryStateStarts[index + 1] ?? inventoryStateEnd))
+  .filter((markup) => markup.includes(`class="flock-meta-value">${flock.rosterSize - flock.fieldCount}/${flock.rosterSize}</text>`))
+  .map((markup) => [...markup.matchAll(/data-inventory-slot="(\d+)"/g)].map((match) => Number(match[1])))
+  .find((slots) => slots.length === 8) ?? [];
+const inventorySheepUses = (svg.match(/href="#flock-inventory-sheep-icon"/g) ?? []).length;
+const inventoryTagLightnesses = [...svg.matchAll(
+  /class="flock-inventory-tag(?: [^"]*)?"[^>]*fill="hsl\(\d+,72%,(\d+)%\)"/g,
+)].map((match) => Number(match[1]));
+const firstInventoryState = svg.slice(inventoryStateStarts[0], inventoryStateStarts[1]);
+const initialInventoryOrder = [...firstInventoryState.matchAll(/data-roster="(\d+)"/g)]
+  .map((match) => Number(match[1]));
+const inventoryShiftBlocks = [...svg.matchAll(
+  /@keyframes flock-inventory-(shift-\d+)\{([^\n]+)\}/g,
+)];
+const inventoryLoadBlocks = [...svg.matchAll(
+  /@keyframes flock-inventory-load-\d+\{([^\n]+)\}/g,
+)];
+const openingLoadBlocks = [...svg.matchAll(
+  /@keyframes flock-inventory-opening-load-\d+\{([^\n]+)\}/g,
+)];
+const openingBoardShiftBlocks = [...svg.matchAll(
+  /@keyframes flock-inventory-opening-board-shift-\d+\{([^\n]+)\}/g,
+)];
+const openingRefillBlocks = [...svg.matchAll(
+  /@keyframes flock-inventory-opening-refill-\d+\{([^\n]+)\}/g,
+)];
+const laterRefillBlocks = [...svg.matchAll(
+  /@keyframes flock-inventory-refill-\d+\{([^\n]+)\}/g,
+)];
+const inventorySpawnEvents = timing.flock.sheep
+  .map((sheep) => ({ atS: sheep.spawnAbsS, rosterIndex: sheep.rosterIndex }))
+  .sort((a, b) => a.atS - b.atS || a.rosterIndex - b.rosterIndex);
+const openingInventoryEvents = inventorySpawnEvents.slice(0, flock.fieldCount);
+const laterInventoryEvents = inventorySpawnEvents.slice(flock.fieldCount);
+const openingShiftStartS = (openingInventoryEvents.at(-1)?.atS ?? 0) + 0.3;
+const openingTargetVisibleCount = Math.min(8, flock.rosterSize - flock.fieldCount);
+const openingRemainingVisibleCount = Math.max(0, Math.min(8, flock.rosterSize) - flock.fieldCount);
+const openingRefillCount = Math.max(0, openingTargetVisibleCount - openingRemainingVisibleCount);
+const openingMotionEndS = openingShiftStartS + 0.14;
+const openingRevealEndS = openingRefillCount > 0
+  ? openingMotionEndS + (openingRefillCount - 1) * 0.1 + 0.08
+  : openingMotionEndS;
+const openingShiftEndS = openingRevealEndS + 0.08;
+const openingLoadEndS =
+  INVENTORY_OPENING_GATE_S +
+  openingInventoryEvents.length * INVENTORY_OPENING_CYCLE_S;
+const inventoryPct = (time) =>
+  ((time * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
+const openingShiftBlock = svg.match(/@keyframes flock-inventory-opening-shift\{([^\n]+)\}/)?.[1] ?? "";
+const firstShiftBlock = inventoryShiftBlocks.find(([, name]) => name === "shift-0")?.[2] ?? "";
+const firstLoadBlock = inventoryLoadBlocks[0]?.[1] ?? "";
+const firstOpeningBoardShiftBlock = openingBoardShiftBlocks[0]?.[1] ?? "";
+const firstLaterEvent = laterInventoryEvents[0];
+const firstTransitionStart = (firstLaterEvent?.atS ?? 0) - 0.76;
+const firstGateOpenEnd = firstTransitionStart + 0.18;
+const firstAbsorbStart = firstGateOpenEnd + 0.04;
+const firstLoadEnd = firstAbsorbStart + 0.08;
+const firstLiftStart = firstLoadEnd + 0.05;
+const firstShiftStart = firstLiftStart + 0.17;
+const firstShiftEnd = firstShiftStart + 0.12;
+const firstRefillEnd = firstShiftEnd + 0.08;
+const firstSettleEnd = firstRefillEnd + 0.04;
+const openingMarkup = svg.slice(
+  svg.indexOf('<g class="flock-inventory-opening"'),
+  svg.indexOf('<g class="flock-inventory-transition"'),
+);
+const openingRefillSlots = [...openingMarkup.matchAll(
+  /<g class="flock-inventory-refill"[\s\S]*?data-inventory-slot="(\d+)"/g,
+)].map((match) => Number(match[1]));
+const firstTransitionMarkup = svg.slice(
+  svg.indexOf('<g class="flock-inventory-transition"'),
+  svg.indexOf('animation:flock-inventory-transition-1'),
+);
+const firstTransitionShiftStart = firstTransitionMarkup.indexOf(
+  '<g class="flock-inventory-shift"',
+);
+const firstTransitionRefillStart = firstTransitionMarkup.indexOf(
+  '<g class="flock-inventory-refill"',
+);
+const firstTransitionShiftMarkup = firstTransitionMarkup.slice(
+  firstTransitionShiftStart,
+  firstTransitionRefillStart,
+);
+const firstTransitionRefillMarkup = firstTransitionMarkup.slice(
+  firstTransitionRefillStart,
+);
+const inventoryTransitionStarts = [...svg.matchAll(/<g class="flock-inventory-transition"/g)].map(
+  (match) => match.index,
+);
+const inventoryTransitionEnd = svg.indexOf('\n    <g style="opacity:0;animation:flock-grass-', inventoryTransitionStarts.at(-1));
+const finalTransitionAlignmentProblems = inventoryTransitionStarts.flatMap((start, index) => {
+  const beforeCount = flock.rosterSize - flock.fieldCount - index;
+  const markup = svg.slice(start, inventoryTransitionStarts[index + 1] ?? inventoryTransitionEnd);
+  const slots = [...markup.matchAll(/data-inventory-slot="(\d+)"/g)].map((match) => Number(match[1]));
+  const shiftCount = Math.min(7, Math.max(0, beforeCount - 1));
+  const shiftStart = Math.max(0, 8 - beforeCount);
+  const expected = [
+    7,
+    ...Array.from({ length: shiftCount }, (_, slot) => shiftStart + slot),
+    ...(beforeCount > 8 ? [0] : []),
+  ];
+  return slots.join(",") === expected.join(",") ? [] : [{ index, beforeCount, slots, expected }];
+});
+const gateKeyframes = svg.match(/@keyframes flock-inventory-gate\{([^\n]+)\}/)?.[1] ?? "";
+const coreKeyframes = svg.match(/@keyframes flock-inventory-core\{([^\n]+)\}/)?.[1] ?? "";
+const inventoryUfoKeyframes = svg.match(
+  /@keyframes flock-inventory-ufo-visible\{([^\n]+)\}/,
+)?.[1] ?? "";
+const inventoryDockKeyframes = svg.match(
+  /@keyframes flock-inventory-dock\{([^\n]+)\}/,
+)?.[1] ?? "";
+const bodyHiddenDockWindows = laterInventoryEvents.map((event) => ({
+  start: event.atS - 0.76,
+  end: event.atS - 0.76 + 0.52,
+}));
+const coreTimingProblems = laterInventoryEvents.flatMap((event, index) => {
+  const transitionStart = event.atS - 0.76;
+  const gateOpenEnd = transitionStart + 0.18;
+  const liftStart = transitionStart + 0.35;
+  const shiftStart = transitionStart + 0.52;
+  return !coreKeyframes.includes(`${inventoryPct(transitionStart)}%{opacity:0}`) ||
+    !coreKeyframes.includes(`${inventoryPct(gateOpenEnd)}%{opacity:0.140}`) ||
+    !coreKeyframes.includes(`${inventoryPct(liftStart)}%{opacity:0.140}`) ||
+    !coreKeyframes.includes(`${inventoryPct(shiftStart)}%{opacity:0}`)
+    ? [{ index, transitionStart, gateOpenEnd, liftStart, shiftStart }]
+    : [];
+});
+const inventoryDiagnostics = {
+  state: inventoryCounts.length < laterInventoryEvents.length + 2 ||
+    finalQueueAlignmentProblems.length > 0 ||
+    finalTransitionAlignmentProblems.length > 0 ||
+    postOpeningIdleSlots.join(",") !== "0,1,2,3,4,5,6,7",
+  tracks: inventoryShiftBlocks.length !== laterInventoryEvents.length ||
+    inventoryLoadBlocks.length !== laterInventoryEvents.length ||
+    openingLoadBlocks.length !== openingInventoryEvents.length ||
+    openingBoardShiftBlocks.length !== openingInventoryEvents.length ||
+    openingRefillBlocks.length !== openingRefillCount ||
+    laterRefillBlocks.length !== Math.max(0, laterInventoryEvents.length - 8),
+  openingTiming:
+    !firstOpeningBoardShiftBlock.includes(`${inventoryPct(INVENTORY_OPENING_GATE_S + 0.18)}%{transform:translateX(0)}`) ||
+    !firstOpeningBoardShiftBlock.includes(`${inventoryPct(INVENTORY_OPENING_GATE_S + 0.28)}%,`) ||
+    !openingShiftBlock.includes(`${inventoryPct(openingMotionEndS)}%,100%{transform:translateX(18px)}`) ||
+    !openingRefillBlocks[0]?.[1].includes(`${inventoryPct(openingMotionEndS)}%{opacity:0}`) ||
+    !openingRefillBlocks.at(-1)?.[1].includes(`${inventoryPct(openingRevealEndS)}%,100%{opacity:1}`),
+  laterTiming:
+    !firstLoadBlock.includes(`${inventoryPct(firstAbsorbStart)}%{opacity:1}`) ||
+    !firstLoadBlock.includes(`${inventoryPct(firstLoadEnd)}%,100%{opacity:0}`) ||
+    !firstShiftBlock.includes(`${inventoryPct(firstShiftStart)}%{transform:translateX(0)}`) ||
+    !firstShiftBlock.includes(`${inventoryPct(firstShiftEnd)}%,100%{transform:translateX(18px)}`) ||
+    !laterRefillBlocks[0]?.[1].includes(`${inventoryPct(firstShiftEnd)}%{opacity:0}`) ||
+    !laterRefillBlocks[0]?.[1].includes(`${inventoryPct(firstRefillEnd)}%,100%{opacity:1}`) ||
+    Math.abs(firstSettleEnd - (firstLaterEvent?.atS ?? 0)) > 0.001,
+  actors:
+    openingRefillSlots.join(",") !== "0,1,2,3,4,5" ||
+    !openingMarkup.includes('data-roster="13" data-inventory-slot="0"') ||
+    !openingMarkup.includes('data-roster="8" data-inventory-slot="5"') ||
+    !openingMarkup.includes('data-roster="7" data-inventory-slot="5"') ||
+    !openingMarkup.includes('data-roster="6" data-inventory-slot="6"') ||
+    firstTransitionShiftMarkup.includes('data-roster="14"') ||
+    !firstTransitionRefillMarkup.includes('data-roster="14" data-inventory-slot="0"'),
+  dock:
+    !gateKeyframes.includes(`${inventoryPct(firstGateOpenEnd)}%{stroke-dashoffset:16}`) ||
+    !gateKeyframes.includes(`${inventoryPct(firstLiftStart)}%{stroke-dashoffset:16}`) ||
+    !gateKeyframes.includes(`${inventoryPct(firstShiftStart)}%{stroke-dashoffset:0}`) ||
+    !inventoryDockKeyframes.includes(`${inventoryPct(firstGateOpenEnd)}%{transform:translateY(18.5px)}`) ||
+    !inventoryDockKeyframes.includes(`${inventoryPct(firstLiftStart)}%{transform:translateY(18.5px)}`) ||
+    !inventoryDockKeyframes.includes(`${inventoryPct(firstShiftStart)}%{transform:translateY(0)}`),
+  light: coreTimingProblems.length > 0 ||
+    !inventoryUfoKeyframes.includes("0%{opacity:1}") ||
+    !inventoryUfoKeyframes.includes(`${inventoryPct(timing.openingBoardEndAbsS)}%{opacity:0}`),
+};
+const failedInventoryDiagnostics = Object.entries(inventoryDiagnostics)
+  .filter(([, failed]) => failed)
+  .map(([name]) => name);
+if (failedInventoryDiagnostics.length > 0) {
+  console.error(`inventory diagnostics: ${failedInventoryDiagnostics.join(", ")}`);
+}
+if (
+  inventoryCounts.length < laterInventoryEvents.length + 2 ||
+  inventoryCounts.some(({ current, total }) => total !== flock.rosterSize || current < 0 || current > flock.rosterSize) ||
+  inventoryCounts.slice(1).some(({ current }, index) => current > inventoryCounts[index].current) ||
+  !inventoryCounts.some(({ current }) => current === flock.rosterSize - flock.fieldCount) ||
+  inventoryCounts.at(-1)?.current !== 0 ||
+  inventoryTags.length === 0 ||
+  inventoryTags.some(({ rosterIndex, tag }) => tag !== getSheepTagCode(rosterIndex)) ||
+  inventoryTagLightnesses.length !== inventoryTags.length ||
+  inventoryTagLightnesses.some((lightness) => lightness !== 52) ||
+  inventorySlots.some((slot) => slot < 0 || slot >= 8) ||
+  finalQueueAlignmentProblems.length > 0 ||
+  postOpeningIdleSlots.join(",") !== "0,1,2,3,4,5,6,7" ||
+  finalTransitionAlignmentProblems.length > 0 ||
+  initialInventoryOrder.join(",") !== "7,6,5,4,3,2,1,0" ||
+  (svg.match(/<symbol id="flock-inventory-sheep-icon"/g) ?? []).length !== 1 ||
+  inventorySheepUses !== inventoryTags.length ||
+  inventoryShiftBlocks.length !== laterInventoryEvents.length ||
+  inventoryShiftBlocks.some(([, , frames]) => !frames.includes("translateX(18px)") || frames.includes("translateX(-")) ||
+  inventoryLoadBlocks.length !== laterInventoryEvents.length ||
+  inventoryLoadBlocks.some(([, frames]) => !frames.includes("opacity:0") || frames.includes("transform:")) ||
+  openingLoadBlocks.length !== openingInventoryEvents.length ||
+  openingLoadBlocks.some(([, frames]) => !frames.includes("opacity:0") || frames.includes("transform:")) ||
+  openingBoardShiftBlocks.length !== openingInventoryEvents.length ||
+  openingBoardShiftBlocks.filter(([, frames]) => frames.includes("translateX(18px)")).length !== Math.max(0, openingInventoryEvents.length - 1) ||
+  openingBoardShiftBlocks.some(([, frames]) => frames.includes("translateX(-")) ||
+  !firstOpeningBoardShiftBlock.includes(`${inventoryPct(INVENTORY_OPENING_GATE_S + 0.18)}%{transform:translateX(0)}`) ||
+  !firstOpeningBoardShiftBlock.includes(`${inventoryPct(INVENTORY_OPENING_GATE_S + 0.28)}%,`) ||
+  openingRefillBlocks.length !== openingRefillCount ||
+  laterRefillBlocks.length !== Math.max(0, laterInventoryEvents.length - 8) ||
+  (svg.match(/data-beats="dock-settle-absorb-empty-shift-settle"/g) ?? []).length !== openingInventoryEvents.length ||
+  (svg.match(/data-beats="approach-settle-absorb-lift-shift-refill-settle-drop"/g) ?? []).length !== laterInventoryEvents.length ||
+  !openingShiftBlock.includes(`${inventoryPct(openingMotionEndS)}%,100%{transform:translateX(18px)}`) ||
+  !svg.includes('data-refill="shift-then-stagger"') ||
+  (openingRefillCount > 0 &&
+    (!openingRefillBlocks[0]?.[1].includes(`${inventoryPct(openingMotionEndS)}%{opacity:0}`) ||
+      !openingRefillBlocks.at(-1)?.[1].includes(`${inventoryPct(openingRevealEndS)}%,100%{opacity:1}`))) ||
+  !firstLoadBlock.includes(`${inventoryPct(firstAbsorbStart)}%{opacity:1}`) ||
+  !firstLoadBlock.includes(`${inventoryPct(firstLoadEnd)}%,100%{opacity:0}`) ||
+  !gateKeyframes.includes(`${inventoryPct(INVENTORY_OPENING_GATE_S)}%{stroke-dashoffset:16}`) ||
+  !gateKeyframes.includes(`${inventoryPct(INVENTORY_OPENING_GATE_S + openingInventoryEvents.length * INVENTORY_OPENING_CYCLE_S)}%{stroke-dashoffset:16}`) ||
+  !gateKeyframes.includes(`${inventoryPct(firstGateOpenEnd)}%{stroke-dashoffset:16}`) ||
+  !gateKeyframes.includes(`${inventoryPct(firstLiftStart)}%{stroke-dashoffset:16}`) ||
+  !gateKeyframes.includes(`${inventoryPct(firstShiftStart)}%{stroke-dashoffset:0}`) ||
+  !firstShiftBlock.includes(`${inventoryPct(firstShiftStart)}%{transform:translateX(0)}`) ||
+  !firstShiftBlock.includes(`${inventoryPct(firstShiftEnd)}%,100%{transform:translateX(18px)}`) ||
+  !laterRefillBlocks[0]?.[1].includes(`${inventoryPct(firstShiftEnd)}%{opacity:0}`) ||
+  !laterRefillBlocks[0]?.[1].includes(`${inventoryPct(firstRefillEnd)}%,100%{opacity:1}`) ||
+  Math.abs(firstSettleEnd - (firstLaterEvent?.atS ?? 0)) > 0.001 ||
+  openingRefillSlots.join(",") !== "0,1,2,3,4,5" ||
+  !openingMarkup.includes('data-roster="13" data-inventory-slot="0"') ||
+  !openingMarkup.includes('data-roster="8" data-inventory-slot="5"') ||
+  !openingMarkup.includes('data-roster="7" data-inventory-slot="5"') ||
+  !openingMarkup.includes('data-roster="6" data-inventory-slot="6"') ||
+  !firstTransitionMarkup.includes('animation:flock-inventory-load-0') ||
+  !firstTransitionMarkup.includes('data-roster="6" data-inventory-slot="7"') ||
+  !firstTransitionMarkup.includes('data-board-occluded-slot="7"') ||
+  !firstTransitionMarkup.includes('animation:flock-inventory-shift-0') ||
+  firstTransitionShiftMarkup.includes('data-roster="14"') ||
+  !firstTransitionRefillMarkup.includes('animation:flock-inventory-refill-0') ||
+  !firstTransitionRefillMarkup.includes('data-roster="14" data-inventory-slot="0"') ||
+  !svg.includes('<clipPath id="flock-inventory-clip"><rect x="287" y="123" width="142" height="11"/>') ||
+  svg.includes('flock-inventory-board-clip') ||
+  svg.includes('translateY(-10px)') ||
+  svg.indexOf('<g class="flock-inventory-dock-activity"') < svg.indexOf('<g class="flock-inventory-states">') ||
+  !svg.includes('<path class="flock-inventory-pen" d="M413 123V134H429V123"/>') ||
+  !svg.includes('<path class="flock-inventory-gate" d="M413 123H429"/>') ||
+  !svg.includes('<use class="flock-inventory-ufo" href="#flock-ufo-icon" x="408" y="97" width="26" height="26"') ||
+  !svg.includes('animation:flock-inventory-ufo-visible') ||
+  !svg.includes('flock-inventory-dock') ||
+  !inventoryDockKeyframes.includes(`transform:translateY(18.5px)`) ||
+  !inventoryDockKeyframes.includes(`${inventoryPct(INVENTORY_OPENING_GATE_S)}%{transform:translateY(18.5px)}`) ||
+  !inventoryDockKeyframes.includes(`${inventoryPct(openingLoadEndS)}%{transform:translateY(18.5px)}`) ||
+  !inventoryDockKeyframes.includes(`${inventoryPct(timing.openingBoardEndAbsS)}%{transform:translateY(0)}`) ||
+  !inventoryDockKeyframes.includes(`${inventoryPct(firstGateOpenEnd)}%{transform:translateY(18.5px)}`) ||
+  !inventoryDockKeyframes.includes(`${inventoryPct(firstLiftStart)}%{transform:translateY(18.5px)}`) ||
+  !inventoryDockKeyframes.includes(`${inventoryPct(firstShiftStart)}%{transform:translateY(0)}`) ||
+  !svg.includes('<text x="231" y="133" class="flock-meta-key">양떼</text>') ||
+  !svg.includes('<text x="283" y="133" text-anchor="end" class="flock-meta-value">') ||
+  !svg.includes("@keyframes flock-inventory-opening-shift") ||
+  (svg.match(/@keyframes flock-inventory-shift-/g) ?? []).length !== flock.rosterSize - flock.fieldCount ||
+  svg.includes("flock-inventory-return") ||
+  (svg.match(/class="flock-inventory-core"/g) ?? []).length !== 1 ||
+  (svg.match(/class="flock-inventory-gate"/g) ?? []).length !== 1 ||
+  (svg.match(/class="flock-inventory-board-body"/g) ?? []).length !== inventorySpawnEvents.length ||
+  (svg.match(/flock-inventory-board-tag"/g) ?? []).length !== inventorySpawnEvents.length ||
+  (svg.match(/class="flock-inventory-opening-shift"/g) ?? []).length !== openingInventoryEvents.length + 1 ||
+  (svg.match(/class="flock-inventory-shift"/g) ?? []).length !== laterInventoryEvents.length ||
+  (svg.match(/class="flock-inventory-refill"/g) ?? []).length !== openingRefillBlocks.length + laterRefillBlocks.length ||
+  !svg.includes('class="flock-inventory-core"') ||
+  !svg.includes('fill="var(--gm-beam-core)" style="opacity:0;animation:flock-inventory-core') ||
+  coreTimingProblems.length > 0 ||
+  !svg.includes('.flock-secondary-motion,#grass-crumbs{animation:flock-turnover-focus') ||
+  (svg.match(/class="flock-secondary-motion"/g) ?? []).length !== 1 ||
+  !inventoryUfoKeyframes.includes(`0%{opacity:1}`) ||
+  !inventoryUfoKeyframes.includes(`${inventoryPct(timing.openingBoardEndAbsS)}%{opacity:0}`) ||
+  bodyHiddenDockWindows.some(({ start, end }) =>
+    !inventoryUfoKeyframes.includes(
+      `${(((start + 0.06) * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4)}%{opacity:1}`,
+    ) ||
+    !inventoryUfoKeyframes.includes(
+      `${((end * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4)}%{opacity:0}`,
+    ),
+  )
+) {
+  throw new Error("eight-pen batch boarding, adjacent queue shift, or identity stamps drifted");
+}
 const rosterActorIndices = [...svg.matchAll(/data-roster-index="(\d+)"/g)].map(
   (match) => Number(match[1]),
 );
@@ -609,6 +1023,8 @@ if (deploymentFlightProblems.length) {
 }
 const ufoVisibility =
   svg.match(/@keyframes ufo-visibility \{([\s\S]*?)\n  \}/)?.[1] ?? "";
+const ufoBodyOpacities = [...ufoVisibility.matchAll(/opacity: ([\d.]+)/g)]
+  .map((match) => Number(match[1]));
 const ufoLight =
   svg.match(/@keyframes ufo-light \{([\s\S]*?)\n  \}/)?.[1] ?? "";
 const visibilityFrame = (time, opacity) =>
@@ -633,7 +1049,6 @@ const blinkProblem = (
   const edgeDuration = Math.min(UFO_BLINK_EDGE_S, duration / 2);
   const edgeOut = depart + edgeDuration;
   const edgeIn = arrive - edgeDuration;
-  const fade = Math.min(UFO_BLINK_FADE_S, edgeDuration / 3);
   const distance = Math.hypot(to.x - from.x, to.y - from.y);
   const edgeRatio = distance > 0 ? Math.min(0.5, 8 / distance) : 0;
   const edgeOutPoint = verticalEdges
@@ -655,15 +1070,15 @@ const blinkProblem = (
   const visibility = arrivalOnly
     ? [
         visibilityFrame(depart, 0),
-        visibilityFrame(edgeIn - fade, 0),
+        visibilityFrame(edgeIn, 0),
         visibilityFrame(edgeIn, 1),
         visibilityFrame(arrive, 1),
       ]
     : [
         visibilityFrame(depart, 1),
         visibilityFrame(edgeOut, 1),
-        visibilityFrame(edgeOut + fade, 0),
-        visibilityFrame(edgeIn - fade, 0),
+        visibilityFrame(edgeOut, 0),
+        visibilityFrame(edgeIn, 0),
         visibilityFrame(edgeIn, 1),
         visibilityFrame(arrive, 1),
       ];
@@ -679,10 +1094,12 @@ const firstDeployPx = getCellCenterPx(
 );
 const firstEntryPx = { x: firstDeployPx.x, y: firstDeployPx.y - 8 };
 const firstArrival = timing.ufoArriveAbsSOffset[0];
+const firstDeparture = firstArrival - UFO_ENTRY_S;
 const firstArrivalFlash = `${((firstArrival * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4)}% { opacity: 0.38; }`;
 if (
-  blinkProblem(firstEntryPx, firstDeployPx, 0, firstArrival, true) ||
-  !svg.includes('class="ufo-body" style="animation:ufo-visibility') ||
+  blinkProblem(firstEntryPx, firstDeployPx, firstDeparture, firstArrival, true) ||
+  ufoBodyOpacities.some((opacity) => opacity !== 0 && opacity !== 1) ||
+  !/class="ufo-body" style="animation:ufo-visibility [\d.]+s step-end/.test(svg) ||
   !ufoLight.includes(firstArrivalFlash)
 ) {
   throw new Error("first deployment loses the visible-edge green blink arrival grammar");
@@ -742,7 +1159,7 @@ const turnoverFlightProblems = timing.turnovers.flatMap((turnover, index) => {
   );
   return blink ||
     !ufoLight.includes(arriveFlash) ||
-    Math.abs(playbackDuration - UFO_BLINK_TRAVEL_S * MOTION_TIME_SCALE) > 0.001
+    Math.abs(playbackDuration - INVENTORY_TURNOVER_EXCHANGE_S * MOTION_TIME_SCALE) > 0.001
     ? [{ index, playbackDuration, blink, arriveFlash: ufoLight.includes(arriveFlash) }]
     : [];
 });
@@ -762,6 +1179,10 @@ const lastStopPx = getCellCenterPx(
 const stageExitDepart = timing.ufoLeaveAbsSOffset[lastStopIndex];
 const offstageGapProblems = timing.ufoStopCells.flatMap((cell, index) => {
   if (index >= timing.ufoStopCells.length - 1) return [];
+  const isTurnoverExchange =
+    index >= flock.fieldCount &&
+    (index - flock.fieldCount) % 2 === 0;
+  if (isTurnoverExchange) return [];
   const depart = timing.ufoLeaveAbsSOffset[index];
   const arrive = timing.ufoArriveAbsSOffset[index + 1];
   if (arrive - depart <= 0.8) return [];
@@ -863,6 +1284,12 @@ const heroList = (svg.match(/data-camera-heroes="([\d,]+)"/)?.[1] ?? "")
   .split(",")
   .filter(Boolean)
   .map(Number);
+const heroModes = (svg.match(/data-camera-modes="([a-z,]+)"/)?.[1] ?? "")
+  .split(",")
+  .filter(Boolean);
+const cameraVisibleTrack = svg.match(
+  /@keyframes flock-camera-visible \{([\s\S]*?)\n  \}/,
+)?.[1] ?? "";
 const selectedTracks = [...svg.matchAll(
   /@keyframes flock-selected-\d+ \{([\s\S]*?)\n  \}/g,
 )].map((match) =>
@@ -879,6 +1306,8 @@ const handoffGapProblems = heroList.flatMap((rosterIndex, heroIndex) => {
   const selectedAt = switchAt + (heroIndex === 0 ? 0 : handoffGapS);
   const switchPct = ((switchAt * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
   const selectedPct = ((selectedAt * 100) / timing.maxTotalTimeWithEntryExit).toFixed(4);
+  const hiddenPct = (((timing.flock.sheep[rosterIndex].hiddenAbsS ?? 0) * 100) /
+    timing.maxTotalTimeWithEntryExit).toFixed(4);
   const gapMidPct = (((switchAt + selectedAt) / 2) * 100) / timing.maxTotalTimeWithEntryExit;
   const gapLeaks = selectedTracks.some((frames) => {
     const nextIndex = frames.findIndex((frame) => frame.pct >= gapMidPct);
@@ -887,6 +1316,8 @@ const handoffGapProblems = heroList.flatMap((rosterIndex, heroIndex) => {
     return (previous?.opacity ?? 0) > 0 || (next?.opacity ?? 0) > 0;
   });
   return !selected.includes(`${selectedPct}% { opacity:1; }`) ||
+    !cameraVisibleTrack.includes(`${selectedPct}% { opacity:1; }`) ||
+    !cameraVisibleTrack.includes(`${hiddenPct}% { opacity:0; }`) ||
     (heroIndex > 0 && selected.includes(`${switchPct}% { opacity:1; }`)) ||
     (heroIndex > 0 && gapLeaks)
     ? [{ roster: rosterIndex, switchPct, selectedPct, gapLeaks }]
@@ -978,7 +1409,7 @@ for (const sheep of timing.flock.sheep) {
   )?.[1] ?? "";
   for (const bite of sheep.bites) {
     energy += bite.level;
-    const expected = Math.min(1, energy / SHEEP_FULLNESS_CAPACITY);
+    const expected = Math.min(1, energy / sheep.capacity);
     if (Math.abs(bite.progress - expected) > 0.001) {
       throw new Error(`sheep ${sheep.rosterIndex} fullness does not follow grass level energy`);
     }
@@ -995,7 +1426,7 @@ for (const sheep of timing.flock.sheep) {
     if (
       !pulse.includes(`${bitePct}% { opacity:1; }`) ||
       !pulse.includes(`${pulseEndPct}% { opacity:0; }`) ||
-      !svg.includes(`>${Math.min(SHEEP_FULLNESS_CAPACITY, energy)}/${SHEEP_FULLNESS_CAPACITY}</text>`)
+      !svg.includes(`>${Math.min(sheep.capacity, energy)}/${sheep.capacity}</text>`)
     ) {
       throw new Error(`sheep ${sheep.rosterIndex} bite energy feedback is not synchronized`);
     }
@@ -1004,28 +1435,44 @@ for (const sheep of timing.flock.sheep) {
 }
 if (
   !svg.includes(".flock-meter-pulse, .flock-map-pulse { display: none; }") ||
-  !svg.includes(".flock-camera-live { animation-timing-function: step-end !important; }")
+  !svg.includes(".flock-camera-live, .flock-inventory-motion, .flock-inventory-shift, .flock-inventory-opening-shift, .flock-inventory-refill, .flock-inventory-core, .flock-inventory-gate, .flock-inventory-board-body, .flock-inventory-board-tag, .flock-inventory-dock-activity { animation-timing-function: step-end !important; }") ||
+  !svg.includes(".flock-inventory-dock-motion { animation-timing-function: step-start !important; }")
 ) {
   throw new Error("reduced motion does not hide bite feedback pulses");
 }
+if (
+  !svg.includes(".flock-meta-key, .flock-meta-value { font-size: 9px; }") ||
+  !svg.includes(".flock-name, .flock-status, .flock-label, .flock-energy { font-size: 10px; }") ||
+  !svg.includes(".flock-inventory-pen, .flock-inventory-gate { stroke-width: 1.2; }") ||
+  !svg.includes(".flock-inventory-tag { stroke-width: .6; }") ||
+  !svg.includes(".flock-map-focus { stroke-width: 1.8; }") ||
+  !svg.includes(".ufo-ripple, #grass-crumbs, .flock-map-pulse { display: none; }")
+) {
+  throw new Error("350px presentation lost its native SVG readability correction");
+}
 const turnoverPathProblems = timing.turnovers.flatMap((turnover, index) => {
-  const unsafe = turnover.dropPath.slice(0, -1).filter((cell) => {
-    const arrival = timingSimulation.targetCellArrivals.get(cell.join(","))?.[0];
-    return arrival != null && arrival.arrivalTime > flock.turnovers[index].baseTime;
-  });
-  const broken = turnover.dropPath.filter(
-    (cell, pathIndex, path) =>
-      pathIndex > 0 &&
-      Math.abs(cell[0] - path[pathIndex - 1][0]) +
-        Math.abs(cell[1] - path[pathIndex - 1][1]) !==
-        1,
-  );
-  return unsafe.length || broken.length
-    ? [{ index, path: turnover.dropPath, unsafe, broken }]
+  const firstBite = timing.flock.sheep[turnover.incomingRosterIndex]?.bites[0];
+  return turnover.dropPath.length !== 1 ||
+    turnover.dropCell.join(",") !== firstBite?.cell
+    ? [{ index, path: turnover.dropPath, drop: turnover.dropCell, firstBite: firstBite?.cell }]
     : [];
 });
 if (turnoverPathProblems.length) {
-  throw new Error(`remote replacement paths are not causally walkable: ${JSON.stringify(turnoverPathProblems)}`);
+  throw new Error(`replacement sheep do not return to their actual work cell: ${JSON.stringify(turnoverPathProblems)}`);
+}
+const walkingPickupCount = flock.turnovers.filter((turnover) => {
+  const finalBite = flock.bites
+    .filter((bite) => bite.rosterIndex === turnover.outgoingRosterIndex)
+    .at(-1);
+  return finalBite != null && turnover.pickupCell.join(",") !== finalBite.cell;
+}).length;
+if (
+  walkingPickupCount === 0 ||
+  flock.turnovers.some(
+    (turnover) => turnover.resumeHistoryIndex - turnover.historyIndex !== 1,
+  )
+) {
+  throw new Error("full sheep stop before their final recorded pickup approach");
 }
 const turnoverPaceProblems = timing.turnovers.flatMap((turnover, index) => {
   const expectedDuration = (turnover.dropPath.length - 1) * SHEEP_CELL_TIME;
@@ -1049,23 +1496,12 @@ const turnoverHoldProblems = timing.turnovers.flatMap((turnover, index) => {
   const frames = [...pose.matchAll(
     new RegExp(`${bridgeEndPct}% \\{ transform: ([^;]+); \\}`, "g"),
   )];
-  return frames.at(-1)?.[1] !== "translateY(0) scale(1, 1)"
+  return !["translateY(0) scale(1, 1)", "scale(1, 1)"].includes(frames.at(-1)?.[1])
     ? [{ index, bridgeEndPct, finalPose: frames.at(-1)?.[1] }]
     : [];
 });
 if (turnoverHoldProblems.length) {
   throw new Error(`replacement sheep freeze mid-step after landing: ${JSON.stringify(turnoverHoldProblems)}`);
-}
-const turnoverDistanceProblems = timing.turnovers.flatMap((turnover, index) => {
-  const dx = turnover.pickupCell[0] - turnover.dropCell[0];
-  const dy = turnover.pickupCell[1] - turnover.dropCell[1];
-  const distancePx = Math.hypot(dx, dy) * (CELL_SIZE + GAP);
-  return distancePx < UFO_WIDTH_PX + CELL_SIZE
-    ? [{ index, pickup: turnover.pickupCell, drop: turnover.dropCell, path: turnover.dropPath, distancePx }]
-    : [];
-});
-if (turnoverDistanceProblems.length) {
-  throw new Error(`remote replacement drops overlap the pickup footprint: ${JSON.stringify(turnoverDistanceProblems)}`);
 }
 if (
   flock.fieldCount !== 6 ||
@@ -1089,7 +1525,7 @@ if (
         turnover.dropCell.join(","),
   )
 ) {
-  throw new Error(`full sheep do not receive serialized remote replacements`);
+  throw new Error(`full sheep do not receive serialized inventory replacements`);
 }
 if (
   timing.flock.sheep.some(
@@ -1125,9 +1561,13 @@ if (
 if (
   (svg.match(/class="flock-map-mark"/g) ?? []).length !== timing.flock.sheep.flatMap((sheep) => sheep.bites).length ||
   !svg.includes("@keyframes flock-fill-27") ||
-  !svg.includes('class="flock-meta-value">6/6</text>')
+  !svg.includes('class="flock-meta-value">6/6</text>') ||
+  (svg.match(/class="flock-inventory-pen"/g) ?? []).length !== 8 ||
+  !svg.includes("@keyframes flock-inventory-ufo-visible") ||
+  !svg.includes("@keyframes flock-inventory-shift-") ||
+  svg.includes("flock-inventory-return")
 ) {
-  throw new Error("pasture map does not expose every recorded bite");
+  throw new Error("pasture map or eight-pen inventory does not expose recorded activity");
 }
 const expectedMapPositions = timing.flock.sheep
   .flatMap((sheep) => sheep.bites)
@@ -1157,7 +1597,7 @@ if (
   (svg.match(/class="camera-sheep-roster-\d+ sheep-camera-copy"/g) ?? []).length !== flock.rosterSize ||
   !svg.includes('<clipPath id="flock-camera-clip"><rect x="18"') ||
   !svg.includes('width="190" height="40" rx="2"') ||
-  !svg.includes('scale(1.55)') ||
+  !svg.includes('scale(1.3)') ||
   svg.includes('id="flock-camera-grid-source"') ||
   svg.includes('class="flock-camera-sheep"') ||
   (svg.match(/class="flock-map-footprint"/g) ?? []).length !== actualMapPositions.length ||
@@ -1165,19 +1605,60 @@ if (
   heroList.length < 3 ||
   heroList.length >= flock.rosterSize / 2 ||
   new Set(heroList).size !== heroList.length ||
+  heroModes.length !== heroList.length ||
+  !["context", "route", "graze"].every((mode) => heroModes.includes(mode)) ||
+  heroModes.some((mode, index) => mode !== ["context", "route", "graze"][index % 3]) ||
   heroDurations[0] < 2.5 ||
-  heroDurations.slice(1).some((duration) => duration < 3.5) ||
+  heroDurations.slice(1, -1).some((duration) => duration < 3.5) ||
+  (heroDurations.at(-1) ?? 0) < 1 ||
   !Number.isFinite(cameraReframes) ||
+  cameraReframes >= 22 ||
   cameraReframes > Math.ceil(timing.flock.sheep.flatMap((sheep) => sheep.bites).length / 8) ||
-  !svg.includes(`class="flock-camera-live" style="animation:flock-camera-follow ${runtime}s linear`) ||
+  !svg.includes(`class="flock-camera-live" style="animation:flock-camera-follow ${runtime.toFixed(3)}s linear`) ||
   !svg.includes("@keyframes flock-camera-follow") ||
   !svg.includes("@keyframes flock-camera-visible")
 ) {
-  throw new Error("live pasture camera or selected-sheep footprints do not follow recorded activity");
+  throw new Error(`live pasture camera or selected-sheep footprints do not follow recorded activity: ${JSON.stringify({ cameraReframes, heroList, heroModes, heroDurations })}`);
 }
 const cameraFollow = svg.match(/@keyframes flock-camera-follow\{([^\n]*)/)?.[1] ?? "";
+const cameraFollowFrames = [...cameraFollow.matchAll(
+  /([\d.]+)%\{transform:([^}]+)\}/g,
+)].map((match) => ({ pct: Number(match[1]), transform: match[2] }));
+const cameraPanSegments = cameraFollowFrames.slice(1).flatMap((frame, index) => {
+  const previous = cameraFollowFrames[index];
+  if (frame.transform === previous.transform) return [];
+  return [{
+    start: previous.pct * timing.maxTotalTimeWithEntryExit / 100,
+    end: frame.pct * timing.maxTotalTimeWithEntryExit / 100,
+  }];
+});
+let cameraHeroCursor = Math.min(...timing.flock.sheep.map((sheep) => sheep.spawnAbsS));
+const cameraVisibleIntervals = heroList.map((rosterIndex, index) => {
+  const end = timing.flock.sheep[rosterIndex]?.hiddenAbsS ?? cameraHeroCursor;
+  const interval = {
+    start: cameraHeroCursor + (index === 0 ? 0 : handoffGapS),
+    end,
+  };
+  cameraHeroCursor = end;
+  return interval;
+});
+const inventoryMotionWindows = [
+  { start: openingShiftStartS, end: openingShiftEndS },
+  ...laterInventoryEvents.map(({ atS }) => ({ start: atS - 0.76, end: atS })),
+];
+const cameraInventoryCompetition = cameraPanSegments.flatMap((pan) =>
+  inventoryMotionWindows.flatMap((inventory) =>
+    cameraVisibleIntervals.flatMap((visible) => {
+      const start = Math.max(pan.start, inventory.start, visible.start);
+      const end = Math.min(pan.end, inventory.end, visible.end);
+      return start < end - 0.001 ? [{ pan, inventory, visible }] : [];
+    }),
+  ),
+);
 if (
-  !cameraFollow.includes("scale(1.55)") ||
+  !cameraFollow.includes("scale(1.3)") ||
+  cameraFollowFrames.slice(1).some((frame, index) => frame.pct < cameraFollowFrames[index].pct) ||
+  cameraInventoryCompetition.length > 0 ||
   (cameraFollow.match(/transform:translate/g) ?? []).length >
     (timing.flock.sheep.flatMap((sheep) => sheep.bites).length * 2) / 3
 ) {
@@ -1200,8 +1681,14 @@ if (
 ) {
   throw new Error("pasture map lost its single activity focus");
 }
-if (Math.abs(timing.timelineOffset - UFO_ENTRY_S) > 0.001) {
-  throw new Error("UFO does not deploy directly from its entry flight");
+const expectedOpeningBoardEnd =
+  INVENTORY_OPENING_GATE_S * 2 +
+  flock.fieldCount * INVENTORY_OPENING_CYCLE_S;
+if (
+  Math.abs(timing.openingBoardEndAbsS - expectedOpeningBoardEnd) > 0.001 ||
+  Math.abs(timing.timelineOffset - timing.openingBoardEndAbsS - UFO_ENTRY_S) > 0.001
+) {
+  throw new Error("UFO does not wait for the opening inventory batch before entry");
 }
 const [firstDropX, firstDropY] = timingPlan.funnelPositionsEarly[0];
 const firstDrop = getCellCenterPx(
@@ -1212,7 +1699,7 @@ const firstDrop = getCellCenterPx(
 );
 const firstDropTx = firstDrop.x - UFO_WIDTH_PX / 2;
 const firstDropTy = firstDrop.y - UFO_WIDTH_PX / 2;
-const entryPct = ((UFO_ENTRY_S / timelineRuntime) * 100).toFixed(4);
+const entryPct = ((timing.ufoArriveAbsSOffset[0] / timing.maxTotalTimeWithEntryExit) * 100).toFixed(4);
 if (!ufoMove.includes(`${entryPct}% { transform: translate(${firstDropTx}px, ${firstDropTy}px)`)) {
   throw new Error("UFO entry still stops somewhere other than the first drop");
 }
@@ -1298,7 +1785,7 @@ const phaseStep = timing.paintSweepDuration / waveMetrics.maxPhase;
 for (const cell of signatureCells) {
   const [x, y] = cell.key.split(",").map(Number);
   const paintPct =
-    (((timing.paintSweepStartAbsSOffset + cell.phase * phaseStep) / timelineRuntime) * 100);
+    (((timing.paintSweepStartAbsSOffset + cell.phase * phaseStep) / timing.maxTotalTimeWithEntryExit) * 100);
   const keyframe =
     svg.match(new RegExp(`@keyframes grass-(?:loop|paint)-${x * 7 + y} \\{([\\s\\S]*?)\\n  \\}`))?.[1] ?? "";
   if (!keyframe.includes(`${(paintPct + 0.01).toFixed(4)}% { fill: var(--gm-level-4); }`)) {
@@ -1323,7 +1810,7 @@ if (timing.firstArrivals.size !== expectedGrassCount) {
 for (const arrival of timing.firstArrivals.values()) {
   const impactPct =
     ((timing.timelineOffset + arrival.arrivalTime + GRASS_STEP_TIMES_S[0]) /
-      timelineRuntime) *
+      timing.maxTotalTimeWithEntryExit) *
     100;
   const head =
     svg.match(

@@ -5,6 +5,10 @@ import type { TimelineResult } from "./types.js";
 import type { FlockPlan } from "../svg/flock.js";
 import {
   SHEEP_CELL_TIME,
+  SHEEP_FULLNESS_CAPACITY,
+  INVENTORY_OPENING_GATE_S,
+  INVENTORY_OPENING_CYCLE_S,
+  INVENTORY_TURNOVER_EXCHANGE_S,
   UFO_ENTRY_S,
   UFO_BLINK_TRAVEL_S,
   UFO_BLINK_EDGE_S,
@@ -20,6 +24,7 @@ const UFO_RELEASE_S = 0.06;
 const PICKUP_WAIT_S = 0.2;
 const PICKUP_LIGHT_S = 0.14;
 const PICKUP_FADE_S = 0.18;
+const SERVICE_OFFSTAGE_HOLD_S = 0.06;
 const SIGNATURE_FALSE_END_S = 0.28;
 const SIGNATURE_APPROACH_S = UFO_BLINK_TRAVEL_S;
 const SIGNATURE_FOCUS_S = 0.18;
@@ -29,7 +34,6 @@ const SIGNATURE_CONFIRM_S = 0.28;
 const SIGNATURE_EXIT_S = UFO_BLINK_TRAVEL_S;
 const SIGNATURE_HOLD_S = 1.4;
 const TURNOVER_PICKUP_S = 0.16;
-const TURNOVER_EXCHANGE_S = UFO_BLINK_TRAVEL_S;
 const TURNOVER_DROP_S = LIGHT_RAMP_S + SHEEP_FADE_S;
 
 export function buildTimeline(
@@ -153,7 +157,7 @@ export function buildTimeline(
       serviceCursor + travelSCells(),
     );
     const outgoingHidden = arrive + TURNOVER_PICKUP_S;
-    const dropArrive = outgoingHidden + TURNOVER_EXCHANGE_S;
+    const dropArrive = outgoingHidden + INVENTORY_TURNOVER_EXCHANGE_S;
     const incomingSpawn = dropArrive;
     const incomingReady = incomingSpawn + TURNOVER_DROP_S;
     const leave = incomingReady + UFO_RELEASE_S;
@@ -216,7 +220,8 @@ export function buildTimeline(
   const pickupCells: [number, number][] = [];
   const pickupVisitSheep: number[] = [];
   const pending = [...activeSheepIndices];
-  let tCursor = serviceCursor + UFO_BLINK_TRAVEL_S;
+  let tCursor =
+    serviceCursor + UFO_BLINK_TRAVEL_S + SERVICE_OFFSTAGE_HOLD_S;
   while (pending.length > 0) {
     let nextPendingIndex = 0;
     let nextArrival = Number.POSITIVE_INFINITY;
@@ -255,7 +260,11 @@ export function buildTimeline(
   const sweepPositions: [number, number][] = [[centerCol, Math.floor(maxY / 2)]];
   const sweepArriveAbsS: number[] = [signatureArriveAbsS];
 
-  const timelineOffset = UFO_ENTRY_S;
+  const openingBoardEndAbsS = flock.fieldCount > 0
+    ? INVENTORY_OPENING_GATE_S * 2 +
+      flock.fieldCount * INVENTORY_OPENING_CYCLE_S
+    : 0;
+  const timelineOffset = openingBoardEndAbsS + UFO_ENTRY_S;
   const maxTotalTimeWithEntryExit =
     Math.max(
       timelineOffset + maxTotalTime,
@@ -360,6 +369,9 @@ export function buildTimeline(
     const hiddenAbsS =
       outgoing?.outgoingHiddenAbsS ??
       (isFinal ? pickupHiddenAbsSOffset[slotIndex] ?? null : null);
+    const rosterBites = flock.bites.filter(
+      (bite) => bite.rosterIndex === rosterIndex,
+    );
     return {
       rosterIndex,
       slotIndex,
@@ -369,9 +381,9 @@ export function buildTimeline(
         incoming?.incomingSpawnAbsS ?? spawnAbsSOffset[slotIndex] ?? timelineOffset,
       pickupAbsS,
       hiddenAbsS,
-      bites: flock.bites
-        .filter((bite) => bite.rosterIndex === rosterIndex)
-        .map((bite) => {
+      capacity: rosterBites[0]?.capacity ?? SHEEP_FULLNESS_CAPACITY,
+      appetite: rosterBites[0]?.appetite ?? "normal",
+      bites: rosterBites.map((bite) => {
           const arrival = firstArrivals.get(bite.cell);
           return {
             cell: bite.cell,
@@ -412,6 +424,7 @@ export function buildTimeline(
   );
 
   return {
+    openingBoardEndAbsS,
     timelineOffset,
     maxTotalTimeWithEntryExit,
     firstArrivals,
