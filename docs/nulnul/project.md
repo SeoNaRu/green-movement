@@ -46,7 +46,7 @@ Current local v60 keeps all v59 camera, route, pickup, inventory, and sheep beha
 
 Observable completion check: `npm run check`
 
-Final verification: local v60 passed a fresh independent Gate at 19/20 with no blocker; only the 63.736-second runtime remains 3/4. The user authorized publication to project main and the connected profile README. The active evolution checkpoint records the single verification receipt; this document describes behavior only.
+Final verification: published v60 passed a fresh independent Gate at 19/20 with no blocker; only the 63.736-second runtime remains 3/4. Feature `70fc6db` and successful workflow `32448469527` published project assets in `160a0bc`, profile assets in `8c1b2d2`, and immutable profile embeds in `0eb8927`; all public project/profile SVG hashes match. The active evolution checkpoint records the single verification receipt; this document describes behavior only.
 
 Rollback verification: local v59 retains the accepted eight-pen inventory, 1.30x camera, unique route preference, and recorded pickup approach, but uses separate 26px panel and 32px field UFO actors with a disconnected upward exit and field re-entry.
 
